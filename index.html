@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>星塵夢汐 Stardust DreamTide</title>
+<meta name="description" content="星塵夢汐 — 語音夢境日記 × 月相 × CBT 自我紀錄 × 時空膠囊（個人紀錄用途，非醫療工具）">
+<meta name="theme-color" content="#0d0d14">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="星塵夢汐">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>星塵<span>夢汐</span> <small style="font-size:.65em;color:var(--ink-3)">Stardust DreamTide</small></h1>
+  <div class="today-moon" id="header-moon"></div>
+</header>
+
+<main>
+  <section id="view-today" class="view active"></section>
+  <section id="view-dream" class="view"></section>
+  <section id="view-cbt" class="view"></section>
+  <section id="view-moon" class="view"></section>
+  <section id="view-more" class="view"></section>
+  <footer class="app-footer">Blue Chiou Copyright ©</footer>
+</main>
+
+<nav class="tabbar">
+  <button data-tab="today" class="on"><span class="ico">🌅</span>今天</button>
+  <button data-tab="dream"><span class="ico">🌙</span>夢境</button>
+  <button data-tab="cbt"><span class="ico">🧠</span>思考</button>
+  <button data-tab="moon"><span class="ico">📅</span>月相</button>
+  <button data-tab="more"><span class="ico">✨</span>更多</button>
+</nav>
+
+<div id="modal-root"></div>
+
+<script>
+  // 從 serverless config 讀 Google Client ID（非機密，可入前端；未設定則雲端功能自動隱藏）
+  fetch("api/config", { cache: "no-store" })
+    .then(r => r.ok ? r.json() : {})
+    .then(c => { if (c.googleClientId) window.STARDUST_GOOGLE_CLIENT_ID = c.googleClientId; })
+    .catch(() => {});
+</script>
+<script src="app.js"></script>
+<script src="cloud.js"></script>
+<script async defer src="https://accounts.google.com/gsi/client"></script>
+</body>
+</html>

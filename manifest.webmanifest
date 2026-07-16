@@ -1,0 +1,17 @@
+{
+  "name": "星塵夢汐 Stardust DreamTide — 夢境・日記・月相",
+  "short_name": "星塵夢汐",
+  "description": "星塵夢汐 — 語音夢境日記 × 月相日曆 × CBT 自我紀錄 × 時空膠囊（個人紀錄用途，非醫療工具）",
+  "lang": "zh-Hant",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0d14",
+  "theme_color": "#0d0d14",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

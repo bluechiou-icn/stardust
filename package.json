@@ -1,0 +1,8 @@
+{
+  "name": "stardust-dreamtide",
+  "private": true,
+  "description": "星塵夢汐 Stardust DreamTide — 靜態 PWA + Vercel serverless functions",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0"
+  }
+}
