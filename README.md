@@ -3,7 +3,8 @@
 stardust.bluechiou.com — 靜態 PWA ＋ Vercel serverless functions。
 
 功能：CBT 情緒紀錄（喜怒哀樂下拉＋強度滑桿）、內在報告、顯化儀式、
-睡前引導、連續徽章、夢汐 AI 陪伴與解夢（Anthropic API）、Notion 同步。
+睡前引導、連續徽章、夢汐 AI 陪伴與解夢（Anthropic API）、Notion 同步、
+水晶圖鑑（52 種・復古博物插圖）與虛擬水晶收藏架（月相×許願搭配）。
 
 2026-07-16 自 `Blue-essay-Jung` repo 的 `app/` 目錄遷出獨立（該 repo 回歸
 心理學論文研究用途）。
@@ -13,6 +14,7 @@ stardust.bluechiou.com — 靜態 PWA ＋ Vercel serverless functions。
 ```
 index.html            單頁 App
 app.js / style.css    前端邏輯與樣式
+crystals.js           水晶圖鑑・虛擬收藏架・月相×許願儀式（見 docs/crystal-vision.md）
 cloud.js              雲端同步
 sw.js                 Service Worker（網路優先）
 manifest.webmanifest  PWA 安裝設定

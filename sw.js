@@ -1,6 +1,6 @@
 /* 星塵夢汐 Stardust DreamTide service worker — 快取＋背景天象檢查 */
-const CACHE = "dreamtide-v11";
-const ASSETS = ["./", "index.html", "style.css", "app.js", "cloud.js", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
+const CACHE = "dreamtide-v12";
+const ASSETS = ["./", "index.html", "style.css", "app.js", "crystals.js", "cloud.js", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

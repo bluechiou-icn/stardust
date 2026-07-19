@@ -155,7 +155,7 @@ async function cloudSyncPullMerge() {
   const cloud = await loadCloudData();
   if (!cloud?.data) { await cloudSyncPush(); return { merged: 0, note: "首次上雲" }; }
   let added = 0;
-  for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep"]) {
+  for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "crystals"]) {
     const local = new Map((store.data[k] || []).map(x => [x.id || JSON.stringify(x), x]));
     for (const item of cloud.data[k] || []) {
       const key = item.id || JSON.stringify(item);
@@ -237,7 +237,7 @@ async function cloudRestoreOpen() {
       const j = await r.json();
       if (!j || typeof j !== "object") throw new Error();
       store.data = { ...store.data, ...j };
-      for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep"]) store.data[k] ||= [];
+      for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "crystals"]) store.data[k] ||= [];
       store.save();
       m.remove();
       if (typeof renderMore === "function") renderMore();
