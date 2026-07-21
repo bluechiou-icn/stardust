@@ -345,3 +345,75 @@ nav.tabbar button.on { color: var(--accent); }
 .right { text-align: right; }
 .center { text-align: center; }
 photo-thumb, .photo-thumb { max-width: 100%; border-radius: 10px; }
+
+/* ================= 水晶模組・Minéralogie 復古博物海報 ================= */
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn-col { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+
+/* 海報紙：米白羊皮紙 × 墨線雙框 × 襯線字 */
+.mineral-poster {
+  --paper: #f4efe2; --paper-2: #eae3d0; --mink: #4a3a2c; --mink-2: #7a6a55;
+  background: var(--paper);
+  background-image: radial-gradient(ellipse at 30% 20%, #fffdf6 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 90%, #e6ddc6 0%, transparent 50%);
+  border: 1px solid var(--mink-2);
+  outline: 4px solid var(--paper);
+  box-shadow: 0 0 0 5px var(--mink-2), 0 6px 18px rgba(0, 0, 0, .28);
+  border-radius: 2px;
+  margin: 12px 5px 10px;
+  padding: 14px 10px 10px;
+  color: var(--mink);
+  font-family: Georgia, "Songti TC", "Noto Serif TC", serif;
+}
+.mp-title { text-align: center; font-size: 1.25em; letter-spacing: .35em; text-indent: .35em; font-weight: 700; }
+.mp-title::before, .mp-title::after { content: "·"; color: var(--mink-2); margin: 0 6px; }
+.mp-subtitle { text-align: center; font-size: .72em; color: var(--mink-2); letter-spacing: .2em; margin: 2px 0 10px; border-bottom: 1px solid var(--mink-2); padding-bottom: 8px; }
+.mp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 4px; }
+@media (min-width: 480px) { .mp-grid { grid-template-columns: repeat(4, 1fr); } }
+.mp-item {
+  background: none; border: none; padding: 4px 2px; cursor: pointer; text-align: center;
+  color: var(--mink); font-family: inherit; border-radius: 6px; position: relative;
+}
+.mp-item:active { background: rgba(74, 58, 44, .08); }
+.mp-num { position: absolute; top: 2px; left: 6px; font-style: italic; font-size: .72em; color: var(--mink-2); }
+.mp-fig { display: block; }
+.mp-fig svg { width: 100%; max-width: 88px; height: auto; display: block; margin: 0 auto; }
+.mp-name { display: block; font-size: .78em; line-height: 1.25; margin-top: 2px; }
+.mp-name small { display: block; font-style: italic; font-size: .82em; color: var(--mink-2); }
+.mp-footer { border-top: 1px solid var(--mink-2); margin-top: 10px; padding-top: 6px; text-align: center; font-size: .62em; letter-spacing: .12em; color: var(--mink-2); line-height: 1.7; }
+.mp-footer span { letter-spacing: 0; font-style: italic; }
+.mp-empty { padding-bottom: 4px; }
+
+/* 收藏照片：復古暈影相片 */
+.shelf-photo { width: 100%; max-width: 88px; aspect-ratio: 1; object-fit: cover; border-radius: 4px; border: 3px solid #fffdf6; box-shadow: 0 1px 4px rgba(74, 58, 44, .4); filter: sepia(.18) saturate(.95); margin: 6px auto 0; display: block; }
+.shelf-photo.big { max-width: 100%; aspect-ratio: auto; }
+.shelf-noimg { font-size: 2em; display: block; padding: 18px 0; }
+
+/* 今日水晶 */
+.cod-row { display: flex; gap: 12px; align-items: flex-start; width: 100%; background: none; border: none; padding: 6px 0; cursor: pointer; color: var(--ink); text-align: left; font-family: inherit; }
+.cod-fig { flex: 0 0 88px; }
+.cod-fig svg { width: 88px; height: 88px; background: #f4efe2; border-radius: 8px; border: 1px solid #7a6a55; padding: 3px; }
+.cod-txt b { font-size: 1.05em; }
+.cod-en { font-style: italic; color: var(--ink-3); font-size: .85em; margin-left: 4px; }
+.cod-lore { color: var(--ink-3); line-height: 1.5; }
+
+/* 詳細頁 */
+.cd-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 8px; }
+.cd-fig { flex: 0 0 96px; }
+.cd-fig svg, .mineral-paper { background: #f4efe2; border: 1px solid #7a6a55; border-radius: 8px; }
+.cd-fig svg { width: 96px; height: 96px; padding: 3px; }
+.cd-fig img { width: 96px; border-radius: 8px; }
+.cd-en { font-style: italic; color: var(--ink-2); margin: 0 0 2px; }
+.chakra-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 3px; vertical-align: -1px; }
+
+/* 篩選 chips */
+.crystal-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.crystal-filters .chip { font-size: .78rem; }
+#cf-q { width: 100%; margin-top: 4px; }
+
+/* 儀式教學 */
+.ritual-crystals { display: flex; gap: 6px; overflow-x: auto; padding: 6px 0; }
+.rc-chip { flex: 0 0 auto; background: #f4efe2; color: #4a3a2c; border: 1px solid #7a6a55; border-radius: 8px; padding: 4px 8px 6px; font-size: .74rem; cursor: pointer; font-family: Georgia, "Songti TC", serif; text-align: center; }
+.rc-fig svg { width: 52px; height: 52px; display: block; margin: 0 auto; }
+.ritual-steps { margin: 10px 0 4px 2px; padding-left: 20px; display: grid; gap: 8px; font-size: .9em; line-height: 1.55; }
+.crystal-hint-link { color: var(--accent); text-decoration: underline dotted; }

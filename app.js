@@ -71,7 +71,7 @@ const store = {
   load() {
     try { this.data = JSON.parse(localStorage.getItem(DB_KEY)) || null; } catch { this.data = null; }
     if (!this.data) this.data = { dreams: [], diary: [], cbt: [], focus: [], capsules: [], customEvents: [], settings: {} };
-    for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "aiChat"]) this.data[k] ||= [];
+    for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "aiChat", "crystals"]) this.data[k] ||= [];
     this.data.settings ||= {};
     this.data.settings.symbols ||= [" 高山", "大海", "湖泊", "河流", "瀑布", "門", "迷宮", "下墜", "飛行", "追逐", "老房子", "牙齒", "樓梯", "考試", "迷路", "木", "火", "土", "金", "水",];
     this.data.settings.emotions ||= ["焦慮", "羞愧", "悲傷", "憤怒", "恐懼", "委屈", "無力", "罪惡感"];
@@ -646,7 +646,7 @@ function magicFX(mode, caption, done, { finale = "✦" } = {}) {
 }
 
 /* ---------- 分頁切換 ---------- */
-const VIEWS = { today: renderToday, dream: renderDream, cbt: renderCBT, moon: renderMoon, more: renderMore };
+const VIEWS = { today: renderToday, dream: renderDream, cbt: renderCBT, moon: renderMoon, crystal: () => renderCrystal(), more: renderMore };
 let currentTab = "today";
 function switchTab(tab) {
   currentTab = tab;
@@ -1257,6 +1257,7 @@ function openManifestRitual() {
     <div class="breath-wrap"><div class="breath-circle"></div></div>
     <p class="muted small center">先跟著圓圈呼吸三次：吸氣 4 秒・停留 7 秒・吐氣 8 秒</p>
     <div class="socratic">今天的顯化語：「${esc(aff)}」<br>閉上眼、輕聲唸出它，想像實現時的畫面，預先感受那份喜悅。</div>
+    ${typeof crystalRitualHintHTML === "function" ? crystalRitualHintHTML() : ""}
     <label class="field">今天我想顯化的意圖（用現在式、肯定句）</label>
     <textarea id="mf-intent" style="min-height:56px" placeholder="我正在……我已經……"></textarea>
     <label class="field">感謝一件此刻已擁有的事</label>
