@@ -1,4 +1,4 @@
-/* 星塵夢汐 Stardust DreamTide v0.1 — 個人內在紀錄工具，非專業醫療用途。
+/* 星塵夢汐 Stardust DreamTide v0.2 — 個人內在紀錄工具，非專業醫療用途。
    全部資料存於裝置本機（localStorage + IndexedDB），無後端、無隱私外漏問題。 */
 "use strict";
 
@@ -204,7 +204,7 @@ const SELF_COMPASSION = [
   "犯錯不會損失你的價值，是你正在學習的證據。",
   "此刻的難受會過去，你已經撐過 99% 的難關。",
   "允許自己慢慢來，我們不需要跟任何人比賽。",
-  "願意記錄自己，就是一種很深層的自我照顧。",
+  "願意記錄自己內在輪廓，就是一種很深層的自我照顧。",
 ];
 function todaySelfCompassion() {
   const d = new Date();
