@@ -72,6 +72,63 @@ const STREAK_BADGES = [
   [3, "🌱 星火"], [7, "✨ 星芒"], [14, "🌙 星軌"], [30, "🌌 星座"], [60, "🌠 星河"], [100, "💫 星系"],
 ];
 
+/* 🐚 神奇海螺碎片：每連續 3 天獲得一顆隨機顏色碎片，同色 5 顆合成一顆完整海螺（供未來技能解鎖兌換） */
+const SHELL_COLORS = [
+  { key: "purple", name: "紫色星雲", emoji: "🟣" },
+  { key: "blue", name: "藍色海潮", emoji: "🔵" },
+  { key: "pink", name: "粉紅夢境", emoji: "🌸" },
+  { key: "gold", name: "金色晨曦", emoji: "🟡" },
+  { key: "teal", name: "綠松月光", emoji: "🟢" },
+];
+const SHELL_FRAGMENTS_PER_SHELL = 5;
+function shellState() {
+  if (!store.data.settings.shells) store.data.settings.shells = { frag: {}, complete: 0, lastStreak: 0 };
+  return store.data.settings.shells;
+}
+function awardShellFragment(colorKey) {
+  const s = shellState();
+  const c = colorKey || SHELL_COLORS[Math.floor(Math.random() * SHELL_COLORS.length)].key;
+  s.frag[c] = (s.frag[c] || 0) + 1;
+  if (s.frag[c] >= SHELL_FRAGMENTS_PER_SHELL) {
+    s.frag[c] -= SHELL_FRAGMENTS_PER_SHELL;
+    s.complete = (s.complete || 0) + 1;
+  }
+  return c;
+}
+/* 連續天數每跨過一個 3 的倍數就發一顆碎片；用「前次觀察到的連續天數」判斷跨越，可正確處理中斷後重新累積 */
+function checkShellMilestone() {
+  const s = shellState();
+  const streak = calcStreak();
+  const prev = s.lastStreak || 0;
+  if (streak > prev) {
+    const crossed = Math.floor(streak / 3) - Math.floor(prev / 3);
+    for (let i = 0; i < crossed; i++) awardShellFragment();
+    if (crossed > 0) {
+      store.save();
+      toast(`🐚 連續 ${streak} 天！獲得神奇海螺碎片 ×${crossed}`);
+    }
+  }
+  s.lastStreak = streak;
+  store.save();
+}
+function shellVaultHTML() {
+  const s = shellState();
+  const streak = calcStreak();
+  const rem = streak % 3;
+  const daysToNext = rem === 0 ? 3 : 3 - rem;
+  return `
+    <h2>🐚 神奇海螺收藏寶庫 <span class="sub">${s.complete || 0} 顆完整海螺</span></h2>
+    <p class="muted small">再連續 ${daysToNext} 天，獲得一顆「🐚隨機顏色神奇海螺碎片」。同色碎片集滿 ${SHELL_FRAGMENTS_PER_SHELL} 顆會自動合成一顆完整海螺，未來可用於技能解鎖兌換。</p>
+    <div class="shell-grid">
+      ${SHELL_COLORS.map(c => `
+        <div class="shell-item shell-${c.key}">
+          <span class="shell-emoji">${c.emoji}</span>
+          <span class="shell-name">${esc(c.name)}神奇海螺</span>
+          <span class="shell-count">${s.frag[c.key] || 0}/${SHELL_FRAGMENTS_PER_SHELL}</span>
+        </div>`).join("")}
+    </div>`;
+}
+
 /* ---------- 儲存層 ---------- */
 const DB_KEY = "dreamtide.v1";
 const store = {
@@ -840,9 +897,10 @@ function magicFX(mode, caption, done, { finale = "✦", color = "gold", dur } = 
   })(t0);
 }
 
-/* ---------- 動態宇宙星空（Book of Shadows 背景：不同亮度的星光閃爍＋星雲＋流星） ----------
+/* ---------- 動態宇宙星空（Book of Shadows 背景：不同亮度的星光閃爍＋星雲＋流星＋互動漩渦） ----------
    把原本 8 顆固定 CSS 星點換成 canvas 星海：每顆星有不同亮度、色溫與呼吸閃爍，
    亮星附帶繞射星芒；緩慢漂移的星雲與偶發流星讓宇宙「活」起來。
+   觸控／滑鼠移動時，鄰近星星會被磁力吸引並產生漩渦擾動，隨距離越近而摩擦生光、越亮。
    回傳 stop() 供離開時停止動畫與移除監聽。 */
 function startCosmos(cv) {
   if (!cv || !cv.getContext) return null;
@@ -850,7 +908,10 @@ function startCosmos(cv) {
   const dpr = Math.min(devicePixelRatio || 1, 2);
   // 星色盤：白、暖金、淡紫、冷藍、琥珀
   const PALETTE = ["255,255,255", "255,242,214", "214,196,255", "188,210,255", "255,220,180"];
+  // 互動漩渦參數（座標系與星星一致，皆已乘上 dpr）
+  const MAGNETIC_RADIUS = 260 * dpr, PULL_STRENGTH = 0.1 * dpr, VORTEX_STRENGTH = 0.5 * dpr;
   let W, H, stars = [], nebulae = [], shooters = [], raf = null, t = 0;
+  const pointer = { x: -9999, y: -9999, active: false };
 
   const build = () => {
     const count = Math.min(440, Math.round((innerWidth * innerHeight) / 3600));
@@ -862,6 +923,7 @@ function startCosmos(cv) {
         tw: Math.random() * Math.PI * 2, tws: 0.006 + Math.random() * 0.035,
         col: PALETTE[Math.random() < 0.55 ? 0 : 1 + Math.floor(Math.random() * (PALETTE.length - 1))],
         dx: (Math.random() - 0.5) * 0.03 * dpr, dy: (0.01 + Math.random() * 0.03) * dpr,
+        vx: 0, vy: 0, glow: 0,
         spike: b > 0.82,
       };
     });
@@ -883,24 +945,48 @@ function startCosmos(cv) {
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   };
   const drawStar = (s) => {
+    // 磁力漩渦：靠近指標時吸引＋切線方向擾動，並隨接近程度累積「摩擦光暈」
+    const mx = pointer.x - s.x, my = pointer.y - s.y;
+    const mdist = Math.hypot(mx, my);
+    if (pointer.active && mdist < MAGNETIC_RADIUS && mdist > 0.01) {
+      const force = (MAGNETIC_RADIUS - mdist) / MAGNETIC_RADIUS;
+      s.vx += (mx / mdist) * force * PULL_STRENGTH;
+      s.vy += (my / mdist) * force * PULL_STRENGTH;
+      s.vx += (my / mdist) * force * VORTEX_STRENGTH;
+      s.vy -= (mx / mdist) * force * VORTEX_STRENGTH;
+      s.glow = Math.min(1, s.glow + force * 0.25);
+    } else {
+      s.glow *= 0.93;
+    }
+    s.vx *= 0.94; s.vy *= 0.94;
+
     const tw = s.base * (0.55 + 0.45 * Math.sin(s.tw));
-    const rr = s.r * (2.4 + 1.2 * Math.sin(s.tw));
+    const boosted = Math.min(1, tw + s.glow * 0.85);
+    const rr = s.r * (2.4 + 1.2 * Math.sin(s.tw)) * (1 + s.glow * 0.9);
     const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rr);
-    g.addColorStop(0, `rgba(${s.col},${tw})`);
-    g.addColorStop(0.5, `rgba(${s.col},${tw * 0.25})`);
+    g.addColorStop(0, `rgba(${s.col},${boosted})`);
+    g.addColorStop(0.5, `rgba(${s.col},${boosted * 0.25})`);
     g.addColorStop(1, `rgba(${s.col},0)`);
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s.x, s.y, rr, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = `rgba(${s.col},${Math.min(1, tw + 0.2)})`; // 星芯
+    if (s.glow > 0.06) { // 摩擦生光：漩渦中額外的冷光暈
+      const gg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rr * 2.4);
+      gg.addColorStop(0, `rgba(190,225,255,${s.glow * 0.5})`);
+      gg.addColorStop(1, "rgba(190,225,255,0)");
+      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(s.x, s.y, rr * 2.4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = `rgba(${s.col},${Math.min(1, boosted + 0.2)})`; // 星芯
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.6, 0, Math.PI * 2); ctx.fill();
-    if (s.spike && tw > 0.5) { // 亮星繞射星芒
-      const L = s.r * 6 * tw;
-      ctx.strokeStyle = `rgba(${s.col},${(tw - 0.5) * 0.7})`; ctx.lineWidth = dpr;
+    if (s.spike && boosted > 0.5) { // 亮星繞射星芒
+      const L = s.r * (6 + s.glow * 5) * boosted;
+      ctx.strokeStyle = `rgba(${s.col},${(boosted - 0.5) * 0.7})`; ctx.lineWidth = dpr;
       ctx.beginPath();
       ctx.moveTo(s.x - L, s.y); ctx.lineTo(s.x + L, s.y);
       ctx.moveTo(s.x, s.y - L); ctx.lineTo(s.x, s.y + L); ctx.stroke();
     }
-    s.tw += s.tws; s.x += s.dx; s.y += s.dy;
+    s.tw += s.tws;
+    s.x += s.dx + s.vx; s.y += s.dy + s.vy;
     if (s.y - rr > H) { s.y = -rr; s.x = Math.random() * W; }
+    if (s.y + rr < 0) s.y = H + rr;
     if (s.x - rr > W) s.x = -rr; else if (s.x + rr < 0) s.x = W + rr;
   };
   const drawShooter = (m) => {
@@ -928,14 +1014,28 @@ function startCosmos(cv) {
   };
   const frame = () => { t += 16; paint(); raf = requestAnimationFrame(frame); };
 
+  const onPointerMove = e => { pointer.x = e.clientX * dpr; pointer.y = e.clientY * dpr; pointer.active = true; };
+  const onTouchMove = e => {
+    if (e.touches[0]) { pointer.x = e.touches[0].clientX * dpr; pointer.y = e.touches[0].clientY * dpr; pointer.active = true; }
+  };
+  const onPointerLeave = () => { pointer.active = false; };
+
   resize();
   window.addEventListener("resize", resize);
-  if (REDUCED_MOTION) { paint(); } // 靜態一幀即可
+  window.addEventListener("mousemove", onPointerMove);
+  window.addEventListener("touchmove", onTouchMove, { passive: true });
+  window.addEventListener("touchend", onPointerLeave);
+  window.addEventListener("mouseleave", onPointerLeave);
+  if (REDUCED_MOTION) { paint(); } // 靜態一幀即可（不啟用互動漩渦）
   else frame();
 
   return () => {
     if (raf) cancelAnimationFrame(raf);
     window.removeEventListener("resize", resize);
+    window.removeEventListener("mousemove", onPointerMove);
+    window.removeEventListener("touchmove", onTouchMove);
+    window.removeEventListener("touchend", onPointerLeave);
+    window.removeEventListener("mouseleave", onPointerLeave);
   };
 }
 
@@ -943,11 +1043,73 @@ function startCosmos(cv) {
 const VIEWS = { today: renderToday, dream: renderDream, cbt: renderCBT, moon: renderMoon, crystal: () => renderCrystal(), more: renderMore };
 let currentTab = "today";
 function switchTab(tab) {
+  const changed = tab !== currentTab;
   currentTab = tab;
   $$(".tabbar button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
   $$(".view").forEach(v => v.classList.remove("active"));
   $(`#view-${tab}`).classList.add("active");
   VIEWS[tab]();
+  if (changed && !REDUCED_MOTION && Math.random() < 0.1) meteorShowerFX();
+}
+
+/* ---------- 🌠 流星雨彩蛋：切換分頁時 10% 機率觸發，附贈一顆神奇海螺碎片 ---------- */
+function meteorShowerFX() {
+  const ov = document.createElement("div");
+  ov.className = "meteor-fx";
+  ov.innerHTML = `<canvas></canvas><p class="meteor-caption">🌠 流星雨出現了，雙手合十🙏，趕快許一個願</p>`;
+  document.body.appendChild(ov);
+  const cv = $("canvas", ov);
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const W = innerWidth, H = innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.scale(dpr, dpr);
+  const DUR = 2600;
+  const meteors = Array.from({ length: 16 }, (_, i) => ({
+    sx: Math.random() * W * 1.2 - W * 0.1, sy: -30 - Math.random() * H * 0.35,
+    ang: (58 + Math.random() * 22) * Math.PI / 180, // 右上往左下的斜角軌跡
+    speed: (0.55 + Math.random() * 0.35) * (Math.max(W, H) / 900),
+    start: i * 100 + Math.random() * 260,
+    trail: 70 + Math.random() * 90,
+  }));
+  const t0 = performance.now();
+  let raf;
+  const frame = now => {
+    const t = now - t0;
+    const wash = Math.sin(Math.min(t / DUR, 1) * Math.PI); // 0→1→0，開頭結尾都淡出
+    ctx.clearRect(0, 0, W, H);
+    // 淡淡的夜幕暈染：讓流星在任何主題（含淺色背景）下都看得清楚，又不會蓋住原本畫面
+    const vg = ctx.createRadialGradient(W / 2, H * 0.3, 0, W / 2, H * 0.3, Math.max(W, H) * 0.75);
+    vg.addColorStop(0, `rgba(8,6,20,${wash * 0.22})`);
+    vg.addColorStop(1, `rgba(8,6,20,${wash * 0.08})`);
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+    meteors.forEach(m => {
+      const lt = t - m.start;
+      if (lt < 0) return;
+      const fade = Math.max(0, 1 - lt / 1500);
+      if (fade <= 0) return;
+      const dist = lt * m.speed;
+      const x = m.sx - Math.cos(m.ang) * dist, y = m.sy + Math.sin(m.ang) * dist;
+      const tx = x + Math.cos(m.ang) * m.trail, ty = y - Math.sin(m.ang) * m.trail;
+      const g = ctx.createLinearGradient(x, y, tx, ty);
+      g.addColorStop(0, `rgba(255,250,230,${fade})`);
+      g.addColorStop(1, "rgba(255,250,230,0)");
+      ctx.strokeStyle = g; ctx.lineWidth = 2.4; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(tx, ty); ctx.stroke();
+      ctx.fillStyle = `rgba(255,255,245,${fade})`;
+      ctx.beginPath(); ctx.arc(x, y, 2.1, 0, Math.PI * 2); ctx.fill();
+    });
+    if (t < DUR) raf = requestAnimationFrame(frame);
+  };
+  raf = requestAnimationFrame(frame);
+  const col = awardShellFragment();
+  store.save();
+  const info = SHELL_COLORS.find(c => c.key === col);
+  setTimeout(() => toast(`🐚 獲得「${info?.emoji || ""}${info?.name || ""}神奇海螺碎片」×1`), 900);
+  setTimeout(() => {
+    ov.style.opacity = "0";
+    setTimeout(() => { cancelAnimationFrame(raf); ov.remove(); }, 300);
+  }, DUR);
 }
 
 /* ================= 今天 ================= */
@@ -1002,7 +1164,7 @@ function openNicknameForm() {
     <h3>✨ 你希望宇宙怎麼稱呼你？</h3>
     <p class="muted small">這個名字只存在這裡，是你與星塵夢汐之間的秘密，留白也沒關係。</p>
     <label class="field">暱稱</label>
-    <input type="text" id="nk-input" maxlength="20" placeholder="Blue、Lisa、Petro⋯" value="${esc(cur)}">
+    <input type="text" id="nk-input" maxlength="20" placeholder="南港Lisa、中和李孝利" value="${esc(cur)}">
     <div class="btn-row">
       <button class="btn" id="nk-save">存起來</button>
       ${cur ? `<button class="btn secondary" id="nk-clear">不設定</button>` : `<button class="btn secondary" id="nk-cancel">先跳過</button>`}
@@ -1060,7 +1222,7 @@ function openBookLanding({ force = false } = {}) {
              <button class="btn secondary" id="book-editname">✎ 改個名字</button>
            </div>`
         : `<label class="field book-label">你希望宇宙怎麼稱呼你？</label>
-           <input type="text" id="book-nick" maxlength="20" placeholder="Blue、Lisa、Petro⋯" autocomplete="off">
+           <input type="text" id="book-nick" maxlength="20" placeholder="南港Lisa、中和李孝利" autocomplete="off">
            <div class="book-actions">
              <button class="btn book-open-btn" id="book-open">✨ 寫上我的名字，解除封印，打開魔法書</button>
            </div>`}
@@ -1212,17 +1374,22 @@ function renderDream() {
     <div class="card center">
       <h2 style="justify-content:center">黃金 90 秒 — 醒來立刻紀錄</h2>
       <button class="mic-big" id="dream-mic">🎙️<small>開始紀錄夢境</small></button>
-      <p class="muted small">按下後直接說：畫面、人物、地點、情緒、顏色。<br>說完會自動幫你標記欄位。</p>
+      <p class="muted small">直接說出：畫面、人物、事件、地點、情緒、顏色。<br>任何你記得的情節，自動幫你標記欄位。</p>
     </div>
     <div class="card locked-card">
       <h2>🌌 星塵樹洞 <span class="sub">傾聽你的秘密</span></h2>
       <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
-      <p class="muted small">星塵樹洞會靜靜聆聽你不能對別人說的話。<br>技能解鎖後，這裡會亮起 💬。</p>
+      <p class="muted small">星塵樹洞AI能靜靜聆聽你不想告訴別人的話，陪伴你分享心情或聊天。</p>
     </div>
     <div class="card locked-card">
       <h2>🖼 夢境圖鑑 <span class="sub">共 ${dreams.length} 則</span></h2>
       <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
-      <p class="muted small">夢境圖鑑將收錄你所有的夢境，為你編織出內心世界的視覺地圖。<br>技能解鎖後，這裡會亮起 🖼。</p>
+      <p class="muted small">收錄你的夢境，為你排列出內心世界的魔幻地圖；技能解鎖後，這裡會成為你的夢境美術館 🎨</p>
+    </div>
+    <div class="card locked-card">
+      <h2>🪬 心願購物車 <span class="sub">許願清單</span></h2>
+      <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
+      <p class="muted small">儲存自己的購物清單，成為每天努力的原動力😍</p>
     </div>
     <div class="card">
       <h2>夢境記錄 <span class="sub">共 ${dreams.length} 則</span></h2>
@@ -1977,9 +2144,10 @@ function renderMoon() {
       entryDates.diary.has(ds) ? `<i class="dot-diary"></i>` : "",
       entryDates.cbt.has(ds) ? `<i class="dot-cbt"></i>` : "",
     ].join("");
-    /* 新月／滿月用外框高亮：0=新月、4=滿月（moonInfo 的 idx） */
-    const phaseIdx = Math.round(mi.age / SYNODIC * 8) % 8;
-    const phaseClass = phaseIdx === 0 ? "newmoon" : phaseIdx === 4 ? "fullmoon" : "";
+    /* 新月／滿月用外框高亮：僅顯示「開始後 3 天內」（不往回追溯） */
+    const sinceNew = (mi.age - 0 + SYNODIC) % SYNODIC;
+    const sinceFull = (mi.age - SYNODIC / 2 + SYNODIC) % SYNODIC;
+    const phaseClass = sinceNew < 3 ? "newmoon" : sinceFull < 3 ? "fullmoon" : "";
     const isToday = ds === todayStr();
     cells += `<div class="cal-cell ${isToday ? "today" : ""} ${phaseClass}" data-date="${ds}">
       <span>${day}</span><span class="moon">${mi.e}</span><span class="dots">${dots}</span></div>`;
@@ -2163,6 +2331,7 @@ function renderMore() {
       </div>
     </div>
     <div class="card"><h2>📊 洞察</h2><div id="insights"></div></div>
+    <div class="card">${shellVaultHTML()}</div>
     <div class="card">
       <h2>📈 內在報告</h2>
       <p class="muted small">回顧一段時間的自己：情緒的喜怒哀樂、夢的符號、思考的鬆動，可匯出帶去諮商或回診參考。</p>
@@ -2215,6 +2384,11 @@ function renderMore() {
       <h2>💬 提供建議</h2>
       <p class="muted small">分享你對星塵夢汐的想法和建議，幫助我們不斷優化功能。</p>
       <div class="btn-row"><button class="btn" id="feedback-btn">✨ 分享你的靈感</button></div>
+    </div>
+    <div class="card">
+      <h2>🔮 命理顧問服務</h2>
+      <p class="muted small">想更深入了解自己的命盤，也可以跟 Blue 分享好笑的事。</p>
+      <div class="btn-row"><a class="btn" href="https://lin.ee/NhElh5L" target="_blank" rel="noopener">💬 加入 LINE 官方帳號</a></div>
     </div>
     <p class="disclaimer">星塵夢汐僅供自我紀錄，非供替代專業醫療，不提供分析治療。</p>`;
   $$("[data-report]", el).forEach(b => b.addEventListener("click", () => openReport(+b.dataset.report, b.textContent.trim())));
@@ -2939,6 +3113,7 @@ function checkEventNotifications() {
   // 每次進入 App 都打開個人魔法書；user 若曾按過「跳過」則直接進本文
   if (!store.data.settings.skipBook) setTimeout(() => openBookLanding(), 60);
   checkEventNotifications();
+  checkShellMilestone();
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     navigator.serviceWorker.register("sw.js").then(async reg => {
       // Android Chrome：App 沒開也能背景檢查天象（best-effort，隨使用頻率調度）
