@@ -3764,7 +3764,7 @@ function renderAccountBox() {
       <button class="btn secondary" id="acc-email">✉️ 用 Email 註冊新帳號</button>
       ${acc.email ? `<button class="btn ghost" id="acc-logout">登出目前帳號</button>` : ""}
     </div>
-    <p class="muted small" style="margin-top:8px">個人資料儲存於你的 Google／Apple／Email 帳號中；系統後台僅記錄 email 作為之後的功能更新通知。</p>`;
+    <p class="muted small" style="margin-top:8px">個人資料儲存於你的 Google／Apple／Email 帳號中；系統後台僅記錄 email，作為新功能搶先體驗與優惠碼接收用。</p>`;
   $("#acc-google", box).addEventListener("click", () => {
     if (typeof cloudSignIn === "function") {
       cloudSignIn();
@@ -3818,7 +3818,7 @@ function openEmailRegisterForm() {
     <input type="email" id="em-email" placeholder="you@example.com" value="${esc(cur.email || "")}">
     <label class="field">暱稱（選填）</label>
     <input type="text" id="em-name" maxlength="20" placeholder="宇宙怎麼稱呼你？" value="${esc(store.data.settings.nickname || "")}">
-    <label class="field"><input type="checkbox" id="em-optin" checked> 我同意將 email 加入星塵夢汐的功能更新通知</label>
+    <label class="field"><input type="checkbox" id="em-optin" checked> 我想搶先體驗新功能，並接收專屬優惠碼</label>
     <div class="btn-row">
       <button class="btn" id="em-save">建立星塵帳號</button>
       <button class="btn secondary" id="em-cancel">取消</button>
