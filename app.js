@@ -71,7 +71,7 @@ const store = {
   load() {
     try { this.data = JSON.parse(localStorage.getItem(DB_KEY)) || null; } catch { this.data = null; }
     if (!this.data) this.data = { dreams: [], diary: [], cbt: [], focus: [], capsules: [], customEvents: [], settings: {} };
-    for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "aiChat", "crystals", "notes", "todos"]) this.data[k] ||= [];
+    for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "aiChat", "crystals", "notes", "todos", "feedback"]) this.data[k] ||= [];
     this.data.settings ||= {};
     this.data.settings.symbols ||= [" 高山", "大海", "湖泊", "河流", "瀑布", "門", "迷宮", "下墜", "飛行", "追逐", "老房子", "牙齒", "樓梯", "考試", "迷路", "木", "火", "土", "金", "水",];
     this.data.settings.emotions ||= ["焦慮", "羞愧", "悲傷", "憤怒", "恐懼", "委屈", "無力", "罪惡感"];
@@ -949,8 +949,13 @@ function renderDream() {
       <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
       <p class="muted small">星塵樹洞會靜靜聆聽你不能對別人說的話。<br>技能解鎖後，這裡會亮起 💬。</p>
     </div>
+    <div class="card locked-card">
+      <h2>🖼 夢境圖鑑 <span class="sub">共 ${dreams.length} 則</span></h2>
+      <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
+      <p class="muted small">夢境圖鑑將收錄你所有的夢境，為你編織出內心世界的視覺地圖。<br>技能解鎖後，這裡會亮起 🖼。</p>
+    </div>
     <div class="card">
-      <h2>夢境圖鑑 <span class="sub">共 ${dreams.length} 則</span></h2>
+      <h2>夢境記錄 <span class="sub">共 ${dreams.length} 則</span></h2>
       ${dreams.length === 0 ? `<p class="muted">尚無夢境紀錄。</p>` : ""}
       <div id="dream-list"></div>
     </div>`;
@@ -1936,7 +1941,12 @@ function renderMore() {
       <input type="file" id="imp-file" accept=".json" class="hidden">
       <p class="muted small" style="margin-top:8px">Markdown 適合當諮商、回診回顧筆記；JSON 是完整備份。天象提醒最可靠的方式是月相頁的「匯出天象行事曆」。</p>
     </div>
-    <p class="disclaimer">星塵夢汐是自我紀錄工具，非供替代專業醫療，不提供分析、治療或諮商。<br>紀錄能在整理後，與你的醫師／心理師討論。</p>`;
+    <div class="card">
+      <h2>💬 提供建議</h2>
+      <p class="muted small">分享你對星塵夢汐的想法和建議，幫助我們不斷優化功能。</p>
+      <div class="btn-row"><button class="btn" id="feedback-btn">✨ 分享你的靈感</button></div>
+    </div>
+    <p class="disclaimer">星塵夢汐僅供自我紀錄，非供替代專業醫療，不提供分析治療。</p>`;
   $$("[data-report]", el).forEach(b => b.addEventListener("click", () => openReport(+b.dataset.report, b.textContent.trim())));
   $$(".theme-swatch", el).forEach(b => b.addEventListener("click", () => {
     store.data.settings.theme = applyTheme(b.dataset.themeKey);
@@ -1977,6 +1987,7 @@ function renderMore() {
     const p = await Notification.requestPermission();
     toast(p === "granted" ? "通知已開啟 🔔（App 開啟時會提醒天象）" : "沒有取得通知權限");
   });
+  $("#feedback-btn").addEventListener("click", openFeedbackForm);
 }
 
 /* --- 番茄鐘 --- */
@@ -2526,6 +2537,50 @@ async function registerMarketingEmail(email, provider = "email", nickname = "") 
       body: JSON.stringify({ email, provider, nickname }),
     });
   } catch { /* offline / 後端未啟用時靜默忽略；帳號仍存在本機 */ }
+}
+
+function openFeedbackForm() {
+  const m = modal(`
+    <h3>✨ 分享你的靈感</h3>
+    <p class="muted small">你的建議幫助星塵夢汐變得更好。</p>
+    <label class="field">你的建議</label>
+    <textarea id="fb-content" placeholder="分享你對功能、設計、體驗的任何想法..." rows="6"></textarea>
+    <label class="field">聯絡方式（選填）</label>
+    <input type="email" id="fb-email" placeholder="email@example.com（若想收取回覆）">
+    <div class="btn-row">
+      <button class="btn" id="fb-save">提交建議</button>
+      <button class="btn ghost" id="fb-cancel">取消</button>
+    </div>
+  `);
+  $("#fb-cancel", m).addEventListener("click", () => m.remove());
+  $("#fb-save", m).addEventListener("click", () => {
+    const content = $("#fb-content", m).value.trim();
+    const email = $("#fb-email", m).value.trim();
+    if (!content) return toast("請分享你的想法");
+    const feedback = {
+      id: uid(),
+      content,
+      email,
+      date: todayStr(),
+      time: tstr(new Date()),
+    };
+    store.data.feedback ||= [];
+    store.data.feedback.push(feedback);
+    store.save();
+    m.remove();
+    submitFeedback(feedback);
+    toast("感謝你的寶貴建議 ✨");
+  });
+}
+
+async function submitFeedback(feedback) {
+  try {
+    await fetch("api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(feedback),
+    });
+  } catch { /* offline / 後端未啟用時靜默忽略；建議仍存在本機 */ }
 }
 
 /* --- 匯出／匯入 --- */
