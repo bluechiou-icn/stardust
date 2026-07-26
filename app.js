@@ -148,9 +148,9 @@ function shellVaultHTML() {
   return `
     <h2>🐚 神奇海螺收藏寶庫 <span class="sub beta-tag">測試中</span></h2>
     <p class="muted small">
-      目前擁有 <b>${s.complete || 0}</b> 顆完整海螺、<b>${s.charges || 0}</b> 次召喚機會。
+      目前擁有 <b>${s.complete || 0}</b> 顆完整神奇海螺、<b>${s.charges || 0}</b> 次召喚機會。
       再連續紀錄 ${daysToNext} 天，或再完成 ${todosToNext} 件待辦，就能開啟一次召喚儀式；
-      同元素碎片集滿 ${SHELL_FRAGMENTS_PER_SHELL} 顆會自動合成一顆完整海螺，未來可用於技能解鎖兌換。
+      同元素碎片集滿 ${SHELL_FRAGMENTS_PER_SHELL} 顆會自動合成一顆完整神奇海螺，未來可用於技能解鎖啟動。
     </p>
     <div class="shell-grid">
       ${SHELL_COLORS.map(c => `
@@ -160,11 +160,11 @@ function shellVaultHTML() {
           <span class="shell-count">${s.frag[c.key] || 0}/${SHELL_FRAGMENTS_PER_SHELL}</span>
         </div>`).join("")}
     </div>
-    <div class="btn-row"><button class="btn" id="vault-summon">🔮 前往召喚祭壇${s.charges ? `（${s.charges} 次）` : ""}</button></div>`;
+    <div class="btn-row"><button class="btn" id="vault-summon">🔮 前往神奇海螺召喚祭壇${s.charges ? `（${s.charges} 次）` : ""}</button></div>`;
 }
 
 /* ---------- 心情 5 Level（心情日曆用；圖示可自訂） ----------
-   level 1 = 最好、5 = 最壞；日曆格子只顯示圖示，方便和上方月相對照。 */
+   level 1 = 最好、5 = 最壞；日曆格子只顯示圖示，方便和上方月相盈缺對照。 */
 const MOOD_LABELS = ["大晴天", "晴天", "陰天", "雨天", "颱風天"];
 const MOOD_SETS = {
   weather: { name: "天氣", icons: ["☀️", "🌤", "☁️", "🌧", "🌪"] },
