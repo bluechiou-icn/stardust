@@ -135,7 +135,7 @@ function checkSummonCharges({ silent = false } = {}) {
   s.lastTodoDone = done;
   if (gained > 0) s.charges = (s.charges || 0) + gained;
   store.save();
-  if (gained > 0 && !silent) toast(`🔮 解鎖 ${gained} 次神奇海螺召喚儀式！到「召喚」分頁試手氣`);
+  if (gained > 0 && !silent) toast(`🔮 解鎖 ${gained} 次神奇海螺召喚儀式！到「召喚」分頁啟動神奇海螺的能量`);
   return gained;
 }
 function shellVaultHTML() {
@@ -165,7 +165,7 @@ function shellVaultHTML() {
 
 /* ---------- 心情 5 Level（心情日曆用；圖示可自訂） ----------
    level 1 = 最好、5 = 最壞；日曆格子只顯示圖示，方便和上方月相盈缺對照。 */
-const MOOD_LABELS = ["大晴天", "晴天", "陰天", "雨天", "颱風天"];
+const MOOD_LABELS = ["大晴天", "晴天", "陰天", "雨天", "颱風天（或軟今天）"];
 const MOOD_SETS = {
   weather: { name: "天氣", icons: ["☀️", "🌤", "☁️", "🌧", "🌪"] },
   color:   { name: "顏色", icons: ["🟩", "🟦", "🟨", "🟧", "🟥"] },
