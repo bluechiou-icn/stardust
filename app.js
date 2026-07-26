@@ -577,17 +577,21 @@ const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const SIGIL_GLYPHS = ["☉", "☽", "☿", "♀", "♂", "♃", "♄", "א", "ב", "ג", "ה", "ש"];
 /* 顏色主題：金色（顯化）／紫色（Doctor Strange 風・開書儀式） */
 const SIGIL_THEMES = {
-  gold: { ink: "232,200,116", glow: "232,160,60", paper: "232,217,176", inkDark: "90,60,20" },
-  purple: { ink: "196,164,255", glow: "170,120,255", paper: "48,26,84", inkDark: "230,210,255" },
+  gold: { ink: "232,200,116", glow: "255,186,64", accent: "196,164,255", spark: "255,214,140", paper: "232,217,176", inkDark: "90,60,20" },
+  purple: { ink: "196,164,255", glow: "180,130,255", accent: "245,205,120", spark: "220,190,255", paper: "48,26,84", inkDark: "230,210,255" },
 };
 function magicFX(mode, caption, done, { finale = "✦", color = "gold", dur } = {}) {
   if (REDUCED_MOTION) { done?.(); return; }
-  const DUR = dur || (mode === "pensieve" ? 1900 : 2700);
+  const DUR = dur || (mode === "pensieve" ? 1900 : 3000);
   const ov = document.createElement("div");
   ov.className = "fx-overlay";
   ov.innerHTML = `<canvas></canvas><p class="fx-caption">${esc(caption)}</p><p class="fx-skip">輕觸跳過</p>`;
   document.body.appendChild(ov);
   const cv = $("canvas", ov), cap = $(".fx-caption", ov);
+  if (mode === "sigil" && color === "purple") {
+    cap.style.color = "#dcc4ff";
+    cap.style.textShadow = "0 0 14px rgba(180,130,255,.7)";
+  }
   const dpr = Math.min(devicePixelRatio || 1, 2);
   cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
   const ctx = cv.getContext("2d");
@@ -627,49 +631,205 @@ function magicFX(mode, caption, done, { finale = "✦", color = "gold", dur } = 
     ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, cy, R * 0.55, R * 0.3, 0, 0, Math.PI * 2); ctx.fill();
   }
 
-  /* 魔法陣：雙環＋六芒星逐筆繪製 → 行星與希伯來字浮現 → 金／紫光烙印羊皮紙 */
+  /* 魔法陣：Doctor Strange 風・紫金交織的動態曼陀羅
+     多層同心環反向旋轉 → 星形幾何與符文漸次浮現 → 靈光火花四射 → 金／紫光烙印 */
   const theme = SIGIL_THEMES[color] || SIGIL_THEMES.gold;
-  const seg = (x1, y1, x2, y2, q) => { // q: 0–1 畫這條線的進度
-    if (q <= 0) return;
-    ctx.beginPath(); ctx.moveTo(x1, y1);
-    ctx.lineTo(x1 + (x2 - x1) * Math.min(q, 1), y1 + (y2 - y1) * Math.min(q, 1)); ctx.stroke();
+  const rgba = (c, a) => `rgba(${c},${a})`;
+  const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
+  const ph = (p, a, b) => clamp01((p - a) / (b - a)); // 把整體進度映射到 [a,b] 段
+  const sparks = [];
+  let ignited = false;
+
+  const spawnSpark = (ang, rad, spd, col, grav = -0.006) => {
+    if (sparks.length > 150) return;
+    sparks.push({
+      x: cx + Math.cos(ang) * rad, y: cy + Math.sin(ang) * rad,
+      vx: Math.cos(ang) * spd + (Math.random() - 0.5) * 0.7,
+      vy: Math.sin(ang) * spd + (Math.random() - 0.5) * 0.7,
+      life: 1, decay: 0.008 + Math.random() * 0.02,
+      size: 0.6 + Math.random() * 1.8, col, grav,
+    });
   };
-  const tri = (rot, q) => {
-    const pts = [0, 1, 2].map(i => [cx + R * 0.74 * Math.cos(rot + i * 2 * Math.PI / 3), cy + R * 0.74 * Math.sin(rot + i * 2 * Math.PI / 3)]);
-    for (let i = 0; i < 3; i++) seg(...pts[i], ...pts[(i + 1) % 3], q * 3 - i);
+  const drawSparks = () => {
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i];
+      s.x += s.vx; s.y += s.vy; s.vy += s.grav;
+      s.vx *= 0.99; s.vy *= 0.99; s.life -= s.decay;
+      if (s.life <= 0) { sparks.splice(i, 1); continue; }
+      const rr = s.size * 3, a = s.life * 0.9;
+      const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rr);
+      g.addColorStop(0, rgba(s.col, a));
+      g.addColorStop(0.4, rgba(s.col, a * 0.5));
+      g.addColorStop(1, rgba(s.col, 0));
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(s.x, s.y, rr, 0, Math.PI * 2); ctx.fill();
+    }
   };
+
+  // 漸進圓環
+  const ring = (r, lw, col, prog, glow, from = -Math.PI / 2) => {
+    if (prog <= 0) return;
+    ctx.lineWidth = lw; ctx.strokeStyle = col;
+    if (glow) { ctx.shadowColor = glow; ctx.shadowBlur = 12; }
+    ctx.beginPath(); ctx.arc(cx, cy, r, from, from + prog * Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+  };
+  // 環上放射刻度（細密曼陀羅感；每三格一長刻）
+  const ticks = (r, n, len, col, prog) => {
+    if (prog <= 0) return;
+    ctx.lineWidth = 1; ctx.strokeStyle = col;
+    const show = Math.floor(prog * n);
+    for (let i = 0; i < show; i++) {
+      const a = -Math.PI / 2 + i * 2 * Math.PI / n, c = Math.cos(a), s = Math.sin(a);
+      const l = (i % 3 === 0) ? len * 1.9 : len;
+      ctx.beginPath();
+      ctx.moveTo(cx + c * r, cy + s * r); ctx.lineTo(cx + c * (r + l), cy + s * (r + l)); ctx.stroke();
+    }
+  };
+  // 漸進星形多邊形 {n/step}（依跳點順序連線）
+  const starPoly = (r, n, step, rot, col, prog, glow) => {
+    if (prog <= 0) return;
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const a = rot + ((i * step) % n) * 2 * Math.PI / n;
+      pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+    }
+    ctx.lineWidth = 1.3; ctx.strokeStyle = col;
+    if (glow) { ctx.shadowColor = glow; ctx.shadowBlur = 9; }
+    const drawn = prog * n;
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 0; i < n; i++) {
+      const q = clamp01(drawn - i); if (q <= 0) break;
+      const p0 = pts[i], p1 = pts[(i + 1) % n];
+      ctx.lineTo(p0[0] + (p1[0] - p0[0]) * q, p0[1] + (p1[1] - p0[1]) * q);
+    }
+    ctx.stroke(); ctx.shadowBlur = 0;
+  };
+  // 漸進三角（六芒星用兩個）
+  const triAt = (r, rot, col, prog, glow) => {
+    if (prog <= 0) return;
+    const pts = [0, 1, 2].map(i => [cx + r * Math.cos(rot + i * 2 * Math.PI / 3), cy + r * Math.sin(rot + i * 2 * Math.PI / 3)]);
+    ctx.lineWidth = 1.3; ctx.strokeStyle = col;
+    if (glow) { ctx.shadowColor = glow; ctx.shadowBlur = 8; }
+    const drawn = prog * 3;
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 0; i < 3; i++) {
+      const q = clamp01(drawn - i); if (q <= 0) break;
+      const p0 = pts[i], p1 = pts[(i + 1) % 3];
+      ctx.lineTo(p0[0] + (p1[0] - p0[0]) * q, p0[1] + (p1[1] - p0[1]) * q);
+    }
+    ctx.stroke(); ctx.shadowBlur = 0;
+  };
+  // 蓮花瓣環
+  const petals = (r, n, col, prog) => {
+    if (prog <= 0) return;
+    ctx.lineWidth = 1; ctx.strokeStyle = col;
+    const show = prog * n;
+    for (let i = 0; i < n; i++) {
+      if (show - i <= 0) break;
+      const a = -Math.PI / 2 + i * 2 * Math.PI / n;
+      ctx.beginPath();
+      ctx.ellipse(cx + Math.cos(a) * r, cy + Math.sin(a) * r, r * 0.52, r * 0.2, a, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  };
+
   function drawSigil(p) {
-    ctx.clearRect(0, 0, W, H);
-    const burning = p > 0.78;
-    if (burning) { // 羊皮紙浮現
-      const a = (p - 0.78) / 0.22;
-      ctx.fillStyle = `rgba(${theme.paper},${a * 0.92})`; ctx.fillRect(0, 0, W, H);
+    const burning = p > 0.8;
+    // 背景：暗色拖影（煙霧與能量殘影）／烙印時的羊皮紙浮現
+    if (burning) {
+      const a = ph(p, 0.8, 1);
+      ctx.fillStyle = rgba(theme.paper, a * 0.94); ctx.fillRect(0, 0, W, H);
       cap.textContent = `${finale} 烙印完成`;
-    } else { ctx.fillStyle = "rgba(10,9,20,0.92)"; ctx.fillRect(0, 0, W, H); }
+    } else {
+      ctx.fillStyle = "rgba(8,6,16,0.34)"; ctx.fillRect(0, 0, W, H);
+    }
+
+    const mainC = burning ? theme.inkDark : theme.ink;
+    const accC = burning ? theme.inkDark : theme.accent;
+    const glowMain = burning ? rgba(theme.glow, 0.9) : rgba(theme.ink, 0.85);
+    const glowAcc = rgba(theme.accent, 0.7);
+
+    // 中央能量核心光暈（呼吸脈動）
+    const pulse = 0.5 + 0.5 * Math.sin(p * Math.PI * 7);
+    const coreA = burning ? ph(1 - p, 0, 0.2) * 0.35 : 0.1 + 0.15 * pulse;
+    if (coreA > 0.002) {
+      const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * (0.7 + 0.3 * pulse));
+      cg.addColorStop(0, rgba(theme.glow, coreA));
+      cg.addColorStop(0.45, rgba(theme.accent, coreA * 0.45));
+      cg.addColorStop(1, rgba(theme.glow, 0));
+      ctx.fillStyle = cg; ctx.fillRect(0, 0, W, H);
+    }
+
+    const spin = p * 1.1;
+
+    // === 外層（順時針）：外環＋刻度＋十二芒星＋符文 ===
     ctx.save();
-    ctx.translate(cx, cy); ctx.rotate(p * 0.35); ctx.translate(-cx, -cy);
-    const ink = burning ? `rgba(${theme.inkDark},` : `rgba(${theme.ink},`;
-    ctx.lineWidth = 1.6;
-    ctx.shadowColor = burning ? `rgba(${theme.glow},0.9)` : `rgba(${theme.ink},0.8)`;
-    ctx.shadowBlur = burning ? 26 : 8 + 10 * Math.sin(p * Math.PI * 2);
-    ctx.strokeStyle = ink + "0.95)";
-    const q1 = Math.min(p / 0.3, 1); // 外環
-    ctx.beginPath(); ctx.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + q1 * Math.PI * 2); ctx.stroke();
-    const q2 = Math.min(Math.max((p - 0.12) / 0.3, 0), 1); // 內環
-    ctx.beginPath(); ctx.arc(cx, cy, R * 0.8, Math.PI / 2, Math.PI / 2 + q2 * Math.PI * 2); ctx.stroke();
-    const q3 = Math.max((p - 0.28) / 0.34, 0); // 六芒星（雙三角）
-    tri(-Math.PI / 2, q3); tri(Math.PI / 2, q3);
-    const gp = Math.max((p - 0.5) / 0.28, 0); // 環間符文
-    ctx.font = `${Math.round(R * 0.12)}px system-ui`;
+    ctx.translate(cx, cy); ctx.rotate(spin); ctx.translate(-cx, -cy);
+    ring(R, 2, rgba(mainC, 0.95), ph(p, 0, 0.22), glowMain);
+    ring(R * 0.94, 1, rgba(accC, 0.75), ph(p, 0.06, 0.28), glowAcc);
+    ticks(R * 0.94, 60, R * 0.03, rgba(accC, 0.8), ph(p, 0.1, 0.34));
+    starPoly(R * 0.86, 12, 5, 0, rgba(mainC, 0.9), ph(p, 0.24, 0.5), glowMain);
+    const gp = ph(p, 0.3, 0.56); // 符文環（行星＋希伯來字）隨曼陀羅旋轉
+    ctx.font = `${Math.round(R * 0.11)}px system-ui`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.shadowColor = glowMain; ctx.shadowBlur = burning ? 14 : 6;
     SIGIL_GLYPHS.forEach((g, i) => {
-      const alpha = Math.min(Math.max(gp * SIGIL_GLYPHS.length - i, 0), 1);
-      if (!alpha) return;
+      const alpha = clamp01(gp * SIGIL_GLYPHS.length - i); if (!alpha) return;
       const ang = -Math.PI / 2 + i * 2 * Math.PI / SIGIL_GLYPHS.length;
-      ctx.fillStyle = ink + alpha * 0.95 + ")";
+      ctx.fillStyle = rgba(mainC, alpha * 0.95);
       ctx.fillText(g, cx + R * 0.9 * Math.cos(ang), cy + R * 0.9 * Math.sin(ang));
     });
+    ctx.shadowBlur = 0;
     ctx.restore();
+
+    // === 內層（逆時針）：內環＋六芒星＋蓮花瓣 ===
+    ctx.save();
+    ctx.translate(cx, cy); ctx.rotate(-spin * 1.5); ctx.translate(-cx, -cy);
+    ring(R * 0.66, 1.4, rgba(mainC, 0.85), ph(p, 0.14, 0.34), glowMain);
+    ticks(R * 0.66, 36, R * 0.022, rgba(accC, 0.7), ph(p, 0.2, 0.4));
+    const hx = ph(p, 0.36, 0.6); // 六芒星：金／紫兩個三角交疊
+    triAt(R * 0.55, -Math.PI / 2, rgba(accC, 0.9), hx, glowAcc);
+    triAt(R * 0.55, Math.PI / 2, rgba(mainC, 0.9), hx, glowMain);
+    petals(R * 0.32, 8, rgba(accC, 0.55), ph(p, 0.5, 0.74));
+    ring(R * 0.2, 1, rgba(mainC, 0.7), ph(p, 0.4, 0.6), glowMain);
+    ctx.restore();
+
+    // === 中央符印 ===
+    const cf = ph(p, 0.6, 0.8);
+    if (cf > 0) {
+      ctx.save();
+      ctx.font = `${Math.round(R * 0.26)}px serif`;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.shadowColor = rgba(theme.glow, 1); ctx.shadowBlur = 20 * cf;
+      ctx.fillStyle = rgba(burning ? theme.inkDark : theme.glow, cf);
+      ctx.fillText(finale, cx, cy);
+      ctx.restore();
+    }
+
+    // === 火花／餘燼 ===
+    if (!burning) {
+      if (p > 0.05) {
+        const em = 1 + Math.floor(pulse * 2);
+        for (let k = 0; k < em; k++) {
+          const a = Math.random() * Math.PI * 2;
+          spawnSpark(a, R * (0.55 + Math.random() * 0.42), 0.6 + Math.random() * 1.2,
+            Math.random() > 0.5 ? theme.spark : theme.accent);
+        }
+      }
+    } else if (!ignited) {
+      ignited = true; // 點燃瞬間向外爆發
+      for (let k = 0; k < 80; k++) {
+        const a = Math.random() * Math.PI * 2;
+        spawnSpark(a, R * 0.5, 2 + Math.random() * 4,
+          Math.random() > 0.4 ? theme.spark : theme.glow, 0.02);
+      }
+    }
+    if (burning) { // 點燃衝擊波
+      const sw = ph(p, 0.8, 0.96);
+      ring(R * (0.9 + sw * 1.4), 2.5, rgba(theme.glow, (1 - sw) * 0.8), 1, rgba(theme.glow, 0.8));
+    }
+    drawSparks();
   }
 
   (function frame(now) {
@@ -678,6 +838,105 @@ function magicFX(mode, caption, done, { finale = "✦", color = "gold", dur } = 
     if (p >= 1) return finish();
     raf = requestAnimationFrame(frame);
   })(t0);
+}
+
+/* ---------- 動態宇宙星空（Book of Shadows 背景：不同亮度的星光閃爍＋星雲＋流星） ----------
+   把原本 8 顆固定 CSS 星點換成 canvas 星海：每顆星有不同亮度、色溫與呼吸閃爍，
+   亮星附帶繞射星芒；緩慢漂移的星雲與偶發流星讓宇宙「活」起來。
+   回傳 stop() 供離開時停止動畫與移除監聽。 */
+function startCosmos(cv) {
+  if (!cv || !cv.getContext) return null;
+  const ctx = cv.getContext("2d");
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  // 星色盤：白、暖金、淡紫、冷藍、琥珀
+  const PALETTE = ["255,255,255", "255,242,214", "214,196,255", "188,210,255", "255,220,180"];
+  let W, H, stars = [], nebulae = [], shooters = [], raf = null, t = 0;
+
+  const build = () => {
+    const count = Math.min(440, Math.round((innerWidth * innerHeight) / 3600));
+    stars = Array.from({ length: Math.max(80, count) }, () => {
+      const b = Math.pow(Math.random(), 2.2); // 亮度分布：暗星多、亮星稀
+      return {
+        x: Math.random() * W, y: Math.random() * H,
+        r: (0.35 + b * 2.1) * dpr, base: 0.2 + b * 0.8,
+        tw: Math.random() * Math.PI * 2, tws: 0.006 + Math.random() * 0.035,
+        col: PALETTE[Math.random() < 0.55 ? 0 : 1 + Math.floor(Math.random() * (PALETTE.length - 1))],
+        dx: (Math.random() - 0.5) * 0.03 * dpr, dy: (0.01 + Math.random() * 0.03) * dpr,
+        spike: b > 0.82,
+      };
+    });
+    nebulae = [
+      { x: W * 0.28, y: H * 0.32, r: Math.max(W, H) * 0.55, col: "92,52,150", a: 0.1, ph: 0 },
+      { x: W * 0.75, y: H * 0.68, r: Math.max(W, H) * 0.5, col: "40,60,140", a: 0.08, ph: 2 },
+      { x: W * 0.6, y: H * 0.14, r: Math.max(W, H) * 0.42, col: "150,80,170", a: 0.06, ph: 4 },
+    ];
+  };
+  const resize = () => {
+    W = cv.width = innerWidth * dpr; H = cv.height = innerHeight * dpr;
+    cv.style.width = innerWidth + "px"; cv.style.height = innerHeight + "px";
+    build();
+  };
+  const drawNebula = (n) => {
+    const a = n.a * (0.7 + 0.3 * Math.sin(t * 0.0006 + n.ph));
+    const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
+    g.addColorStop(0, `rgba(${n.col},${a})`); g.addColorStop(1, `rgba(${n.col},0)`);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  };
+  const drawStar = (s) => {
+    const tw = s.base * (0.55 + 0.45 * Math.sin(s.tw));
+    const rr = s.r * (2.4 + 1.2 * Math.sin(s.tw));
+    const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rr);
+    g.addColorStop(0, `rgba(${s.col},${tw})`);
+    g.addColorStop(0.5, `rgba(${s.col},${tw * 0.25})`);
+    g.addColorStop(1, `rgba(${s.col},0)`);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s.x, s.y, rr, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(${s.col},${Math.min(1, tw + 0.2)})`; // 星芯
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.6, 0, Math.PI * 2); ctx.fill();
+    if (s.spike && tw > 0.5) { // 亮星繞射星芒
+      const L = s.r * 6 * tw;
+      ctx.strokeStyle = `rgba(${s.col},${(tw - 0.5) * 0.7})`; ctx.lineWidth = dpr;
+      ctx.beginPath();
+      ctx.moveTo(s.x - L, s.y); ctx.lineTo(s.x + L, s.y);
+      ctx.moveTo(s.x, s.y - L); ctx.lineTo(s.x, s.y + L); ctx.stroke();
+    }
+    s.tw += s.tws; s.x += s.dx; s.y += s.dy;
+    if (s.y - rr > H) { s.y = -rr; s.x = Math.random() * W; }
+    if (s.x - rr > W) s.x = -rr; else if (s.x + rr < 0) s.x = W + rr;
+  };
+  const drawShooter = (m) => {
+    m.x += m.vx; m.y += m.vy; m.life -= 0.012;
+    const inv = 1 / Math.hypot(m.vx, m.vy), tail = 80 * dpr;
+    const ex = m.x - m.vx * inv * tail, ey = m.y - m.vy * inv * tail;
+    const g = ctx.createLinearGradient(m.x, m.y, ex, ey);
+    g.addColorStop(0, `rgba(255,248,224,${m.life})`); g.addColorStop(1, "rgba(255,248,224,0)");
+    ctx.strokeStyle = g; ctx.lineWidth = 1.6 * dpr; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(ex, ey); ctx.stroke();
+  };
+  const paint = () => {
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = "lighter"; // 疊加光暈更有宇宙感
+    nebulae.forEach(drawNebula);
+    stars.forEach(drawStar);
+    if (Math.random() < 0.004) {
+      shooters.push({ x: Math.random() * W, y: -20, vx: (2 + Math.random() * 3) * dpr * (Math.random() < 0.5 ? 1 : -1), vy: (5 + Math.random() * 4) * dpr, life: 1 });
+    }
+    for (let i = shooters.length - 1; i >= 0; i--) {
+      drawShooter(shooters[i]);
+      if (shooters[i].life <= 0 || shooters[i].y > H + 40) shooters.splice(i, 1);
+    }
+    ctx.globalCompositeOperation = "source-over";
+  };
+  const frame = () => { t += 16; paint(); raf = requestAnimationFrame(frame); };
+
+  resize();
+  window.addEventListener("resize", resize);
+  if (REDUCED_MOTION) { paint(); } // 靜態一幀即可
+  else frame();
+
+  return () => {
+    if (raf) cancelAnimationFrame(raf);
+    window.removeEventListener("resize", resize);
+  };
 }
 
 /* ---------- 分頁切換 ---------- */
@@ -771,7 +1030,7 @@ function openBookLanding({ force = false } = {}) {
   el.setAttribute("aria-hidden", "false");
   document.documentElement.classList.add("book-open");
   el.innerHTML = `
-    <div class="book-stars" aria-hidden="true"></div>
+    <canvas class="book-stars" aria-hidden="true"></canvas>
     <button type="button" class="book-skip" id="book-skip" aria-label="跳過">跳過 ›</button>
     <div class="book-cover">
       <div class="book-runes">✧ ⋆ ˚ ⋆ ✦ ⋆ ˚ ✧</div>
@@ -808,7 +1067,10 @@ function openBookLanding({ force = false } = {}) {
       <p class="book-foot">此書只專屬於你．紀錄僅存於此裝置或帳號</p>
     </div>`;
 
+  const stopCosmos = startCosmos(el.querySelector(".book-stars")); // 啟動動態宇宙背景
+
   const closeBook = () => {
+    stopCosmos?.();
     el.classList.add("hidden");
     el.setAttribute("aria-hidden", "true");
     document.documentElement.classList.remove("book-open");
@@ -818,7 +1080,7 @@ function openBookLanding({ force = false } = {}) {
     magicFX("sigil", "🔮 開啟你的專屬魔法書⋯", () => {
       closeBook();
       switchTab("today");
-    }, { color: "purple", finale: "🔮", dur: 2600 });
+    }, { color: "purple", finale: "🔮", dur: 2900 });
   };
 
   $("#book-skip").addEventListener("click", () => {
