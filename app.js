@@ -2881,7 +2881,7 @@ function renderSummon() {
         <h2 class="altar-title">神奇海螺召喚儀式</h2>
         <p class="altar-sub">${charges
           ? `魔法陣已經亮起，你有 <b>${charges}</b> 次召喚機會`
-          : "魔法陣暗著，先去累積你的紀錄吧"}</p>
+          : "魔法陣還未能啟動，先去累積你的紀錄吧"}</p>
         <button class="altar-btn ${charges ? "" : "off"}" id="summon-go" ${charges ? "" : "disabled"}>
           ${charges ? "🔮 召喚神奇海螺" : "🔒 尚無召喚機會"}
         </button>
@@ -2899,7 +2899,7 @@ function renderSummon() {
         <li><b>完成 ${SUMMON_PER_TODOS} 件待辦</b>：在「思考」分頁的待辦事項打勾（已完成 ${countDoneTodos()} 件）</li>
         <li><b>流星雨</b>：切換分頁時 10% 機率出現，出現後有 ${Math.round(METEOR_FRAGMENT_CHANCE * 100)}% 機率直接掉落一片碎片</li>
       </ul>
-      <p class="muted small">召喚結果為隨機碎片；也有 ${Math.round(SUMMON_MISS_CHANCE * 100)}% 的機率神奇海螺正在忙線中。</p>
+      <p class="muted small">召喚結果為隨機碎片；也有 ${Math.round(SUMMON_MISS_CHANCE * 100)}% 的機率神奇海螺本身偏忙碌，不會出現。</p>
     </div>
     <div class="card">
       <h2>🐚 目前的收藏 <span class="sub">${s.complete || 0} 顆完整・${totalFrag} 片碎片</span></h2>
@@ -2930,7 +2930,7 @@ function doSummon() {
   store.save();
 
   const finale = miss ? "🌫" : SHELL_BY_KEY[result.key].emoji;
-  magicFX("summon", "銀色魔法陣繪製中⋯", () => showSummonResult(miss, result),
+  magicFX("summon", "召喚魔法陣繪製中⋯", () => showSummonResult(miss, result),
     { color: "silver", finale, dur: 3200 });
 }
 
@@ -2940,8 +2940,8 @@ function showSummonResult(miss, result) {
       <div class="summon-res">
         <div class="sr-emoji">🌫</div>
         <h3>神奇海螺偏忙碌</h3>
-        <p class="muted">下次一定會更棒 ✨</p>
-        <p class="muted small">別氣餒——繼續紀錄，明天的祭壇還會為你亮起。</p>
+        <p class="muted">下次一定會更讚 ✨</p>
+        <p class="muted small">辣妹不氣餒繼，續紀錄，明天的祭壇還會為你亮起。</p>
       </div>
       <div class="btn-row"><button class="btn" id="sr-close">好的</button></div>`);
     $("#sr-close", m).addEventListener("click", () => { m.remove(); renderSummon(); });
@@ -2956,7 +2956,7 @@ function showSummonResult(miss, result) {
       <h3>${esc(info.name)}神奇海螺碎片 ×1</h3>
       ${result.merged
         ? `<p class="sr-merged">🎉 碎片集滿 ${SHELL_FRAGMENTS_PER_SHELL} 片，合成一顆完整的${info.emoji}${esc(info.name)}神奇海螺！</p>`
-        : `<p class="muted">目前 ${s.frag[result.key] || 0}/${SHELL_FRAGMENTS_PER_SHELL} 片，集滿即可合成一顆完整海螺。</p>`}
+        : `<p class="muted">目前 ${s.frag[result.key] || 0}/${SHELL_FRAGMENTS_PER_SHELL} 片，集滿即可合成一顆完整神奇海螺。</p>`}
       <p class="muted small">剩餘召喚機會：${s.charges || 0} 次</p>
     </div>
     <div class="btn-row">
@@ -3072,7 +3072,7 @@ function openRitualModal(evType, evTitle, evDate, rit) {
         <button class="btn" id="ev-journal">當天寫進日記</button>
         ${isCustom ? `<button class="btn secondary" id="ev-del">刪除此提醒</button>` : ""}
       </div>
-      <p class="muted small center" style="margin-top:10px">儀式是給自己的正念時間——安全第一，觀星請注意環境。</p>`);
+      <p class="muted small center" style="margin-top:10px">儀式是給自己的正念時間，安全第一，觀星請注意環境狀況。</p>`);
     $("#ev-journal", m).addEventListener("click", () => { m.remove(); openDiaryForm(); });
     $("#ev-del", m)?.addEventListener("click", () => {
       store.data.customEvents = store.data.customEvents.filter(e => !(e.date === evDate && e.title === evTitle));
@@ -3082,7 +3082,7 @@ function openRitualModal(evType, evTitle, evDate, rit) {
 function openCustomEventForm() {
   const m = modal(`
     <h3>＋ 自訂天象／儀式提醒</h3>
-    <p class="muted small">看到「六星連珠」「超級月亮」這類新聞？把日期記進來，App 會倒數提醒你。</p>
+    <p class="muted small">看到「六星連珠」「超級月亮」這類新聞？想把日期記進來，App 會倒數提醒你。</p>
     <label class="field">名稱</label><input type="text" id="ce-title" placeholder="例：行星連珠">
     <label class="field">日期</label><input type="date" id="ce-date" value="${todayStr()}">
     <label class="field">備註（選填）</label><input type="text" id="ce-note" placeholder="例：日出前東方低空">
@@ -3093,7 +3093,7 @@ function openCustomEventForm() {
     const date = $("#ce-date", m).value;
     if (!title || !date) return toast("名稱和日期都要填");
     store.data.customEvents.push({ date, title, note: $("#ce-note", m).value.trim(), type: "custom" });
-    store.save(); m.remove(); VIEWS[currentTab](); toast("已加入，會在到期前倒數提醒 ✨");
+    store.save(); m.remove(); VIEWS[currentTab](); toast("已加入，會在到期前倒數提醒你 ✨");
   });
 }
 
@@ -3112,19 +3112,19 @@ function renderMore() {
       <div class="btn-row"><button class="btn" id="cap-new">✉️ 封印一顆新的時空膠囊 🐚</button></div>
     </div>
     <div class="card">
-      <h2>🏆 小勝利罐 <span class="sub">${wins.length} 件</span></h2>
-      <p class="muted small">「其實我做到了」的小事都值得被記住。難過的時候打開這個罐子，看看自己一路累積了什麼。</p>
+      <h2>🏆 小勝利聖杯 <span class="sub">${wins.length} 件</span></h2>
+      <p class="muted small">「我做到了」的任何小事都值得被記住。難過的時候打開這個罐子，看看自己一路累積了什麼。</p>
       <div class="add-emo">
         <input type="text" id="win-input" placeholder="例：今天主動說出了自己的想法⋯按 Enter">
         <button type="button" class="btn small" id="win-add">＋</button>
       </div>
       <div id="win-list"></div>
-      ${wins.length >= 3 ? `<div class="btn-row"><button class="btn secondary" id="win-random">🎲 隨機翻一件出來看</button></div>` : ""}
+      ${wins.length >= 3 ? `<div class="btn-row"><button class="btn secondary" id="win-random">🎲 隨機翻一件事來回顧</button></div>` : ""}
     </div>
     <div class="card"><h2>📊 洞察</h2><div id="insights"></div></div>
     <div class="card">
       <h2>📈 內在報告</h2>
-      <p class="muted small">回顧一段時間的自己：情緒的喜怒哀樂、夢的符號、思考的鬆動，可匯出帶去諮商或回診參考。</p>
+      <p class="muted small">回顧一段時間的自己：情緒的喜怒哀樂、夢的符號、思緒的變化，可匯出帶去諮商、回診參考或自我紀錄。</p>
       <div class="btn-row">
         <button class="btn secondary" data-report="7">週報</button>
         <button class="btn secondary" data-report="30">月報</button>
@@ -3172,7 +3172,7 @@ function renderMore() {
   $("#win-random")?.addEventListener("click", () => {
     const w = wins[Math.floor(Math.random() * wins.length)];
     modal(`<div class="summon-res"><div class="sr-emoji">🏆</div>
-      <h3>${esc(w.text)}</h3><p class="muted small">${esc(fmtMD(w.date))}・你做到了</p></div>
+      <h3>${esc(w.text)}</h3><p class="muted small">${esc(fmtMD(w.date))}・讚ㄙˇ，你做到了</p></div>
       <div class="btn-row"><button class="btn" onclick="this.closest('.modal-mask').remove()">收下這份肯定</button></div>`);
   });
 }
@@ -3180,7 +3180,7 @@ function renderWinList() {
   const box = $("#win-list");
   if (!box) return;
   const wins = [...store.data.wins].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
-  if (!wins.length) { box.innerHTML = `<p class="muted small">罐子還空著，今天有什麼小小的做到了嗎？</p>`; return; }
+  if (!wins.length) { box.innerHTML = `<p class="muted small">聖杯還空著，今天有什麼小小成就嗎？</p>`; return; }
   box.innerHTML = wins.slice(0, 30).map(w => `
     <div class="nb-item">
       <div class="nb-body">🏆 ${esc(w.text)}</div>
@@ -3224,7 +3224,7 @@ function renderSettings() {
     </div>
     <div class="card">
       <h2>👤 帳號 <span class="sub">跨裝置同步／註冊會員</span></h2>
-      <p class="muted small">選一種方式建立你的星塵帳號。個人紀錄仍存在本機與你的雲端裡；系統後台僅保留你的 email，作為之後新功能通知與行銷名單。</p>
+      <p class="muted small">選一種方式建立你的星塵帳號。個人紀錄仍存在本機與你的雲端裡；系統後台僅保留你的 email，作為之後新功能與辣妹優惠碼通知。</p>
       <div id="account-box"></div>
     </div>
     <div class="card">
