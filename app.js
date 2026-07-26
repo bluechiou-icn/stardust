@@ -1052,7 +1052,7 @@ function switchTab(tab) {
   if (changed && !REDUCED_MOTION && Math.random() < 0.1) meteorShowerFX();
 }
 
-/* ---------- 🌠 流星雨彩蛋：切換分頁時 10% 機率觸發，附贈一顆神奇海螺碎片 ---------- */
+/* ---------- 🌠 流星雨彩蛋：切換分頁時 10% 機率觸發，得到隨機顏色神奇海螺碎片一片機率改為5% ---------- */
 function meteorShowerFX() {
   const ov = document.createElement("div");
   ov.className = "meteor-fx";
