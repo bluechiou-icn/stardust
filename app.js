@@ -71,7 +71,7 @@ const store = {
   load() {
     try { this.data = JSON.parse(localStorage.getItem(DB_KEY)) || null; } catch { this.data = null; }
     if (!this.data) this.data = { dreams: [], diary: [], cbt: [], focus: [], capsules: [], customEvents: [], settings: {} };
-    for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "aiChat", "crystals"]) this.data[k] ||= [];
+    for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "aiChat", "crystals", "notes", "todos"]) this.data[k] ||= [];
     this.data.settings ||= {};
     this.data.settings.symbols ||= [" 高山", "大海", "湖泊", "河流", "瀑布", "門", "迷宮", "下墜", "飛行", "追逐", "老房子", "牙齒", "樓梯", "考試", "迷路", "木", "火", "土", "金", "水",];
     this.data.settings.emotions ||= ["焦慮", "羞愧", "悲傷", "憤怒", "恐懼", "委屈", "無力", "罪惡感"];
@@ -160,23 +160,43 @@ function upcomingMoonEvents(days = 90) {
 const ASTRO_EVENTS = [
   { date: "2026-07-04", type: "conjunction", title: "火星合天王星", note: "僅相距 6 角分（約滿月直徑 1/5），金牛座黎明前東方低空" },
   { date: "2026-07-30", type: "meteor", title: "寶瓶座δ流星雨極大期", note: "南半球條件較佳，午夜後觀察" },
+  { date: "2026-08-02", type: "conjunction", title: "水星合金星", note: "黎明前東方低空，兩顆內行星相會於巨蟹座" },
+  { date: "2026-08-10", type: "conjunction", title: "金星合木星", note: "「宇宙之吻」全年最亮的兩顆行星靠近至約 1 度，黎明東方最為壯觀" },
   { date: "2026-08-12", type: "eclipse", title: "日全蝕", note: "全蝕帶經格陵蘭、冰島、西班牙北部；台灣不可見，可線上觀看" },
-  { date: "2026-08-12", type: "conjunction", title: "六星晨聚（行星連珠）", note: "木星・水星・火星・天王星・土星・海王星日出前齊聚東方天空" },
+  { date: "2026-08-12", type: "conjunction", title: "六星晨聚（六星連珠）", note: "木星・水星・火星・天王星・土星・海王星日出前齊聚東方天空" },
   { date: "2026-08-13", type: "meteor", title: "英仙座流星雨極大期", note: "年度三大流星雨之一，適逢新月無光害，後半夜條件極佳" },
   { date: "2026-08-15", type: "conjunction", title: "水星合木星", note: "日出前一小時東方低空，兩顆亮星靠近" },
+  { date: "2026-08-19", type: "conjunction", title: "月合金星", note: "眉月與金星在黎明東方低空相會，非常美麗好拍" },
   { date: "2026-08-28", type: "eclipse", title: "月偏蝕", note: "美洲、歐洲、非洲可見；台灣不可見" },
+  { date: "2026-09-09", type: "conjunction", title: "土星合海王星", note: "兩顆遠行星相距僅約 1 度，雙魚座整夜可見（需望遠鏡辨認海王星）" },
+  { date: "2026-09-14", type: "conjunction", title: "月掩土星", note: "月亮從土星前方掠過並短暫遮蔽，北半球部分地區可見" },
+  { date: "2026-09-23", type: "seasonal", title: "秋分・晝夜等長", note: "太陽直射赤道，全球白晝與黑夜幾乎等長；秋日的能量轉折點" },
   { date: "2026-09-25", type: "opposition", title: "海王星衝", note: "海王星整夜可見、最亮，仍需望遠鏡（雙魚座）" },
+  { date: "2026-10-08", type: "meteor", title: "天龍座流星雨極大期", note: "傍晚後觀察，時有火流星，數量不多但明亮" },
+  { date: "2026-10-14", type: "conjunction", title: "金星合火星", note: "黎明前東方，紅色與白色行星並肩，室女座" },
   { date: "2026-10-21", type: "meteor", title: "獵戶座流星雨極大期", note: "哈雷彗星的碎屑，午夜後東方天空" },
+  { date: "2026-11-05", type: "conjunction", title: "五星連珠（水金火木土）", note: "日落後西方低空與凌晨東方，五顆行星串連於黃道，肉眼即可全數看見" },
+  { date: "2026-11-05", type: "meteor", title: "南金牛座流星雨極大期", note: "數量少但明亮，時有火流星劃過" },
   { date: "2026-11-15", type: "conjunction", title: "火星合木星", note: "兩星相距約 1 度，黎明前天空最接近，全年最佳行星相合之一" },
   { date: "2026-11-17", type: "meteor", title: "獅子座流星雨極大期", note: "後半夜觀察" },
+  { date: "2026-11-20", type: "conjunction", title: "水星合金星（上合）", note: "水星內合於太陽前方，日落後西方低空短暫可見" },
   { date: "2026-11-24", type: "supermoon", title: "超級月亮", note: "年度三次超級月亮之一，月亮比平均更大更亮" },
   { date: "2026-11-25", type: "opposition", title: "天王星衝", note: "天王星整夜可見、最亮，暗空下勉強肉眼可見（金牛座）" },
+  { date: "2026-12-04", type: "conjunction", title: "月合木星", note: "盈凸月與木星靠近，入夜東方天空的醒目組合" },
   { date: "2026-12-14", type: "meteor", title: "雙子座流星雨極大期", note: "年度最穩定的大流星雨，入夜即可觀察，每小時可達百顆" },
+  { date: "2026-12-21", type: "seasonal", title: "冬至・北半球夜最長", note: "太陽直射南回歸線，一年中最長的夜，適合安靜內省的儀式" },
+  { date: "2026-12-22", type: "meteor", title: "小熊座流星雨極大期", note: "數量少但流量穩定，適合寒冷冬夜靜心觀察" },
   { date: "2026-12-23", type: "supermoon", title: "超級滿月（近八年最大）", note: "2019 年以來最接近地球的滿月，全年最大最亮" },
   { date: "2027-01-03", type: "meteor", title: "象限儀座流星雨極大期", note: "極大期短暫，凌晨觀察，每小時可達 40 顆" },
+  { date: "2027-01-24", type: "conjunction", title: "金星合土星", note: "日落後西南方低空，兩顆行星相距約 3 度" },
   { date: "2027-02-06", type: "eclipse", title: "日環蝕", note: "環蝕帶經南美洲與大西洋；台灣不可見" },
+  { date: "2027-03-20", type: "seasonal", title: "春分・晝夜等長", note: "太陽再度直射赤道，白晝日漸增長，適合新起點的意念設定" },
+  { date: "2027-04-22", type: "meteor", title: "天琴座流星雨極大期", note: "年度四月的可靠流星雨，午夜後觀察" },
+  { date: "2027-05-06", type: "meteor", title: "寶瓶座η流星雨極大期", note: "哈雷彗星另一次碎屑，南半球條件較佳" },
+  { date: "2027-06-11", type: "opposition", title: "土星衝", note: "土星整夜可見、最亮，小望遠鏡就能看到光環" },
   { date: "2027-07-01", type: "conjunction", title: "金星合水星（三合之一）", note: "金水三次相合的第一次（另在 8/11、10/10）" },
   { date: "2027-08-02", type: "eclipse", title: "日全蝕", note: "本世紀最長時間的日全蝕之一（ 6 分 23 秒），全蝕帶經北非、中東" },
+  { date: "2027-09-14", type: "opposition", title: "木星衝", note: "整夜可見的木星最亮時刻，小望遠鏡可見四大衛星與雲帶" },
 ];
 const SUPERMOON_ANNOT = { "2026-01-03": "超級滿月", "2026-11-24": "超級滿月", "2026-12-23": "超級滿月（近八年最大）" };
 const RITUALS = {
@@ -187,6 +207,7 @@ const RITUALS = {
   conjunction: { name: "星體相合・合力顯化", steps: ["兩顆行星相會，正是兩股宇宙能量交融之時：想一件需要「合力」完成之事（如事業＋關係、行動＋耐心）", "抬頭找到相合的兩顆星（黎明或黃昏低空），凝視一分鐘", "寫下你想融合的兩個面向，各一句話", "許一個需要這兩股力量一起推動的願望，存進本日日記"] },
   opposition: { name: "行星衝・照見與整合", steps: ["行星衝＝它整夜可見、最明亮的時刻，象徵某件事來到滿盈與清晰", "問自己：現在什麼事已經「看得最清楚」了？", "寫下這份清晰帶來的一個決定", "若有望遠鏡，親眼看看這顆最亮的行星"] },
   supermoon: { name: "超級月亮・盈滿感恩", steps: ["超級月亮是最大最亮的滿月，能量格外飽滿", "到戶外或窗邊，讓月光照在身上一分鐘", "寫下 3 件此刻豐盛、感謝的事", "寫下 1 件想在柔和月光中放下的重擔，深呼吸、吐氣、釋放"] },
+  seasonal: { name: "節氣・晝夜轉折儀式", steps: ["節氣是宇宙尺度的呼吸，站在轉折點上感受自己的位置", "寫下這一季走過的路：3 件收穫、1 件釋放", "以現在式寫下下一季想成為的樣子", "點一根蠟燭或倒一杯溫水，敬過去的自己與正在誕生的自己"] },
   custom: { name: "自訂顯化儀式", steps: ["閉上眼，靜下心，進行三個深呼吸循環", "寫下此刻的意圖，用現在式", "想像心願實現的畫面、感受心中喜悅的情緒 1 分鐘", "以一句感謝作結，可以是感謝宇宙，也可以感謝自己"] },
 };
 
@@ -546,9 +567,14 @@ function applyTheme(key) {
 /* ---------- 魔法過場特效（純視覺；資料在動畫前就已寫入，點擊可跳過） ---------- */
 const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const SIGIL_GLYPHS = ["☉", "☽", "☿", "♀", "♂", "♃", "♄", "א", "ב", "ג", "ה", "ש"];
-function magicFX(mode, caption, done, { finale = "✦" } = {}) {
+/* 顏色主題：金色（顯化）／紫色（Doctor Strange 風・開書儀式） */
+const SIGIL_THEMES = {
+  gold: { ink: "232,200,116", glow: "232,160,60", paper: "232,217,176", inkDark: "90,60,20" },
+  purple: { ink: "196,164,255", glow: "170,120,255", paper: "48,26,84", inkDark: "230,210,255" },
+};
+function magicFX(mode, caption, done, { finale = "✦", color = "gold", dur } = {}) {
   if (REDUCED_MOTION) { done?.(); return; }
-  const DUR = mode === "pensieve" ? 1900 : 2700;
+  const DUR = dur || (mode === "pensieve" ? 1900 : 2700);
   const ov = document.createElement("div");
   ov.className = "fx-overlay";
   ov.innerHTML = `<canvas></canvas><p class="fx-caption">${esc(caption)}</p><p class="fx-skip">輕觸跳過</p>`;
@@ -593,7 +619,8 @@ function magicFX(mode, caption, done, { finale = "✦" } = {}) {
     ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, cy, R * 0.55, R * 0.3, 0, 0, Math.PI * 2); ctx.fill();
   }
 
-  /* 魔法陣：雙環＋六芒星逐筆繪製 → 行星與希伯來字浮現 → 金光烙印羊皮紙 */
+  /* 魔法陣：雙環＋六芒星逐筆繪製 → 行星與希伯來字浮現 → 金／紫光烙印羊皮紙 */
+  const theme = SIGIL_THEMES[color] || SIGIL_THEMES.gold;
   const seg = (x1, y1, x2, y2, q) => { // q: 0–1 畫這條線的進度
     if (q <= 0) return;
     ctx.beginPath(); ctx.moveTo(x1, y1);
@@ -608,14 +635,14 @@ function magicFX(mode, caption, done, { finale = "✦" } = {}) {
     const burning = p > 0.78;
     if (burning) { // 羊皮紙浮現
       const a = (p - 0.78) / 0.22;
-      ctx.fillStyle = `rgba(232,217,176,${a * 0.92})`; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = `rgba(${theme.paper},${a * 0.92})`; ctx.fillRect(0, 0, W, H);
       cap.textContent = `${finale} 烙印完成`;
     } else { ctx.fillStyle = "rgba(10,9,20,0.92)"; ctx.fillRect(0, 0, W, H); }
     ctx.save();
     ctx.translate(cx, cy); ctx.rotate(p * 0.35); ctx.translate(-cx, -cy);
-    const ink = burning ? "rgba(90,60,20," : "rgba(232,200,116,";
+    const ink = burning ? `rgba(${theme.inkDark},` : `rgba(${theme.ink},`;
     ctx.lineWidth = 1.6;
-    ctx.shadowColor = burning ? "rgba(232,160,60,0.9)" : "rgba(232,200,116,0.8)";
+    ctx.shadowColor = burning ? `rgba(${theme.glow},0.9)` : `rgba(${theme.ink},0.8)`;
     ctx.shadowBlur = burning ? 26 : 8 + 10 * Math.sin(p * Math.PI * 2);
     ctx.strokeStyle = ink + "0.95)";
     const q1 = Math.min(p / 0.3, 1); // 外環
@@ -725,17 +752,113 @@ function openNicknameForm() {
   $("#nk-cancel", m)?.addEventListener("click", () => m.remove());
 }
 
+/* ================= Book of Shadows 首頁：個人魔法書 =================
+   每次進 App 都會出現這頁，像翻開自己的魔法書；輸入暱稱後以紫色魔法陣過場。
+   點右上「跳過」可略過整個儀式（設定會記住，之後直接進本文）。 */
+function openBookLanding({ force = false } = {}) {
+  const el = document.getElementById("book-landing");
+  if (!el) return;
+  const nickname = store.data.settings.nickname || "";
+  el.classList.remove("hidden");
+  el.setAttribute("aria-hidden", "false");
+  document.documentElement.classList.add("book-open");
+  el.innerHTML = `
+    <div class="book-stars" aria-hidden="true"></div>
+    <button type="button" class="book-skip" id="book-skip" aria-label="跳過">跳過 ›</button>
+    <div class="book-cover">
+      <div class="book-runes">✧ ⋆ ˚ ⋆ ✦ ⋆ ˚ ✧</div>
+      <div class="book-crest">
+        <svg viewBox="0 0 120 120" role="img" aria-label="魔法書封印" style="width:118px;height:118px">
+          <defs>
+            <radialGradient id="bc-g" cx="50%" cy="45%" r="55%">
+              <stop offset="0%" stop-color="#f6ecff" stop-opacity=".95"/>
+              <stop offset="65%" stop-color="#c4a4ff" stop-opacity=".7"/>
+              <stop offset="100%" stop-color="#5b3aa0" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <circle cx="60" cy="60" r="52" fill="none" stroke="#c4a4ff" stroke-width="1.5" opacity=".85"/>
+          <circle cx="60" cy="60" r="42" fill="none" stroke="#e9d9ff" stroke-width="1" opacity=".7"/>
+          <path d="M60 20 L96 74 L24 74 Z" fill="none" stroke="#f2e6ff" stroke-width="1.3" opacity=".85"/>
+          <path d="M60 100 L24 46 L96 46 Z" fill="none" stroke="#f2e6ff" stroke-width="1.3" opacity=".85"/>
+          <circle cx="60" cy="60" r="10" fill="url(#bc-g)"/>
+          <text x="60" y="63" text-anchor="middle" font-size="12" fill="#f6ecff" font-family="serif">✦</text>
+        </svg>
+      </div>
+      <h1 class="book-title">Book of Shadows</h1>
+      <p class="book-sub">你的個人魔法書</p>
+      ${nickname
+        ? `<p class="book-hi">歡迎回來，<b>${esc(nickname)}</b></p>
+           <div class="book-actions">
+             <button class="btn book-open-btn" id="book-open">✨ 打開魔法書</button>
+             <button class="btn secondary" id="book-editname">✎ 改個名字</button>
+           </div>`
+        : `<label class="field book-label">你希望宇宙怎麼稱呼你？</label>
+           <input type="text" id="book-nick" maxlength="20" placeholder="Blue、Lisa、Petro⋯" autocomplete="off">
+           <div class="book-actions">
+             <button class="btn book-open-btn" id="book-open">✨ 封印我的名字，打開魔法書</button>
+           </div>`}
+      <p class="book-foot">此書專屬於你．紀錄僅存於此裝置</p>
+    </div>`;
+
+  const closeBook = () => {
+    el.classList.add("hidden");
+    el.setAttribute("aria-hidden", "true");
+    document.documentElement.classList.remove("book-open");
+    el.innerHTML = "";
+  };
+  const enterApp = () => {
+    magicFX("sigil", "🔮 開啟你的魔法書⋯", () => {
+      closeBook();
+      switchTab("today");
+    }, { color: "purple", finale: "🔮", dur: 2600 });
+  };
+
+  $("#book-skip").addEventListener("click", () => {
+    store.data.settings.skipBook = true;
+    store.save();
+    closeBook();
+    switchTab(currentTab || "today");
+  });
+  $("#book-open").addEventListener("click", () => {
+    const nkInput = $("#book-nick");
+    if (nkInput) {
+      const v = nkInput.value.trim();
+      if (v) store.data.settings.nickname = v;
+      store.save();
+    }
+    enterApp();
+  });
+  $("#book-editname")?.addEventListener("click", () => {
+    closeBook();
+    openNicknameForm();
+    // 修改完再打開一次書
+    const check = setInterval(() => {
+      if (!document.querySelector(".modal-mask")) {
+        clearInterval(check);
+        openBookLanding({ force: true });
+      }
+    }, 300);
+  });
+
+  const inp = $("#book-nick");
+  if (inp) {
+    setTimeout(() => inp.focus(), 200);
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("#book-open").click(); } });
+  }
+}
+
 function renderToday() {
   const el = $("#view-today");
   const now = new Date();
   const mi = moonInfo(now);
   const t = todayStr();
-  const upcoming = allUpcomingEvents(30).slice(0, 2);
+  const upcoming = allUpcomingEvents(30).slice(0, 3);
   const resurface = findResurfacing();
   const todayDiary = store.data.diary.filter(d => d.date === t);
   const todayDreams = store.data.dreams.filter(d => d.date === t);
   const intro = !store.data.settings.seenIntro;
   const nickname = store.data.settings.nickname || "";
+  refreshAffirmation(); // 每次重新載入今日頁 → 換一句
   const [, zh, en, gicon] = currentGreeting();
   const streak = calcStreak();
   const manifestDone = store.data.settings.lastManifest === t;
@@ -762,16 +885,12 @@ function renderToday() {
       </div>
     </div>
     <div class="card">
-      <h2>🌠 今日顯化 <span class="sub">${manifestDone ? "今日已完成 ✓" : "每天一句，說給宇宙聽"}</span></h2>
+      <h2>🌠 今日顯化 <span class="sub">${manifestDone ? "今日已完成 ✓" : "每天一句，宇宙一直在等待接收"}</span></h2>
       <p class="affirmation">「${esc(todayAffirmation())}」</p>
       <div class="btn-row">
-        <button class="btn ${manifestDone ? "secondary" : ""}" id="manifest-start">${manifestDone ? "🕯 再做一次儀式" : "🕯 開始 3 分鐘顯化儀式"}</button>
+        <button class="btn ${manifestDone ? "secondary" : ""}" id="manifest-start">🕯 開始顯化儀式</button>
         <button class="btn secondary" id="sleep-ritual">🌜 睡前引導</button>
       </div>
-    </div>
-    <div class="card">
-      <h2>🩵 夢汐 AI 陪伴 <span class="sub">傾訴、聊聊、找回平靜</span></h2>
-      <div class="btn-row"><button class="btn secondary" id="ai-chat-open">💬 和夢汐聊聊</button></div>
     </div>
     ${upcoming.length ? `<div class="card"><h2>✨ 即將到來的宇宙星象 <span class="sub">點擊查看儀式</span></h2>${upcoming.map(eventRowHTML).join("")}</div>` : ""}
     ${resurface.length ? `<div class="card"><h2>⏳ 時空回聲 <span class="sub">來自過去的你</span></h2>${resurface.map(r => `
@@ -785,18 +904,13 @@ function renderToday() {
 
   if (intro) $("#intro-ok").addEventListener("click", () => {
     store.data.settings.seenIntro = true; store.save();
-    // 初次使用：讀完聲明後接著詢問暱稱
-    if (!store.data.settings.nickname && !store.data.settings.nicknameAsked) {
-      store.data.settings.nicknameAsked = true; store.save();
-      openNicknameForm();
-    } else renderToday();
+    renderToday();
   });
   $("#edit-nickname").addEventListener("click", openNicknameForm);
   $("#quick-dream").addEventListener("click", () => openDreamForm());
   $("#quick-diary").addEventListener("click", () => openDiaryForm());
   $("#manifest-start").addEventListener("click", openManifestRitual);
   $("#sleep-ritual").addEventListener("click", openSleepRitual);
-  $("#ai-chat-open").addEventListener("click", openAiChat);
   bindEventRows(el);
   const box = $("#today-entries");
   todayDreams.forEach(d => box.appendChild(dreamEntryEl(d)));
@@ -829,6 +943,11 @@ function renderDream() {
       <h2 style="justify-content:center">黃金 90 秒 — 醒來立刻紀錄</h2>
       <button class="mic-big" id="dream-mic">🎙️<small>開始紀錄夢境</small></button>
       <p class="muted small">按下後直接說：畫面、人物、地點、情緒、顏色。<br>說完會自動幫你標記欄位。</p>
+    </div>
+    <div class="card locked-card">
+      <h2>🌌 星塵樹洞 <span class="sub">傾聽你的秘密</span></h2>
+      <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
+      <p class="muted small">星塵樹洞會靜靜聆聽你不能對別人說的話。<br>技能解鎖後，這裡會亮起 💬。</p>
     </div>
     <div class="card">
       <h2>夢境圖鑑 <span class="sub">共 ${dreams.length} 則</span></h2>
@@ -1036,6 +1155,11 @@ const DISTORTIONS = ["災難化", "讀心術", "非黑即白", "過度類化", "
 function renderCBT() {
   const el = $("#view-cbt");
   const recs = [...store.data.cbt].sort((a, b) => b.date.localeCompare(a.date));
+  const notes = [...store.data.notes].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const todos = [...store.data.todos].sort((a, b) => {
+    if (!!a.done !== !!b.done) return a.done ? 1 : -1;
+    return b.createdAt.localeCompare(a.createdAt);
+  });
   el.innerHTML = `
     <div class="card">
       <h2>🧠 思考紀錄（7-Step）</h2>
@@ -1046,6 +1170,24 @@ function renderCBT() {
       </div>
     </div>
     <div class="card">
+      <h2>📓 隨身小本本 <span class="sub">記錄你的靈感與情緒</span></h2>
+      <p class="muted small">來不及分類的一句話、一段畫面、一種情緒；先寫下再說。</p>
+      <div class="add-emo">
+        <input type="text" id="nb-input" placeholder="想到什麼就寫下來⋯按 Enter">
+        <button type="button" class="btn small" id="nb-add">＋</button>
+      </div>
+      <div id="nb-list">${notes.length === 0 ? `<p class="muted small">小本本還是空白的，寫第一句吧。</p>` : ""}</div>
+    </div>
+    <div class="card">
+      <h2>✅ 代辦事項 <span class="sub" id="td-sub">${todos.filter(t => !t.done).length} 未完成 / ${todos.length} 總數</span></h2>
+      <p class="muted small">完成後打勾，讓宇宙記得，你也記得為自己拍手。</p>
+      <div class="add-emo">
+        <input type="text" id="td-input" placeholder="今天想完成的一件事⋯按 Enter">
+        <button type="button" class="btn small" id="td-add">＋</button>
+      </div>
+      <div id="td-list">${todos.length === 0 ? `<p class="muted small">尚無代辦事項。</p>` : ""}</div>
+    </div>
+    <div class="card">
       <h2>紀錄 <span class="sub">${recs.length} 則</span></h2>
       ${recs.length === 0 ? `<p class="muted">尚無紀錄。</p>` : ""}
       <div id="cbt-list"></div>
@@ -1054,6 +1196,81 @@ function renderCBT() {
   $("#cbt-dump").addEventListener("click", () => openCbtDump());
   const list = $("#cbt-list");
   recs.slice(0, 20).forEach(r => list.appendChild(cbtEntryEl(r)));
+  renderNotebookList();
+  renderTodoList();
+  bindNotebookAdders();
+}
+
+/* --- 隨身小本本 --- */
+function renderNotebookList() {
+  const box = $("#nb-list");
+  if (!box) return;
+  const notes = [...store.data.notes].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  if (!notes.length) { box.innerHTML = `<p class="muted small">小本本還是空白的，寫第一句吧。</p>`; return; }
+  box.innerHTML = notes.slice(0, 40).map(n => `
+    <div class="nb-item" data-id="${esc(n.id)}">
+      <div class="nb-body">${esc(n.text)}</div>
+      <div class="nb-meta">${esc(n.createdAt.slice(0, 16).replace("T", " "))}</div>
+      <button class="nb-del" data-id="${esc(n.id)}" aria-label="刪除">✕</button>
+    </div>`).join("");
+  $$(".nb-del", box).forEach(b => b.addEventListener("click", () => {
+    store.data.notes = store.data.notes.filter(x => x.id !== b.dataset.id);
+    store.save(); renderNotebookList();
+  }));
+}
+/* --- 代辦事項 --- */
+function renderTodoList() {
+  const box = $("#td-list");
+  if (!box) return;
+  const todos = [...store.data.todos].sort((a, b) => {
+    if (!!a.done !== !!b.done) return a.done ? 1 : -1;
+    return b.createdAt.localeCompare(a.createdAt);
+  });
+  if (!todos.length) { box.innerHTML = `<p class="muted small">尚無代辦事項。</p>`; return; }
+  box.innerHTML = todos.map(t => `
+    <label class="td-item ${t.done ? "done" : ""}">
+      <input type="checkbox" data-id="${esc(t.id)}" ${t.done ? "checked" : ""}>
+      <span class="td-text">${esc(t.text)}</span>
+      <button type="button" class="td-del" data-id="${esc(t.id)}" aria-label="刪除">✕</button>
+    </label>`).join("");
+  $$('input[type="checkbox"]', box).forEach(cb => cb.addEventListener("change", () => {
+    const t = store.data.todos.find(x => x.id === cb.dataset.id);
+    if (!t) return;
+    const wasDone = t.done;
+    t.done = cb.checked;
+    if (t.done) t.doneAt = new Date().toISOString();
+    store.save();
+    if (!wasDone && t.done) toast("又完成了一項，記得謝謝自己 ❤️");
+    renderTodoList();
+    const todos2 = store.data.todos;
+    const undoneEl = document.getElementById("td-sub");
+    if (undoneEl) undoneEl.textContent = `${todos2.filter(x => !x.done).length} 未完成 / ${todos2.length} 總數`;
+  }));
+  $$(".td-del", box).forEach(b => b.addEventListener("click", e => {
+    e.preventDefault();
+    store.data.todos = store.data.todos.filter(x => x.id !== b.dataset.id);
+    store.save(); renderTodoList();
+  }));
+}
+function bindNotebookAdders() {
+  const nbIn = $("#nb-input"), nbBtn = $("#nb-add");
+  const tdIn = $("#td-input"), tdBtn = $("#td-add");
+  const addNote = () => {
+    const v = (nbIn?.value || "").trim();
+    if (!v) return;
+    store.data.notes.push({ id: uid(), text: v, createdAt: new Date().toISOString() });
+    store.save(); nbIn.value = ""; renderNotebookList();
+  };
+  const addTodo = () => {
+    const v = (tdIn?.value || "").trim();
+    if (!v) return;
+    store.data.todos.push({ id: uid(), text: v, done: false, createdAt: new Date().toISOString() });
+    store.save(); tdIn.value = ""; renderTodoList();
+  };
+  nbBtn?.addEventListener("click", addNote);
+  nbIn?.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addNote(); } });
+  tdBtn?.addEventListener("click", addTodo);
+  tdIn?.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addTodo(); } });
 }
 function cbtEntryEl(r) {
   const div = document.createElement("div");
@@ -1240,11 +1457,14 @@ function openCbtWizard(existing = null) {
 }
 
 /* ================= 顯化儀式・睡前引導 ================= */
+/* 每次呼叫都隨機挑一句；同一次 render 內共用同一句（避免卡片與儀式對不上） */
+let _sessionAffirmation = null;
 function todayAffirmation() {
-  const now = new Date();
-  const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-  return AFFIRMATIONS[dayOfYear % AFFIRMATIONS.length];
+  if (_sessionAffirmation) return _sessionAffirmation;
+  _sessionAffirmation = AFFIRMATIONS[Math.floor(Math.random() * AFFIRMATIONS.length)];
+  return _sessionAffirmation;
 }
+function refreshAffirmation() { _sessionAffirmation = null; return todayAffirmation(); }
 
 function openManifestRitual() {
   const aff = todayAffirmation();
@@ -1482,7 +1702,11 @@ function renderMoon() {
       entryDates.diary.has(ds) ? `<i class="dot-diary"></i>` : "",
       entryDates.cbt.has(ds) ? `<i class="dot-cbt"></i>` : "",
     ].join("");
-    cells += `<div class="cal-cell ${ds === todayStr() ? "today" : ""}" data-date="${ds}">
+    /* 新月／滿月用外框高亮：0=新月、4=滿月（moonInfo 的 idx） */
+    const phaseIdx = Math.round(mi.age / SYNODIC * 8) % 8;
+    const phaseClass = phaseIdx === 0 ? "newmoon" : phaseIdx === 4 ? "fullmoon" : "";
+    const isToday = ds === todayStr();
+    cells += `<div class="cal-cell ${isToday ? "today" : ""} ${phaseClass}" data-date="${ds}">
       <span>${day}</span><span class="moon">${mi.e}</span><span class="dots">${dots}</span></div>`;
   }
   const events = allUpcomingEvents(120);
@@ -1497,7 +1721,10 @@ function renderMoon() {
         ${WEEKDAYS.map(w => `<div class="dow">${w}</div>`).join("")}
         ${cells}
       </div>
-      <div class="cal-legend"><span><i class="dot-dream"></i>夢境</span><span><i class="dot-diary"></i>日記</span><span><i class="dot-cbt"></i>思考紀錄</span></div>
+      <div class="cal-legend">
+        <span><i class="dot-dream"></i>夢境</span><span><i class="dot-diary"></i>日記</span><span><i class="dot-cbt"></i>思考紀錄</span>
+        <span><i class="dot-newmoon"></i>新月</span><span><i class="dot-fullmoon"></i>滿月</span>
+      </div>
       <div id="cal-detail"></div>
     </div>
     <div class="card">
@@ -1680,8 +1907,21 @@ function renderMore() {
       <p class="muted small" style="margin-top:8px">Notion：一次將未同步的紀錄寫進你的四個資料庫（需一次性設定）。Obsidian：匯出 .zip，解壓到 Vault 即成一則一檔的筆記庫。</p>
     </div>
     <div class="card">
+      <h2>👤 帳號 <span class="sub">跨裝置同步／註冊會員</span></h2>
+      <p class="muted small">選一種方式建立你的星塵帳號。個人紀錄仍存在本機與你的雲端裡；系統後台僅保留你的 email，作為之後新功能通知與行銷名單。</p>
+      <div id="account-box"></div>
+    </div>
+    <div class="card">
       <h2>☁ 雲端備份</h2>
       <div id="cloud-box"><p class="muted small">載入中⋯</p></div>
+    </div>
+    <div class="card">
+      <h2>📖 魔法書首頁</h2>
+      <p class="muted small">是否於每次開啟 App 時，先呈現你的 Book of Shadows 個人魔法書。</p>
+      <div class="btn-row">
+        <button class="btn secondary" id="book-toggle">${store.data.settings.skipBook ? "重新開啟魔法書首頁 📖" : "下次進 App 直接跳過魔法書 →"}</button>
+        <button class="btn ghost" id="book-preview">🔮 立即打開魔法書</button>
+      </div>
     </div>
     <div class="card">
       <h2>🔐 資料（本機儲存）</h2>
@@ -1706,7 +1946,14 @@ function renderMore() {
   renderFocusBox();
   renderSleepBox();
   renderInsights();
+  renderAccountBox();
   if (typeof refreshCloudUI === "function") refreshCloudUI();
+  $("#book-toggle")?.addEventListener("click", () => {
+    store.data.settings.skipBook = !store.data.settings.skipBook;
+    store.save(); renderMore();
+    toast(store.data.settings.skipBook ? "下次進 App 直接進入本文 ✨" : "下次進 App 會先開啟魔法書 📖");
+  });
+  $("#book-preview")?.addEventListener("click", () => openBookLanding({ force: true }));
   $("#sl-manual").addEventListener("click", openSleepManual);
   $("#sl-help").addEventListener("click", openSleepImportHelp);
   $("#sync-notion").addEventListener("click", notionSync);
@@ -2180,6 +2427,107 @@ function openNotionHelp() {
     <div class="btn-row"><button class="btn" onclick="this.closest('.modal-mask').remove()">知道了</button></div>`);
 }
 
+/* --- 帳號登入／註冊（Google／Apple／Email） ---
+   Google Sign-In 由 cloud.js 的 GIS 走 Drive scope 完成；此區域只提供入口。
+   Apple Sign In 需在 Apple Developer 後台先設定 Service ID 與 Return URL，
+   若尚未設定，按鈕會提示使用者 Google 或 Email。
+   Email 註冊：只寄回 email + 暱稱到 /api/register 作為行銷名單。 */
+function renderAccountBox() {
+  const box = $("#account-box");
+  if (!box) return;
+  const acc = store.data.settings.account || {};
+  const gEmail = (typeof Cloud !== "undefined" && Cloud.email) || "";
+  box.innerHTML = `
+    ${acc.email ? `<p class="small">✅ 目前登入：<b>${esc(acc.email)}</b>（${esc(acc.provider || "email")}）${acc.nickname ? `・暱稱 ${esc(acc.nickname)}` : ""}</p>` : ""}
+    ${gEmail && !acc.email ? `<p class="muted small">Google Drive 已登入 ${esc(gEmail)}；可綁定為星塵帳號。</p>` : ""}
+    <div class="btn-col">
+      <button class="btn" id="acc-google">🔐 使用 Google 帳號登入</button>
+      <button class="btn secondary" id="acc-apple">🍎 使用 Apple 帳號登入</button>
+      <button class="btn secondary" id="acc-email">✉️ 用 Email 註冊新帳號</button>
+      ${acc.email ? `<button class="btn ghost" id="acc-logout">登出目前帳號</button>` : ""}
+    </div>
+    <p class="muted small" style="margin-top:8px">個人資料儲存於你的 Google／Apple／Email 帳號中；系統後台僅記錄 email 作為之後的功能更新通知。</p>`;
+  $("#acc-google", box).addEventListener("click", () => {
+    if (typeof cloudSignIn === "function") {
+      cloudSignIn();
+      // 授權完成後 cloud.js 會把 email 寫回 Cloud.email；1 秒後同步入 account
+      setTimeout(() => {
+        if (Cloud?.email) {
+          store.data.settings.account = { provider: "google", email: Cloud.email, nickname: store.data.settings.nickname || "" };
+          store.save(); renderAccountBox();
+          registerMarketingEmail(Cloud.email, "google");
+        }
+      }, 1500);
+    } else toast("Google 登入尚未就緒");
+  });
+  $("#acc-apple", box).addEventListener("click", openAppleSignInStub);
+  $("#acc-email", box).addEventListener("click", openEmailRegisterForm);
+  $("#acc-logout", box)?.addEventListener("click", () => {
+    if (!confirm("登出目前帳號？（本機紀錄不會被刪除）")) return;
+    store.data.settings.account = null; store.save(); renderAccountBox();
+  });
+}
+function openAppleSignInStub() {
+  const m = modal(`
+    <h3>🍎 使用 Apple 帳號登入</h3>
+    <p class="muted small">Apple Sign In 需先在 Apple Developer 後台建立 Service ID 並綁定星塵夢汐網址，前端才能顯示 Apple 授權視窗。若你已完成設定，請填入你要當作帳號的 email。</p>
+    <label class="field">你的 Apple ID email</label>
+    <input type="email" id="ap-email" placeholder="you@icloud.com">
+    <label class="field">暱稱（選填）</label>
+    <input type="text" id="ap-name" maxlength="20" placeholder="宇宙怎麼稱呼你？" value="${esc(store.data.settings.nickname || "")}">
+    <div class="btn-row">
+      <button class="btn" id="ap-save">綁定為星塵帳號</button>
+      <button class="btn secondary" id="ap-cancel">取消</button>
+    </div>`);
+  $("#ap-cancel", m).addEventListener("click", () => m.remove());
+  $("#ap-save", m).addEventListener("click", async () => {
+    const email = $("#ap-email", m).value.trim();
+    const nickname = $("#ap-name", m).value.trim();
+    if (!/^\S+@\S+\.\S+$/.test(email)) return toast("email 格式看起來不對");
+    store.data.settings.account = { provider: "apple", email, nickname };
+    if (nickname) store.data.settings.nickname = nickname;
+    store.save(); m.remove(); renderMore();
+    registerMarketingEmail(email, "apple", nickname);
+    toast(`已綁定 Apple 帳號 🍎 ${email}`);
+  });
+}
+function openEmailRegisterForm() {
+  const cur = store.data.settings.account || {};
+  const m = modal(`
+    <h3>✉️ Email 註冊 / 登入</h3>
+    <p class="muted small">留下 email 就能建立一個星塵帳號；下次換手機時，能用同一組 email 收到重新連結指引。</p>
+    <label class="field">Email</label>
+    <input type="email" id="em-email" placeholder="you@example.com" value="${esc(cur.email || "")}">
+    <label class="field">暱稱（選填）</label>
+    <input type="text" id="em-name" maxlength="20" placeholder="宇宙怎麼稱呼你？" value="${esc(store.data.settings.nickname || "")}">
+    <label class="field"><input type="checkbox" id="em-optin" checked> 我同意將 email 加入星塵夢汐的功能更新通知</label>
+    <div class="btn-row">
+      <button class="btn" id="em-save">建立星塵帳號</button>
+      <button class="btn secondary" id="em-cancel">取消</button>
+    </div>`);
+  $("#em-cancel", m).addEventListener("click", () => m.remove());
+  $("#em-save", m).addEventListener("click", async () => {
+    const email = $("#em-email", m).value.trim();
+    const nickname = $("#em-name", m).value.trim();
+    const optin = $("#em-optin", m).checked;
+    if (!/^\S+@\S+\.\S+$/.test(email)) return toast("email 格式看起來不對");
+    store.data.settings.account = { provider: "email", email, nickname };
+    if (nickname) store.data.settings.nickname = nickname;
+    store.save(); m.remove(); renderMore();
+    if (optin) registerMarketingEmail(email, "email", nickname);
+    toast(`已建立星塵帳號 ✨ ${email}`);
+  });
+}
+async function registerMarketingEmail(email, provider = "email", nickname = "") {
+  try {
+    await fetch("api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, provider, nickname }),
+    });
+  } catch { /* offline / 後端未啟用時靜默忽略；帳號仍存在本機 */ }
+}
+
 /* --- 匯出／匯入 --- */
 function download(name, text, type = "application/json") {
   const a = document.createElement("a");
@@ -2263,6 +2611,8 @@ function checkEventNotifications() {
   handleHashImport();
   window.addEventListener("hashchange", handleHashImport);
   switchTab("today");
+  // 每次進入 App 都打開個人魔法書；user 若曾按過「跳過」則直接進本文
+  if (!store.data.settings.skipBook) setTimeout(() => openBookLanding(), 60);
   checkEventNotifications();
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     navigator.serviceWorker.register("sw.js").then(async reg => {

@@ -775,6 +775,14 @@ function renderCrystal() {
         ${moonPicks.map(c => `<a href="#" class="crystal-hint-link" data-cid="${c.id}">${esc(c.zh)}</a>`).join("・")}</p>
     </div>
 
+    <div class="card bracelet-card">
+      <h2>💫 訂製專屬水晶手鍊</h2>
+      <p class="muted small">由 Crystibee 手工串製；依你的月相意圖挑選對應水晶，成為你日常隨身的能量陪伴。</p>
+      <div class="btn-row">
+        <a class="btn bracelet-btn" href="https://crystibee.cashier.ecpay.com.tw/product/000000000562210" target="_blank" rel="noopener">✨ 前往 Crystibee 訂製</a>
+      </div>
+    </div>
+
     <div class="card">
       <h2>🗄 我的收藏架 <span class="sub">${col.length} 顆</span></h2>
       <p class="muted small">拍下你買回家的水晶，記錄日期・地點・價格，蒐集成一張自己的博物圖鑑海報。</p>
@@ -849,6 +857,7 @@ function renderCrystalPoster() {
   const box = $("#crystal-poster");
   if (!box) return;
   const list = filteredCrystals();
+  const showSuggest = !_crystalFilter.q && !_crystalFilter.use && !_crystalFilter.moon;
   box.innerHTML = `
     <div class="mineral-poster">
       <div class="mp-title">MINÉRALOGIE</div>
@@ -860,12 +869,58 @@ function renderCrystalPoster() {
             <span class="mp-fig">${crystalSVG(c)}</span>
             <span class="mp-name">${esc(c.zh)}<small>${esc(c.en)}</small></span>
           </button>`).join("") || `<p class="muted small" style="grid-column:1/-1;text-align:center">沒有符合的水晶，換個條件試試 ✨</p>`}
+        ${showSuggest ? `
+          <button type="button" class="mp-item mp-suggest" id="mp-suggest">
+            <span class="mp-num">${CRYSTAL_DB.length + 1}.</span>
+            <span class="mp-fig"><span class="mp-suggest-glyph">＋</span></span>
+            <span class="mp-name">新水晶種類建議<small>Suggest a new one</small></span>
+          </button>` : ""}
       </div>
       <div class="mp-footer">· ORDRE DES MATIÈRES ·<br>
         <span>${list.slice(0, 24).map((c, i) => `${CRYSTAL_DB.indexOf(c) + 1}. ${esc(c.en)}`).join(" — ")}${list.length > 24 ? " — …" : ""}</span>
       </div>
     </div>`;
-  $$(".mp-item", box).forEach(b => b.addEventListener("click", () => openCrystalDetail(b.dataset.cid)));
+  $$(".mp-item", box).forEach(b => {
+    if (b.id === "mp-suggest") return;
+    b.addEventListener("click", () => openCrystalDetail(b.dataset.cid));
+  });
+  $("#mp-suggest", box)?.addEventListener("click", openCrystalSuggestForm);
+}
+
+/* 新水晶種類建議：把使用者的想法送給 Blue（透過 /api/register 或本機收件匣） */
+function openCrystalSuggestForm() {
+  const m = modal(`
+    <h3>＋ 新水晶種類建議</h3>
+    <p class="muted small">想收藏但圖鑑裡還沒有？把它告訴 Blue，之後版本會補進來。</p>
+    <label class="field">水晶中／英文名稱</label>
+    <input type="text" id="cs-name" placeholder="例：拉利瑪、Ocean Jasper⋯">
+    <label class="field">你想被記住的原因（選填）</label>
+    <textarea id="cs-why" style="min-height:64px" placeholder="這顆水晶對你的意義、或為什麼想放進圖鑑⋯"></textarea>
+    <div class="btn-row">
+      <button class="btn" id="cs-send">送出 — 謝謝你的意見 🩵</button>
+      <button class="btn secondary" id="cs-cancel">取消</button>
+    </div>`);
+  $("#cs-cancel", m).addEventListener("click", () => m.remove());
+  $("#cs-send", m).addEventListener("click", async () => {
+    const name = $("#cs-name", m).value.trim();
+    const why = $("#cs-why", m).value.trim();
+    if (!name) return toast("先告訴我水晶的名稱");
+    // 本機收件匣（離線也不會遺失）
+    store.data.settings.crystalSuggestions ||= [];
+    store.data.settings.crystalSuggestions.push({ name, why, at: new Date().toISOString() });
+    store.save();
+    // 有帳號就順便寄回後端
+    try {
+      const email = store.data.settings.account?.email || "";
+      await fetch("api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, kind: "crystal-suggest", name, why }),
+      });
+    } catch {}
+    m.remove();
+    toast("已送出，謝謝你的意見 🩵 未來版本會補進圖鑑");
+  });
 }
 
 /* 詳細頁 */
