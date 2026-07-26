@@ -1,5 +1,5 @@
 /* 星塵夢汐 Stardust DreamTide v0.2 — 個人內在紀錄工具，非專業醫療用途。
-   全部資料存於裝置本機（localStorage + IndexedDB），無後端、無隱私外漏問題。 */
+   全部資料存於裝置本機或你的帳號（localStorage + IndexedDB），無後端、無隱私外漏問題。 */
 "use strict";
 
 /* ---------- 小工具 ---------- */
@@ -1592,7 +1592,7 @@ function renderToday() {
         ${sleepBadge(t) ? `<p class="muted small">${esc(sleepBadge(t))}</p>` : ""}
         <div class="btn-row">
           <button class="btn" id="quick-dream">🌙 記錄夢境</button>
-          <button class="btn secondary" id="quick-diary">✍️ 寫日記</button>
+          <button class="btn secondary" id="quick-diary">✍️ 寫下日記</button>
         </div>
       </div>`,
     mood: () => `
@@ -1613,8 +1613,8 @@ function renderToday() {
     gratitude: () => `
       <div class="card">
         <h2>🙏 三件感謝 <span class="sub">${grat ? "今天已寫 ✓" : "睡前的小練習"}</span></h2>
-        <p class="muted small">寫下今天三件值得感謝的小事，再小都算數，這是最簡單的快樂建立。</p>
-        ${[0, 1, 2].map(i => `<input type="text" class="grat-in" data-i="${i}" maxlength="60" placeholder="${i + 1}. ${["有人對我說了一句什麼話，讓我很開心", "今天吃到的美味食物是什麼", "今年忍下來，撐過去的那件事也寫下來"][i]}" value="${esc(grat?.items?.[i] || "")}">`).join("")}
+        <p class="muted small">寫下今天三件值得感謝的小事，再小都算數，這是挖掘生命快樂泉源的最佳管道。</p>
+        ${[0, 1, 2].map(i => `<input type="text" class="grat-in" data-i="${i}" maxlength="60" placeholder="${i + 1}. ${["有人對我說了一句什麼話，讓我很開心", "今天吃到了什麼讓你感到很幸福？", "今天忍下來，撐過去的那件事也寫下來"][i]}" value="${esc(grat?.items?.[i] || "")}">`).join("")}
         <div class="btn-row"><button class="btn" id="grat-save">存下今天的感謝</button></div>
       </div>`,
     summon: () => `
