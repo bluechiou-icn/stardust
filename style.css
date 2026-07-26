@@ -308,12 +308,28 @@ nav.tabbar {
   background: var(--surface); border-top: 1px solid var(--line);
   display: flex;
 }
+/* 可左右滑動：預設顯示六個，其餘滑動帶出 */
+.tabbar-scroll {
+  display: flex; width: 100%; height: 100%;
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tabbar-scroll::-webkit-scrollbar { display: none; }
 nav.tabbar button {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex: 0 0 calc(100% / 6); scroll-snap-align: start;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 2px; font-size: .68rem; color: var(--ink-3);
 }
 nav.tabbar button .ico { font-size: 1.25rem; }
 nav.tabbar button.on { color: var(--accent); }
+/* 右側漸層提示：暗示還有更多分頁可以滑 */
+nav.tabbar::after {
+  content: ""; position: absolute; right: 0; top: 0; width: 22px;
+  height: var(--nav-h); pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--surface));
+}
 
 /* moon calendar */
 .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -384,8 +400,12 @@ nav.tabbar button.on { color: var(--accent); }
 .bar-row .val { min-width: 2em; font-size: .8rem; font-variant-numeric: tabular-nums; }
 .spark svg { width: 100%; height: 72px; display: block; }
 
-/* 🐚 神奇海螺收藏寶庫 */
-.shell-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 10px; }
+/* 🐚 神奇海螺收藏寶庫（五行元素＋星際罕見版） */
+.beta-tag {
+  background: rgba(255,170,60,.16); color: #d98a1f; border: 1px solid rgba(255,170,60,.4);
+  border-radius: 999px; padding: 1px 8px; font-size: .68rem !important;
+}
+.shell-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; margin-top: 10px; }
 .shell-item {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   background: var(--surface-2); border-radius: 12px; padding: 10px 6px;
@@ -393,17 +413,125 @@ nav.tabbar button.on { color: var(--accent); }
 }
 .shell-emoji { font-size: 1.3rem; }
 .shell-name { font-size: .68rem; color: var(--ink-2); }
+.shell-name i { display: block; font-style: normal; font-size: .6rem; opacity: .8; }
 .shell-count { font-size: .78rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.shell-purple { border-color: rgba(160,120,255,.4); }
-.shell-purple .shell-count { color: #a078ff; }
-.shell-blue { border-color: rgba(90,150,255,.4); }
-.shell-blue .shell-count { color: #5a96ff; }
-.shell-pink { border-color: rgba(255,130,190,.4); }
-.shell-pink .shell-count { color: #ff82be; }
-.shell-gold { border-color: rgba(232,190,90,.45); }
-.shell-gold .shell-count { color: #e8be5a; }
-.shell-teal { border-color: rgba(70,200,180,.4); }
-.shell-teal .shell-count { color: #46c8b4; }
+.shell-wood  { border-color: rgba(88,170,110,.45); }
+.shell-wood  .shell-count { color: #58aa6e; }
+.shell-fire  { border-color: rgba(232,96,72,.45); }
+.shell-fire  .shell-count { color: #e86048; }
+.shell-earth { border-color: rgba(190,150,90,.45); }
+.shell-earth .shell-count { color: #be965a; }
+.shell-metal { border-color: rgba(214,178,70,.5); }
+.shell-metal .shell-count { color: #d6b246; }
+.shell-water { border-color: rgba(70,150,225,.45); }
+.shell-water .shell-count { color: #4696e1; }
+.shell-cosmic {
+  border-color: rgba(180,120,255,.55);
+  background: linear-gradient(150deg, rgba(150,90,240,.16), rgba(60,120,240,.12));
+}
+.shell-cosmic .shell-count { color: #b478ff; }
+.shell-rare { box-shadow: 0 0 14px rgba(180,120,255,.25); }
+
+/* 心情 5 Level 選擇列 */
+.mood-picker { display: flex; gap: 6px; margin: 10px 0; }
+.mood-opt {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 2px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--surface-2); transition: transform .12s ease, border-color .12s ease;
+}
+.mood-opt .mood-ico { font-size: 1.4rem; line-height: 1; }
+.mood-opt .mood-lbl { font-size: .6rem; color: var(--ink-3); }
+.mood-opt.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface-2)); transform: translateY(-2px); }
+.mood-opt.on .mood-lbl { color: var(--accent); }
+
+/* 心情日曆：格子只顯示圖示，與上方月相同格式 */
+.mood-grid { margin-top: 10px; }
+.cal-cell.mood-cell { align-items: center; justify-content: center; gap: 0; }
+.mood-cell .mc-day { font-size: .6rem; color: var(--ink-3); line-height: 1; }
+.mood-cell .mc-ico { font-size: 1.05rem; line-height: 1.2; min-height: 1.2em; }
+.mood-cell.future { opacity: .35; }
+.mood-legend { flex-wrap: wrap; gap: 8px; }
+.mood-bars { margin-top: 10px; }
+.mood-bars .lbl { width: 92px; }
+
+/* 心情圖示樣式挑選 */
+.ms-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%;
+  padding: 10px 12px; margin: 6px 0; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--surface-2); text-align: left;
+}
+.ms-row.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); }
+.ms-name { font-size: .84rem; font-weight: 600; }
+.ms-icons { font-size: 1.05rem; letter-spacing: .12em; }
+
+/* 🧩 自訂首頁 */
+.hc-list { margin: 8px 0; }
+.hc-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; margin: 6px 0; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--surface-2);
+}
+.hc-main { flex: 1; display: flex; align-items: center; gap: 10px; font-size: .86rem; }
+.hc-main i { display: block; font-style: normal; font-size: .68rem; color: var(--ink-3); }
+.hc-move { display: flex; gap: 4px; }
+.hc-move button {
+  width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink-2); font-size: .7rem;
+}
+.hc-move button:disabled { opacity: .3; }
+
+/* 🔮 召喚祭壇 */
+.altar {
+  position: relative; margin: 10px 5px; border-radius: 18px; overflow: hidden;
+  min-height: 540px; display: flex; align-items: flex-end;
+  background: #0b0a12 url("assets/altar.jpg") center / cover no-repeat;
+  box-shadow: 0 12px 34px rgba(0,0,0,.4);
+}
+.altar-clouds { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.altar-inner {
+  position: relative; z-index: 1; width: 100%; padding: 34px 18px 20px; text-align: center;
+  background: linear-gradient(to top, rgba(6,4,11,.97) 42%, rgba(6,4,11,.86) 66%, rgba(6,4,11,.5) 84%, transparent);
+  color: #f3eefb;
+}
+.altar-kicker { color: #e6c7d6; letter-spacing: .42em; font-size: .68rem; margin-bottom: 6px; }
+.altar-title {
+  font-family: Georgia, "Songti TC", serif; font-size: 1.35rem; letter-spacing: .1em; margin-bottom: 6px;
+  background: linear-gradient(120deg, #fff, #e7d7ff 45%, #cbb6ff);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.altar-sub { font-size: .82rem; color: #d9cfe8; margin-bottom: 14px; }
+.altar-sub b { color: #fff; }
+.altar-btn {
+  width: 100%; max-width: 300px; padding: 14px 18px; border-radius: 999px; border: none;
+  font-size: .98rem; font-weight: 700; letter-spacing: .05em; color: #1a1030;
+  background: linear-gradient(120deg, #e8e3f7, #b9a6ec);
+  box-shadow: 0 6px 24px rgba(170,140,240,.45);
+  animation: altar-pulse 2.6s ease-in-out infinite;
+}
+.altar-btn.off {
+  background: rgba(255,255,255,.1); color: rgba(255,255,255,.55);
+  border: 1px solid rgba(255,255,255,.18); box-shadow: none; animation: none;
+}
+@keyframes altar-pulse {
+  0%, 100% { box-shadow: 0 6px 24px rgba(170,140,240,.4); }
+  50% { box-shadow: 0 6px 34px rgba(200,175,255,.75); }
+}
+.altar-hint { margin-top: 10px; font-size: .72rem; color: rgba(245,240,255,.6); }
+.altar-hint b { color: #e7d7ff; }
+.summon-rules { margin: 8px 0 4px; padding-left: 20px; font-size: .82rem; line-height: 1.7; color: var(--ink-2); }
+.summon-rules li { margin: 4px 0; }
+
+/* 召喚結果 */
+.summon-res { text-align: center; padding: 12px 4px 4px; }
+.summon-res .sr-emoji { font-size: 3.4rem; line-height: 1; animation: sr-pop .5s cubic-bezier(.2,1.4,.4,1); }
+.summon-res h3 { margin: 10px 0 6px; }
+.summon-res.rare .sr-emoji { filter: drop-shadow(0 0 16px rgba(180,120,255,.85)); }
+.sr-rare { color: #b478ff; letter-spacing: .3em; font-size: .7rem; margin-bottom: 4px; }
+.sr-merged { color: var(--accent); font-size: .86rem; font-weight: 600; margin: 6px 0; }
+@keyframes sr-pop { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .altar-btn, .summon-res .sr-emoji { animation: none; }
+}
 
 /* misc */
 .banner {

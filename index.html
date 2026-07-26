@@ -27,19 +27,28 @@
   <section id="view-cbt" class="view"></section>
   <section id="view-moon" class="view"></section>
   <section id="view-crystal" class="view"></section>
+  <section id="view-cosmos" class="view"></section>
+  <section id="view-summon" class="view"></section>
   <section id="view-more" class="view"></section>
+  <section id="view-settings" class="view"></section>
   <footer class="app-footer">Blue Chiou Copyright ©</footer>
 </main>
 
 <div id="book-landing" class="book-landing hidden" aria-hidden="true"></div>
 
+<!-- 分頁列：可左右滑動，預設顯示六個 -->
 <nav class="tabbar">
-  <button data-tab="today" class="on"><span class="ico">🌅</span>今天</button>
-  <button data-tab="dream"><span class="ico">🌙</span>夢境</button>
-  <button data-tab="cbt"><span class="ico">🧠</span>思考</button>
-  <button data-tab="moon"><span class="ico">📅</span>月相</button>
-  <button data-tab="crystal"><span class="ico">💎</span>水晶</button>
-  <button data-tab="more"><span class="ico">✨</span>更多</button>
+  <div class="tabbar-scroll" id="tabbar-scroll">
+    <button data-tab="today" class="on"><span class="ico">🏠</span>首頁</button>
+    <button data-tab="dream"><span class="ico">🌙</span>夢境</button>
+    <button data-tab="cbt"><span class="ico">🧠</span>思考</button>
+    <button data-tab="moon"><span class="ico">📅</span>月曆</button>
+    <button data-tab="crystal"><span class="ico">💎</span>水晶</button>
+    <button data-tab="cosmos"><span class="ico">🌌</span>宇宙</button>
+    <button data-tab="summon"><span class="ico">🔮</span>召喚</button>
+    <button data-tab="more"><span class="ico">🗝</span>寶庫</button>
+    <button data-tab="settings"><span class="ico">⚙️</span>設定</button>
+  </div>
 </nav>
 
 <div id="modal-root"></div>
