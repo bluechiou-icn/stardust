@@ -84,8 +84,11 @@ const SHELL_COLORS = [
 ];
 const SHELL_BY_KEY = Object.fromEntries(SHELL_COLORS.map(c => [c.key, c]));
 const SHELL_FRAGMENTS_PER_SHELL = 5;
-/* 機率設定：流星雨本身 10% 出現（見 switchTab），出現後給碎片的機率 5%；召喚有 10% 摃龜 */
-const METEOR_FRAGMENT_CHANCE = 0.05;
+/* 機率設定（內部用，不寫進公開文案）：
+   切換分頁時 8.8% 出現流星雨；流星雨出現後，再以 8.8% 掉落一片碎片（整體約 0.77%）。
+   召喚儀式有 10% 摃龜（神奇海螺偏忙碌）。 */
+const METEOR_SHOWER_CHANCE = 0.088;
+const METEOR_FRAGMENT_CHANCE = 0.088;
 const SUMMON_MISS_CHANCE = 0.10;
 const SUMMON_PER_STREAK_DAYS = 3;   // 連續紀錄幾天轉化一次召喚機會
 const SUMMON_PER_TODOS = 3;         // 完成幾件待辦轉化一次召喚機會
@@ -1293,73 +1296,146 @@ function switchTab(tab) {
   if (tab !== "summon") stopAltar(); // 離開召喚頁就停掉雲層動畫
   VIEWS[tab]();
   window.scrollTo({ top: 0 });
-  if (changed && !REDUCED_MOTION && Math.random() < 0.1) meteorShowerFX();
+  if (changed && !REDUCED_MOTION && Math.random() < METEOR_SHOWER_CHANCE) meteorShowerFX();
 }
 
-/* ---------- 🌠 流星雨彩蛋：切換分頁時 10% 機率觸發，得到隨機顏色神奇海螺碎片一片機率改為5% ---------- */
+/* ---------- 🌠 流星雨彩蛋 ----------
+   切換分頁時 METEOR_SHOWER_CHANCE 機率觸發：整個畫面被流星雨蓋版 METEOR_DURATION_MS，
+   讓使用者真的放下手機許願；期間持續有流星劃過。
+   出現後再以 METEOR_FRAGMENT_CHANCE 的機率掉落一片隨機碎片（機率不寫在公開文案裡）。 */
+const METEOR_DURATION_MS = 24000;
 function meteorShowerFX() {
+  if (document.querySelector(".meteor-fx")) return; // 避免重疊觸發
   const ov = document.createElement("div");
   ov.className = "meteor-fx";
-  ov.innerHTML = `<canvas></canvas><p class="meteor-caption">🌠 流星雨出現了，雙手合十🙏，趕快許一個願</p>`;
+  ov.innerHTML = `
+    <canvas></canvas>
+    <div class="meteor-copy">
+      <p class="mc-1">🌠 流星雨出現了！</p>
+      <p class="mc-2">趕快放下手機🙏雙手合十</p>
+      <p class="mc-3">快速許下一個心願。</p>
+    </div>
+    <div class="meteor-foot">
+      <div class="meteor-ring"><svg viewBox="0 0 44 44"><circle class="mr-bg" cx="22" cy="22" r="19"/><circle class="mr-fg" cx="22" cy="22" r="19"/></svg><b id="mtr-n">${Math.ceil(METEOR_DURATION_MS / 1000)}</b></div>
+      <button type="button" class="meteor-skip hidden" id="mtr-skip">先跳過</button>
+    </div>`;
   document.body.appendChild(ov);
+  document.documentElement.classList.add("meteor-open");
+
   const cv = $("canvas", ov);
   const dpr = Math.min(devicePixelRatio || 1, 2);
-  const W = innerWidth, H = innerHeight;
-  cv.width = W * dpr; cv.height = H * dpr;
+  let W = innerWidth, H = innerHeight;
   const ctx = cv.getContext("2d");
-  ctx.scale(dpr, dpr);
-  const DUR = 2600;
-  const meteors = Array.from({ length: 16 }, (_, i) => ({
-    sx: Math.random() * W * 1.2 - W * 0.1, sy: -30 - Math.random() * H * 0.35,
-    ang: (58 + Math.random() * 22) * Math.PI / 180, // 右上往左下的斜角軌跡
-    speed: (0.55 + Math.random() * 0.35) * (Math.max(W, H) / 900),
-    start: i * 100 + Math.random() * 260,
-    trail: 70 + Math.random() * 90,
+  const sizeCanvas = () => {
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  sizeCanvas();
+  addEventListener("resize", sizeCanvas);
+
+  const ANG = () => (58 + Math.random() * 22) * Math.PI / 180; // 右上往左下的斜角軌跡
+  const spawn = (stagger = 0) => ({
+    sx: Math.random() * W * 1.45 - W * 0.2, sy: -40 - Math.random() * H * 0.5,
+    ang: ANG(),
+    speed: (0.5 + Math.random() * 0.5) * (Math.max(W, H) / 900),
+    born: performance.now() + stagger,
+    life: 1200 + Math.random() * 900,
+    trail: 70 + Math.random() * 120,
+    w: 1.4 + Math.random() * 1.6,
+  });
+  let meteors = Array.from({ length: 18 }, (_, i) => spawn(i * 90 + Math.random() * 200));
+  // 背景星點，讓蓋版畫面不至於空洞
+  const bgStars = Array.from({ length: 90 }, () => ({
+    x: Math.random() * W, y: Math.random() * H,
+    r: Math.random() * 1.3 + 0.3, a: Math.random() * 0.5 + 0.15,
+    tw: Math.random() * Math.PI * 2, tws: 0.01 + Math.random() * 0.03,
   }));
+
   const t0 = performance.now();
-  let raf;
+  let raf, ended = false;
+  const nEl = $("#mtr-n", ov), ringFg = $(".mr-fg", ov);
+  const CIRC = 2 * Math.PI * 19;
+  ringFg.style.strokeDasharray = CIRC;
+
+  const finish = () => {
+    if (ended) return; ended = true;
+    cancelAnimationFrame(raf);
+    removeEventListener("resize", sizeCanvas);
+    ov.style.opacity = "0";
+    document.documentElement.classList.remove("meteor-open");
+    setTimeout(() => ov.remove(), 400);
+  };
+
   const frame = now => {
     const t = now - t0;
-    const wash = Math.sin(Math.min(t / DUR, 1) * Math.PI); // 0→1→0，開頭結尾都淡出
+    const p = Math.min(t / METEOR_DURATION_MS, 1);
+    const fadeIn = Math.min(t / 500, 1);
+    const fadeOut = Math.min((METEOR_DURATION_MS - t) / 700, 1);
+    const veil = fadeIn * Math.max(fadeOut, 0);
+
+    // 全面蓋版的夜空
     ctx.clearRect(0, 0, W, H);
-    // 淡淡的夜幕暈染：讓流星在任何主題（含淺色背景）下都看得清楚，又不會蓋住原本畫面
-    const vg = ctx.createRadialGradient(W / 2, H * 0.3, 0, W / 2, H * 0.3, Math.max(W, H) * 0.75);
-    vg.addColorStop(0, `rgba(8,6,20,${wash * 0.22})`);
-    vg.addColorStop(1, `rgba(8,6,20,${wash * 0.08})`);
-    ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
-    meteors.forEach(m => {
-      const lt = t - m.start;
-      if (lt < 0) return;
-      const fade = Math.max(0, 1 - lt / 1500);
-      if (fade <= 0) return;
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, `rgba(6,7,20,${veil})`);
+    bg.addColorStop(0.55, `rgba(9,8,26,${veil})`);
+    bg.addColorStop(1, `rgba(4,4,12,${veil})`);
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+    for (const s of bgStars) {
+      s.tw += s.tws;
+      const a = s.a * (0.55 + 0.45 * Math.sin(s.tw)) * veil;
+      ctx.fillStyle = `rgba(255,255,245,${a})`;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+    }
+
+    for (let i = 0; i < meteors.length; i++) {
+      const m = meteors[i];
+      const lt = now - m.born;
+      if (lt < 0) continue;
+      if (lt > m.life) { // 回收再利用，維持整段時間都有流星
+        if (t < METEOR_DURATION_MS - 1500) meteors[i] = spawn(Math.random() * 500);
+        continue;
+      }
+      const fade = (1 - lt / m.life) * veil;
       const dist = lt * m.speed;
       const x = m.sx - Math.cos(m.ang) * dist, y = m.sy + Math.sin(m.ang) * dist;
       const tx = x + Math.cos(m.ang) * m.trail, ty = y - Math.sin(m.ang) * m.trail;
       const g = ctx.createLinearGradient(x, y, tx, ty);
       g.addColorStop(0, `rgba(255,250,230,${fade})`);
       g.addColorStop(1, "rgba(255,250,230,0)");
-      ctx.strokeStyle = g; ctx.lineWidth = 2.4; ctx.lineCap = "round";
+      ctx.strokeStyle = g; ctx.lineWidth = m.w; ctx.lineCap = "round";
       ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(tx, ty); ctx.stroke();
-      ctx.fillStyle = `rgba(255,255,245,${fade})`;
-      ctx.beginPath(); ctx.arc(x, y, 2.1, 0, Math.PI * 2); ctx.fill();
-    });
-    if (t < DUR) raf = requestAnimationFrame(frame);
+      const hg = ctx.createRadialGradient(x, y, 0, x, y, 7);
+      hg.addColorStop(0, `rgba(255,255,250,${fade})`);
+      hg.addColorStop(1, "rgba(255,255,250,0)");
+      ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill();
+    }
+
+    const left = Math.ceil((METEOR_DURATION_MS - t) / 1000);
+    if (nEl.textContent !== String(Math.max(left, 0))) nEl.textContent = String(Math.max(left, 0));
+    ringFg.style.strokeDashoffset = String(CIRC * p);
+
+    if (t >= METEOR_DURATION_MS) return finish();
+    raf = requestAnimationFrame(frame);
   };
   raf = requestAnimationFrame(frame);
-  // 流星雨本身 10% 出現；出現後只有 5% 機率真的掉落碎片
+
+  // 8 秒後才給跳過，讓許願的儀式感有機會發生
+  const skipBtn = $("#mtr-skip", ov);
+  setTimeout(() => skipBtn.classList.remove("hidden"), 8000);
+  skipBtn.addEventListener("click", finish);
+
+  // 掉落碎片（機率刻意不寫在公開文案）
   if (Math.random() < METEOR_FRAGMENT_CHANCE) {
     const { key, merged } = awardShellFragment();
     store.save();
     const info = SHELL_BY_KEY[key];
     setTimeout(() => {
       toast(`🐚 願望被聽見了！獲得「${info.emoji}${info.name}神奇海螺碎片」×1`);
-      if (merged) setTimeout(() => toast(`✨ 碎片集滿，合成一顆完整的${info.emoji}${info.name}神奇海螺！`), 1600);
-    }, 900);
+      if (merged) setTimeout(() => toast(`✨ 碎片集滿，合成一顆完整的${info.emoji}${info.name}神奇海螺！`), 1800);
+    }, 3200);
   }
-  setTimeout(() => {
-    ov.style.opacity = "0";
-    setTimeout(() => { cancelAnimationFrame(raf); ov.remove(); }, 300);
-  }, DUR);
 }
 
 /* ================= 今天 ================= */
@@ -1492,6 +1568,7 @@ function openBookLanding({ force = false } = {}) {
     magicFX("sigil", "🔮 開啟你的專屬魔法書⋯", () => {
       closeBook();
       switchTab("today");
+      settleReferral(); // 若是透過好友邀請連結進來的，開書後雙方各得一片碎片
     }, { color: "purple", finale: "🔮", dur: 2900 });
   };
 
@@ -2897,9 +2974,9 @@ function renderSummon() {
       <ul class="summon-rules">
         <li><b>連續紀錄 ${SUMMON_PER_STREAK_DAYS} 天</b>：夢境、思考紀錄、快速心情、日記、小本本、三件感謝、小勝利、顯化儀式⋯任何一種都算數（目前連續 ${streak} 天）</li>
         <li><b>完成 ${SUMMON_PER_TODOS} 件待辦</b>：在「思考」分頁的待辦事項打勾（已完成 ${countDoneTodos()} 件）</li>
-        <li><b>流星雨</b>：切換分頁時 10% 機率出現，出現後有 ${Math.round(METEOR_FRAGMENT_CHANCE * 100)}% 機率直接掉落一片碎片</li>
+        <li><b>流星雨</b>：切換分頁時偶爾會出現，記得趕快許願，有機會拿到神奇海螺碎片</li>
       </ul>
-      <p class="muted small">召喚結果為隨機碎片；也有 ${Math.round(SUMMON_MISS_CHANCE * 100)}% 的機率神奇海螺本身偏忙碌，不會出現。</p>
+      <p class="muted small">碎片屬性隨機出現，也有可能神奇海螺本身偏忙碌，下次才會來。</p>
     </div>
     <div class="card">
       <h2>🐚 目前的收藏 <span class="sub">${s.complete || 0} 顆完整・${totalFrag} 片碎片</span></h2>
@@ -3254,11 +3331,35 @@ function renderSettings() {
       <p class="muted small" style="margin-top:8px">Markdown 適合當諮商、回診回顧筆記；JSON 是完整備份。天象提醒最可靠的方式是「宇宙」分頁的「匯出天象行事曆」。</p>
     </div>
     <div class="card">
-      <h2>💬 提供建議</h2>
-      <p class="muted small">分享你對星塵夢汐的想法和建議，幫助我們不斷優化功能。</p>
+      <h2>💄 請辣妹給建議</h2>
+      <p class="muted small">分享你對星塵夢汐的想法，讓 Blue 知道哪裡可優化。</p>
       <div class="btn-row"><button class="btn" id="feedback-btn">✨ 分享你的靈感</button></div>
     </div>
+    <div class="card">
+      <h2>💋 辣妹留言板 <span class="sub" id="board-sub">載入中⋯</span></h2>
+      <p class="muted small">留下你的暱稱和一句話，讓大家看看彼此的星塵日常。</p>
+      <input type="text" id="bd-nick" maxlength="20" placeholder="暱稱（例：南港Lisa）" value="${esc(store.data.settings.nickname || "")}">
+      <textarea id="bd-text" maxlength="300" rows="3" placeholder="想說的話⋯（最多 300 字）"></textarea>
+      <div class="btn-row"><button class="btn" id="bd-send">💌 送出留言</button></div>
+      <div class="board-list" id="bd-list"><p class="muted small">載入中⋯</p></div>
+      <p class="muted small board-note">送出即表示同意記錄暱稱、留言內容與連線 IP；IP 不會公開顯示，僅於發生惡意毀謗留言時供法律追溯使用。</p>
+    </div>
+    <div class="card">
+      <h2>🎁 分享給好友</h2>
+      <p class="muted small">好友開啟個人魔法書後，雙方都能獲得一個隨機神奇海螺碎片。</p>
+      <div class="btn-row"><button class="btn" id="share-btn">🔗 分享我的魔法書邀請</button></div>
+      <p class="muted small">你的邀請碼：<b>${esc(myReferralCode())}</b></p>
+    </div>
+    <div class="card">
+      <h2>📕 封印魔法書</h2>
+      <p class="muted small">結束今天的紀錄時，把魔法書闔上重新封印，下次再由你親手開啟。</p>
+      <div class="btn-row"><button class="btn secondary" id="seal-btn">🔒 封印魔法書</button></div>
+    </div>
     <p class="disclaimer">星塵夢汐僅供自我紀錄，非供替代專業醫療，不提供分析治療。</p>`;
+  renderBoard();
+  $("#bd-send").addEventListener("click", sendBoardMessage);
+  $("#share-btn").addEventListener("click", openShareForm);
+  $("#seal-btn").addEventListener("click", () => sealBookFX());
   $$(".theme-swatch", el).forEach(b => b.addEventListener("click", () => {
     store.data.settings.theme = applyTheme(b.dataset.themeKey);
     store.save(); renderSettings();
@@ -3287,6 +3388,236 @@ function renderSettings() {
     toast(p === "granted" ? "通知已開啟 🔔（App 開啟時會提醒天象）" : "沒有取得通知權限");
   });
   $("#feedback-btn").addEventListener("click", openFeedbackForm);
+}
+
+/* ---------- 💋 辣妹留言板 ---------- */
+let _boardCache = null;
+async function renderBoard() {
+  const box = $("#bd-list"), sub = $("#board-sub");
+  if (!box) return;
+  try {
+    const r = await fetch("api/board", { cache: "no-store" });
+    const j = await r.json();
+    _boardCache = j;
+    if (!j.enabled && !(j.messages || []).length) {
+      if (sub) sub.textContent = "尚未啟用";
+      box.innerHTML = `<p class="muted small">留言板尚未啟用（後台尚未設定儲存空間），留言仍會送達後台。</p>`;
+      return;
+    }
+    drawBoard(j.messages || []);
+  } catch {
+    if (sub) sub.textContent = "連線失敗";
+    box.innerHTML = `<p class="muted small">留言板暫時連不上，稍後再試。</p>`;
+  }
+}
+function drawBoard(msgs) {
+  const box = $("#bd-list"), sub = $("#board-sub");
+  if (!box) return;
+  if (sub) sub.textContent = `${msgs.length} 則`;
+  if (!msgs.length) { box.innerHTML = `<p class="muted small">還沒有人留言，當第一個吧 💋</p>`; return; }
+  box.innerHTML = msgs.map(m => `
+    <div class="bd-item">
+      <div class="bd-head"><b>${esc(m.nickname || "訪客")}</b><span>${esc(fmtBoardTime(m.at))}</span></div>
+      <div class="bd-body">${esc(m.content || "")}</div>
+    </div>`).join("");
+}
+function fmtBoardTime(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d)) return "";
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 60) return "剛剛";
+  if (diff < 3600) return `${Math.floor(diff / 60)} 分鐘前`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} 小時前`;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+async function sendBoardMessage() {
+  const nick = $("#bd-nick")?.value.trim().slice(0, 20) || "";
+  const text = $("#bd-text")?.value.trim().slice(0, 300) || "";
+  if (!text) return toast("留言內容不能空白");
+  const btn = $("#bd-send");
+  btn.disabled = true; btn.textContent = "送出中⋯";
+  try {
+    const r = await fetch("api/board", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nickname: nick, content: text }),
+    });
+    if (r.status === 429) { toast("留言太頻繁，休息一下再送 💋"); return; }
+    const j = await r.json();
+    if (!r.ok || j.error) { toast("送出失敗，稍後再試"); return; }
+    $("#bd-text").value = "";
+    if (nick && !store.data.settings.nickname) { store.data.settings.nickname = nick; store.save(); }
+    toast(j.enabled ? "留言已送出 💋" : "留言已送達後台 💌");
+    renderBoard();
+  } catch {
+    toast("網路連線失敗，稍後再試");
+  } finally {
+    btn.disabled = false; btn.textContent = "💌 送出留言";
+  }
+}
+
+/* ---------- 🎁 分享給好友（邀請碼） ----------
+   前端版：邀請連結帶上個人邀請碼，好友開啟魔法書後雙方各得一片碎片。
+   受邀方立即入帳；邀請方的碎片在同一裝置回訪時入帳（沒有後端可即時通知）。 */
+function myReferralCode() {
+  const st = store.data.settings;
+  if (!st.refCode) {
+    st.refCode = (Math.random().toString(36).slice(2, 6) + Math.random().toString(36).slice(2, 6)).toUpperCase();
+    store.save();
+  }
+  return st.refCode;
+}
+function shareUrl() {
+  const base = location.origin + location.pathname.replace(/index\.html$/, "");
+  return `${base}#ref=${myReferralCode()}`;
+}
+function openShareForm() {
+  const url = shareUrl();
+  const text = `我在用「星塵夢汐」記錄夢境和心情 ✨ 用這個連結打開你的個人魔法書，我們都會拿到一片神奇海螺碎片 🐚`;
+  const m = modal(`
+    <h3>🎁 分享給好友</h3>
+    <p class="muted small">好友開啟個人魔法書後，雙方都能獲得一個隨機神奇海螺碎片。</p>
+    <label class="field">你的邀請連結</label>
+    <input type="text" id="sh-url" readonly value="${esc(url)}">
+    <div class="btn-row">
+      ${navigator.share ? `<button class="btn" id="sh-native">📤 分享連結</button>` : ""}
+      <button class="btn ${navigator.share ? "secondary" : ""}" id="sh-copy">📋 複製連結</button>
+    </div>
+    <p class="muted small">邀請碼 <b>${esc(myReferralCode())}</b></p>`);
+  $("#sh-copy", m).addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(url); toast("連結已複製 📋"); }
+    catch { $("#sh-url", m).select(); toast("請長按選取複製"); }
+  });
+  $("#sh-native", m)?.addEventListener("click", async () => {
+    try { await navigator.share({ title: "星塵夢汐", text, url }); } catch { /* 使用者取消 */ }
+  });
+}
+/* 被邀請方開啟連結：記下邀請碼，等他真的開啟魔法書時才發碎片 */
+function handleReferralHash() {
+  const m = location.hash.match(/[#&]ref=([A-Z0-9]{4,16})/i);
+  if (!m) return;
+  const code = m[1].toUpperCase();
+  history.replaceState(null, "", location.pathname + location.search);
+  const st = store.data.settings;
+  if (st.refCode === code) return;              // 不能自己邀自己
+  if (st.invitedBy) return;                     // 已經被邀請過就不重複
+  st.pendingRef = code; store.save();
+}
+/* 開啟魔法書時結算邀請獎勵。
+   受邀方這一片可以立刻入帳；邀請方那一片需要後端做歸戶才發得出去，
+   這裡先把 invitedBy 記在本機，等之後接上帳號系統就能回頭補發。 */
+function settleReferral() {
+  const st = store.data.settings;
+  if (!st.pendingRef) return;
+  const code = st.pendingRef;
+  delete st.pendingRef;
+  st.invitedBy = code;
+  const { key, merged } = awardShellFragment();
+  store.save();
+  const info = SHELL_BY_KEY[key];
+  setTimeout(() => {
+    toast(`🎁 來自好友的邀請！獲得「${info.emoji}${info.name}神奇海螺碎片」×1`);
+    if (merged) setTimeout(() => toast(`✨ 碎片集滿，合成一顆完整的${info.emoji}${info.name}神奇海螺！`), 1800);
+  }, 700);
+}
+
+/* ---------- 📕 封印魔法書 ----------
+   闔書：頁面收攏 → 封印圈收緊 → 落鎖，結束後回到 Book of Shadows 封面。 */
+function sealBookFX(done) {
+  if (REDUCED_MOTION) { done ? done() : openBookLanding({ force: true }); return; }
+  const ov = document.createElement("div");
+  ov.className = "fx-overlay seal-fx";
+  ov.innerHTML = `<canvas></canvas><p class="fx-caption">封印魔法書⋯</p><p class="fx-skip">輕觸跳過</p>`;
+  document.body.appendChild(ov);
+  const cv = $("canvas", ov), cap = $(".fx-caption", ov);
+  cap.style.color = "#dcc4ff";
+  cap.style.textShadow = "0 0 14px rgba(180,130,255,.7)";
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.scale(dpr, dpr);
+  const W = innerWidth, H = innerHeight, cx = W / 2, cy = H / 2 - 20;
+  const R = Math.min(W, H) * 0.3;
+  const DUR = 1900;
+  let raf, ended = false;
+  const finish = () => {
+    if (ended) return; ended = true;
+    cancelAnimationFrame(raf);
+    ov.style.opacity = "0";
+    setTimeout(() => {
+      ov.remove();
+      if (done) done(); else openBookLanding({ force: true });
+    }, 240);
+  };
+  ov.addEventListener("click", finish);
+  const t0 = performance.now();
+  const ease = x => 1 - Math.pow(1 - x, 3);
+  (function frame(now) {
+    const p = Math.min((now - t0) / DUR, 1);
+    const e = ease(p);
+    ctx.fillStyle = "rgba(10,8,20,0.34)"; ctx.fillRect(0, 0, W, H);
+
+    // 書頁由兩側往中間闔上
+    const half = R * 1.15 * (1 - e);
+    ctx.fillStyle = `rgba(46,26,86,${0.5 + 0.4 * e})`;
+    ctx.strokeStyle = `rgba(196,164,255,${0.5 + 0.4 * e})`;
+    ctx.lineWidth = 1.6;
+    for (const s of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - R * 0.9);
+      ctx.lineTo(cx + s * half, cy - R * 0.72);
+      ctx.lineTo(cx + s * half, cy + R * 0.72);
+      ctx.lineTo(cx, cy + R * 0.9);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+
+    // 封印圈：由外往內收緊
+    const rings = 3;
+    for (let i = 0; i < rings; i++) {
+      const rr = R * (1.5 - i * 0.18) * (1 - 0.55 * e);
+      const a = (0.25 + 0.6 * e) * (1 - i * 0.22);
+      ctx.strokeStyle = `rgba(196,164,255,${a})`;
+      ctx.lineWidth = 1.4;
+      ctx.shadowColor = "rgba(170,120,255,0.8)"; ctx.shadowBlur = 12 * e;
+      ctx.beginPath();
+      ctx.arc(cx, cy, rr, i * 0.7 - p * 2.4, i * 0.7 - p * 2.4 + Math.PI * 1.5);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // 中央落鎖
+    if (p > 0.55) {
+      const lp = (p - 0.55) / 0.45;
+      ctx.save();
+      ctx.globalAlpha = Math.min(lp * 1.6, 1);
+      ctx.font = `${Math.round(R * 0.36)}px serif`;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.shadowColor = "rgba(220,196,255,1)"; ctx.shadowBlur = 26 * lp;
+      ctx.fillText("🔒", cx, cy);
+      ctx.restore();
+      if (lp > 0.5) cap.textContent = "已重新封印 🔒";
+    }
+    if (p >= 1) return finish();
+    raf = requestAnimationFrame(frame);
+  })(t0);
+}
+
+/* 離開後自動重新封印。
+   瀏覽器在關閉分頁時會直接凍結頁面，沒有辦法在「退出當下」播完一段動畫，
+   所以改成：離開超過 RESEAL_AFTER_MS 再回來時，魔法書已經自己重新封印回封面。 */
+const RESEAL_AFTER_MS = 30 * 60 * 1000;
+function bindAutoReseal() {
+  let hiddenAt = 0;
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { hiddenAt = Date.now(); return; }
+    const away = hiddenAt ? Date.now() - hiddenAt : 0;
+    hiddenAt = 0;
+    if (away < RESEAL_AFTER_MS) return;
+    if (store.data.settings.skipBook) return;                  // 使用者選過「直接進本文」就尊重他
+    const el = document.getElementById("book-landing");
+    if (el && el.classList.contains("hidden")) openBookLanding({ force: true });
+  });
 }
 
 /* --- 🍆 茄子鐘（原番茄鐘，移到「思考」分頁） --- */
@@ -3970,6 +4301,7 @@ function checkEventNotifications() {
   const mi = moonInfo(new Date());
   $("#header-moon").textContent = `${mi.e} ${mi.n}・${mi.illum}%`;
   $$(".tabbar button").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
+  handleReferralHash();
   handleHashImport();
   window.addEventListener("hashchange", handleHashImport);
   switchTab("today");
@@ -3977,6 +4309,7 @@ function checkEventNotifications() {
   if (!store.data.settings.skipBook) setTimeout(() => openBookLanding(), 60);
   checkEventNotifications();
   checkSummonCharges({ silent: true });
+  bindAutoReseal();
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     navigator.serviceWorker.register("sw.js").then(async reg => {
       // Android Chrome：App 沒開也能背景檢查天象（best-effort，隨使用頻率調度）
