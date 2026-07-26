@@ -529,7 +529,7 @@ const KNOWLEDGE = [
   },
 ];
 
-/* ---------- 宇宙新聞（內容取自 NASA，美國政府作品屬公共領域；預設英文＋中譯） ---------- */
+/* ---------- 宇宙新聞（內容取自 NASA，美國政府資訊屬公共領域；預設英文＋中譯） ---------- */
 const NEWS = [
   {
     id: "webb-methane", date: "2026-06-01", icon: "☄️",
@@ -1613,8 +1613,8 @@ function renderToday() {
     gratitude: () => `
       <div class="card">
         <h2>🙏 三件感謝 <span class="sub">${grat ? "今天已寫 ✓" : "睡前的小練習"}</span></h2>
-        <p class="muted small">寫下今天三件值得感謝的小事，再小都算——研究說這是最省力的快樂練習。</p>
-        ${[0, 1, 2].map(i => `<input type="text" class="grat-in" data-i="${i}" maxlength="60" placeholder="${i + 1}. ${["有人對我說了一句好話", "今天吃到的一口好吃的", "撐過去的那件事"][i]}" value="${esc(grat?.items?.[i] || "")}">`).join("")}
+        <p class="muted small">寫下今天三件值得感謝的小事，再小都算數，這是最簡單的快樂建立。</p>
+        ${[0, 1, 2].map(i => `<input type="text" class="grat-in" data-i="${i}" maxlength="60" placeholder="${i + 1}. ${["有人對我說了一句什麼話，讓我很開心", "今天吃到的美味食物是什麼", "今年忍下來，撐過去的那件事也寫下來"][i]}" value="${esc(grat?.items?.[i] || "")}">`).join("")}
         <div class="btn-row"><button class="btn" id="grat-save">存下今天的感謝</button></div>
       </div>`,
     summon: () => `
