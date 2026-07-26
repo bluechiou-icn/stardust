@@ -1,5 +1,5 @@
 /* 星塵夢汐 Stardust DreamTide v0.1 — 個人內在紀錄工具，非專業醫療用途。
-   全部資料存於裝置本機（localStorage + IndexedDB），無後端、無帳號。 */
+   全部資料存於裝置本機（localStorage + IndexedDB），無後端、無隱私外漏問題。 */
 "use strict";
 
 /* ---------- 小工具 ---------- */
@@ -50,7 +50,7 @@ const AFFIRMATIONS = [
   "今天的我，比昨天更靠近想成為的自己。",
   "過去所有的選擇，都引領我至最好的當下。",
   "我吸引所有美好與幸運，而非追求。",
-  "改變不了的過去，我不會浪費時間去後悔。
+  "改變不了的過去，我不會浪費時間去後悔。",
   "每個微小的起心動念，都是內在要提醒我的訊號。",
   "我的感受是真實的，也值得被宇宙聽見。",
   "豐盛正在流向我，我已敞開心胸去接收。",
@@ -67,7 +67,7 @@ const AFFIRMATIONS = [
   "感謝過去的我，撐起了現在的我。",
 ];
 
-/* 連續紀錄徽章（[天數, 名稱]；想改直接編輯） */
+/* 連續紀錄徽章（[天數, 名稱]；想修改可直接編輯） */
 const STREAK_BADGES = [
   [3, "🌱 星火"], [7, "✨ 星芒"], [14, "🌙 星軌"], [30, "🌌 星座"], [60, "🌠 星河"], [100, "💫 星系"],
 ];
@@ -208,14 +208,14 @@ const ASTRO_EVENTS = [
 ];
 const SUPERMOON_ANNOT = { "2026-01-03": "超級滿月", "2026-11-24": "超級滿月", "2026-12-23": "超級滿月（近八年最大）" };
 const RITUALS = {
-  newmoon: { name: "新月許願儀式", steps: ["今晚預留 10 分鐘給自己，點燃一根蠟燭", "寫下 1 至 10 個願望，用現在式、肯定句（「我正在、我已經……」）", "字句寫下後，逐條唸出，閉上眼去想像，當這些願望實現時，喜悅佈滿內心的情緒，在腦海中預先體會這份幸福", "存進本日日記，於滿月時再回顧"] },
+  newmoon: { name: "新月許願儀式", steps: ["今晚預留 10 分鐘給自己，點燃一根蠟燭", "寫下 1 至 10 個願望，用現在式、肯定句（「我正在、我已經...」）", "字句寫下後，逐條唸出，閉上眼去想像，當這些願望實現時，喜悅佈滿內心的情緒，在腦海中預先體會這份幸福", "存進本日日記，於滿月時再回顧"] },
   fullmoon: { name: "滿月感恩與釋放", steps: ["回顧這半個月的自己：寫下 3 件感謝的事", "也寫下 1 件想放下的念頭或習慣", "深呼吸三次，想像問題都隨月光釋放、隨潮汐流走", "可回顧上個新月的願望清單是否已實現，即便還沒也沒關係，可趁著本輪滿月再次寫下心願"] },
   meteor: { name: "流星雨觀星儀式", steps: ["遠離光害，讓眼睛適應黑暗 15 分鐘", "對流星許願前，先在心中定好一個核心意念", "仰望星空，感受宇宙的壯闊與深度", "回家後用語音記下此刻的感受"] },
   eclipse: { name: "蝕相轉化書寫", steps: ["蝕相是週期的轉折點：寫下「正在結束的」與「正在開始的」", "問自己：我要讓什麼問題或負面情緒隨著星體移轉而離開？", "寫一句給下個週期的自己", "存為時空膠囊，下次蝕相時重新開啟"] },
   conjunction: { name: "星體相合・合力顯化", steps: ["兩顆行星相會，正是兩股宇宙能量交融之時：想一件需要「合力」完成之事（如事業＋關係、行動＋耐心）", "抬頭找到相合的兩顆星（黎明或黃昏低空），凝視一分鐘", "寫下你想融合的兩個面向，各一句話", "許一個需要這兩股力量一起推動的願望，存進本日日記"] },
   opposition: { name: "行星衝・照見與整合", steps: ["行星衝＝它整夜可見、最明亮的時刻，象徵某件事來到滿盈與清晰", "問自己：現在什麼事已經「看得最清楚」了？", "寫下這份清晰帶來的一個決定", "若有望遠鏡，親眼看看這顆最亮的行星"] },
   supermoon: { name: "超級月亮・盈滿感恩", steps: ["超級月亮是最大最亮的滿月，能量格外飽滿", "到戶外或窗邊，讓月光照在身上一分鐘", "寫下 3 件此刻豐盛、感謝的事", "寫下 1 件想在柔和月光中放下的重擔，深呼吸、吐氣、釋放"] },
-  seasonal: { name: "節氣・晝夜轉折儀式", steps: ["節氣是宇宙尺度的呼吸，站在轉折點上感受自己的位置", "寫下這一季走過的路：3 件收穫、1 件釋放", "以現在式寫下下一季想成為的樣子", "點一根蠟燭或倒一杯溫水，敬過去的自己與正在誕生的自己"] },
+  seasonal: { name: "節氣・晝夜轉折儀式", steps: ["節氣是宇宙尺度的呼吸，站在轉折點上感受自己的位置", "寫下這一季走過的路，有捨有得：3 個正面收穫、1 個負面情緒釋放", "以現在式寫下下一季想成為的樣子", "點一根蠟燭或倒一杯水，給過去的自己與正在誕生的自己"] },
   custom: { name: "自訂顯化儀式", steps: ["閉上眼，靜下心，進行三個深呼吸循環", "寫下此刻的意圖，用現在式", "想像心願實現的畫面、感受心中喜悅的情緒 1 分鐘", "以一句感謝作結，可以是感謝宇宙，也可以感謝自己"] },
 };
 
@@ -760,7 +760,7 @@ function openNicknameForm() {
   $("#nk-cancel", m)?.addEventListener("click", () => m.remove());
 }
 
-/* ================= Book of Shadows 首頁：個人魔法書 =================
+/* ================= Book of Shadows 首頁：個人專屬魔法書 =================
    每次進 App 都會出現這頁，像翻開自己的魔法書；輸入暱稱後以紫色魔法陣過場。
    點右上「跳過」可略過整個儀式（設定會記住，之後直接進本文）。 */
 function openBookLanding({ force = false } = {}) {
@@ -776,7 +776,7 @@ function openBookLanding({ force = false } = {}) {
     <div class="book-cover">
       <div class="book-runes">✧ ⋆ ˚ ⋆ ✦ ⋆ ˚ ✧</div>
       <div class="book-crest">
-        <svg viewBox="0 0 120 120" role="img" aria-label="魔法書封印" style="width:118px;height:118px">
+        <svg viewBox="0 0 120 120" role="img" aria-label="魔法書封印解除" style="width:118px;height:118px">
           <defs>
             <radialGradient id="bc-g" cx="50%" cy="45%" r="55%">
               <stop offset="0%" stop-color="#f6ecff" stop-opacity=".95"/>
@@ -793,7 +793,7 @@ function openBookLanding({ force = false } = {}) {
         </svg>
       </div>
       <h1 class="book-title">Book of Shadows</h1>
-      <p class="book-sub">你的個人魔法書</p>
+      <p class="book-sub">你的個人專屬魔法書</p>
       ${nickname
         ? `<p class="book-hi">歡迎回來，<b>${esc(nickname)}</b></p>
            <div class="book-actions">
@@ -803,9 +803,9 @@ function openBookLanding({ force = false } = {}) {
         : `<label class="field book-label">你希望宇宙怎麼稱呼你？</label>
            <input type="text" id="book-nick" maxlength="20" placeholder="Blue、Lisa、Petro⋯" autocomplete="off">
            <div class="book-actions">
-             <button class="btn book-open-btn" id="book-open">✨ 封印我的名字，打開魔法書</button>
+             <button class="btn book-open-btn" id="book-open">✨ 寫上我的名字，解除封印，打開魔法書</button>
            </div>`}
-      <p class="book-foot">此書專屬於你．紀錄僅存於此裝置</p>
+      <p class="book-foot">此書只專屬於你．紀錄僅存於此裝置或帳號</p>
     </div>`;
 
   const closeBook = () => {
@@ -815,7 +815,7 @@ function openBookLanding({ force = false } = {}) {
     el.innerHTML = "";
   };
   const enterApp = () => {
-    magicFX("sigil", "🔮 開啟你的魔法書⋯", () => {
+    magicFX("sigil", "🔮 開啟你的專屬魔法書⋯", () => {
       closeBook();
       switchTab("today");
     }, { color: "purple", finale: "🔮", dur: 2600 });
@@ -839,7 +839,7 @@ function openBookLanding({ force = false } = {}) {
   $("#book-editname")?.addEventListener("click", () => {
     closeBook();
     openNicknameForm();
-    // 修改完再打開一次書
+    // 修改完再打開一次魔法書
     const check = setInterval(() => {
       if (!document.querySelector(".modal-mask")) {
         clearInterval(check);
@@ -872,7 +872,7 @@ function renderToday() {
   const manifestDone = store.data.settings.lastManifest === t;
 
   el.innerHTML = `
-    ${intro ? `<div class="banner">🖤 歡迎進入星塵夢汐。此為<b>自我紀錄與回顧工具</b>，不具任何醫療用途；統合內在後可做為心理諮商或專業醫療參考。所有資料僅儲存在這支手機裡。<div class="btn-row"><button class="btn small" id="intro-ok">我瞭解了</button></div></div>` : ""}
+    ${intro ? `<div class="banner">🖤 歡迎使用星塵夢汐。此為<b>自我紀錄回顧工具</b>，不具醫療用途；統合內在後可做為心理諮商或專業醫療參考。所有資料僅儲存在這支手機裡。<div class="btn-row"><button class="btn small" id="intro-ok">我瞭解了</button></div></div>` : ""}
     <div class="card greet-card">
       <div class="greet-row">
         <span class="greet-ico">${gicon}</span>
@@ -958,8 +958,9 @@ function renderDream() {
       <p class="muted small">星塵樹洞會靜靜聆聽你不能對別人說的話。<br>技能解鎖後，這裡會亮起 💬。</p>
     </div>
     <div class="card">
-      <h2>夢境圖鑑 <span class="sub">共 ${dreams.length} 則</span></h2>
-      ${dreams.length === 0 ? `<p class="muted">尚無夢境紀錄。</p>` : ""}
+      <h2>夢境圖鑑，讓AI幫你繪出夢境 <span class="sub">共 ${dreams.length} 則</span></h2>
+    <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
+   ${dreams.length === 0 ? `<p class="muted">尚無夢境紀錄。</p>` : ""}
       <div id="dream-list"></div>
     </div>`;
   $("#dream-mic").addEventListener("click", () => openDreamForm({ autostart: true }));
