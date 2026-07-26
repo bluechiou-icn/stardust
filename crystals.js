@@ -776,15 +776,15 @@ function renderCrystal() {
     </div>
 
     <div class="card bracelet-card">
-      <h2>💫 訂製專屬水晶手鍊</h2>
-      <p class="muted small">由 Crystibee 手工串製；依你的月相意圖挑選對應水晶，成為你日常隨身的能量陪伴。</p>
+      <h2>💫 訂製你的專屬水晶手鍊</h2>
+      <p class="muted small">由 Crystibee 1:1 客製化，依你的命盤五行設計最適合你的水晶飾品。</p>
       <div class="btn-row">
         <a class="btn bracelet-btn" href="https://crystibee.cashier.ecpay.com.tw/product/000000000562210" target="_blank" rel="noopener">✨ 前往 Crystibee 訂製</a>
       </div>
     </div>
 
     <div class="card">
-      <h2>🗄 我的收藏架 <span class="sub">${col.length} 顆</span></h2>
+      <h2>🗄 我的水晶收藏架 <span class="sub">${col.length} 顆</span></h2>
       <p class="muted small">拍下你買回家的水晶，記錄日期・地點・價格，蒐集成一張自己的博物圖鑑海報。</p>
       <div id="crystal-shelf"></div>
       <div class="btn-row">
@@ -965,14 +965,14 @@ function renderCrystalShelf() {
   const col = [...(store.data.crystals || [])].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   if (!col.length) {
     box.innerHTML = `<div class="mineral-poster mp-empty">
-      <div class="mp-title" style="font-size:1.05em">MA COLLECTION</div>
+      <div class="mp-title" style="font-size:1.05em">MY COLLECTION</div>
       <p class="muted small" style="text-align:center;padding:14px 10px">收藏架還空著。<br>把你的第一顆水晶放上來吧 💎</p>
     </div>`;
     return;
   }
   box.innerHTML = `
     <div class="mineral-poster">
-      <div class="mp-title">MA COLLECTION</div>
+      <div class="mp-title">MY COLLECTION</div>
       <div class="mp-subtitle">— 我的水晶收藏 —</div>
       <div class="mp-grid">
         ${col.map((it, i) => {
