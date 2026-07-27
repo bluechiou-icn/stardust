@@ -25,7 +25,7 @@ If you're an agent on another platform (Gemini, ChatGPT, etc.) without access to
 | **Blue-OS** | Claude Code dashboard/control panel, runs on Blue's Mac, phone-reachable PWA | localhost:4173 (Blue's Mac) | Stable/idle — booking subsystem just split out to its own repo |
 | **aethnous-landing** | Public ÆTHNOUS marketing/landing site, Next.js (customized build) + Three.js solar-system hero | (Vercel, ÆTHNOUS domain) | Active — building EN-market acquisition funnel (`/start`, `/quiz`) |
 | **stardust** (this repo) | 星塵夢汐 Stardust DreamTide — separate wellness/journaling PWA (mood tracking, AI companion, crystal encyclopedia) | stardust.bluechiou.com | Active, brand-new — v1 just shipped, v1.5+ roadmapped |
-| **Blue-Bubble-Buddy** | Portable Claude Code skill library (16 skills) teaching engineering discipline to other AI agents/smaller models | (skill library, no deployment) | Active — STATE.md on main is stale, see that repo's own AGENT_STATUS.md |
+| **Blue-Bubble-Buddy** | Portable Claude Code skill library (17 skills) teaching engineering discipline to other AI agents/smaller models | (skill library, no deployment) | Active — STATE.md current (2026-07-27); newest skill `bbb-knowledge-graph` wraps the third-party graphify CLI as an optional onboarding accelerator |
 
 This repo split out of a `Blue-essay-Jung` repo's `app/` directory on 2026-07-16 (that repo reverted to being a psychology-research-paper project and is out of scope for this compilation). It's the one repo in the network **not** branded ÆTHNOUS — it's a separate wellness product under the same owner.
 
