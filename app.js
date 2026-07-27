@@ -3451,22 +3451,22 @@ function renderSettings() {
     </div>
     <div class="card">
       <h2>📖 魔法書首頁</h2>
-      <p class="muted small">是否於每次開啟 App 時，先呈現你的 Book of Shadows 個人魔法書。</p>
+      <p class="muted small">是否於每次開啟 App 時，先呈現你的 Book of Shadows。</p>
       <div class="btn-row">
-        <button class="btn secondary" id="book-toggle">${store.data.settings.skipBook ? "重新開啟魔法書首頁 📖" : "下次進 App 直接跳過魔法書 →"}</button>
+        <button class="btn secondary" id="book-toggle">${store.data.settings.skipBook ? "想再看見魔法書 📖" : "下次直接進首頁 →"}</button>
         <button class="btn ghost" id="book-preview">🔮 立即打開魔法書</button>
       </div>
     </div>
     <div class="card">
-      <h2>👤 星塵帳號 <span class="sub beta-tag">測試中</span></h2>
+      <h2>🐰 星塵夢汐帳號 <span class="sub beta-tag">測試中</span></h2>
       <p class="muted small">用 email＋密碼建立帳號，紀錄會<b>加密</b>後存進雲端；換手機、清掉瀏覽器資料、重灌，登入回來就把紀錄拿回去。</p>
       <div class="warn-box">⚠️ <b>帳號同步仍在測試中</b>，請務必定期用下方「🔐 資料（本機儲存）」的<b>匯出 JSON</b> 自己留一份備份，
-      不要只依賴雲端。金鑰只存在你的手機裡，<b>宇宙不曉得也找不回你的密碼</b>——忘記了雲端那份就永遠解不開（本機紀錄與匯出檔仍在）。</div>
+      不要只依賴雲端。金鑰只存在你的手機裡，<b>宇宙不曉得也找不回你的密碼</b>如果忘記了，雲端永遠解不開（本機紀錄與匯出檔仍在）。</div>
       <div id="account-box"><p class="muted small">載入中⋯</p></div>
     </div>
     <div class="card">
       <h2>☁ 雲端備份（Google Drive） <span class="sub beta-tag">測試中</span></h2>
-      <div class="warn-box">⚠️ <b>此區塊仍在測試中</b>，最保險的做法還是先用下方的「匯出 JSON」把資料存一份到自己手上。</div>
+      <div class="warn-box">⚠️ <b>此區塊仍在測試中</b>，最保險的做法還是先用下方的「匯出 JSON」把資料存一份到自己手機裡。</div>
       <div id="cloud-box"><p class="muted small">載入中⋯</p></div>
     </div>
     <div class="card">
