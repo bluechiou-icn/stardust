@@ -911,7 +911,8 @@ function openCrystalSuggestForm() {
     store.save();
     // 有帳號就順便寄回後端
     try {
-      const email = store.data.settings.account?.email || "";
+      const email = (typeof Account !== "undefined" && Account.email)
+        || store.data.settings.account?.email || "";   // 舊版本機帳號留下的 email，還在就一併帶上
       await fetch("api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

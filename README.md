@@ -15,18 +15,27 @@ stardust.bluechiou.com — 靜態 PWA ＋ Vercel serverless functions。
 index.html            單頁 App
 app.js / style.css    前端邏輯與樣式
 crystals.js           水晶圖鑑・虛擬收藏架・月相×許願儀式（見 docs/crystal-vision.md）
-cloud.js              雲端同步
+cloud.js              Google Drive 備份
+account.js            星塵帳號（email＋密碼・端對端加密同步，見 docs/account-setup.md）
 sw.js                 Service Worker（網路優先）
 manifest.webmanifest  PWA 安裝設定
 api/ai-chat.js        夢汐 AI（Anthropic）
 api/notion-sync.js    Notion 同步
+api/account.js        星塵帳號後端（Upstash Redis）
 api/config.js         前端組態
+Moon_altar/           召喚祭壇背景原圖（PNG，來源檔）
+assets/altar/         同一批圖壓成 1280px WebP，App 實際載入的版本
 icons/                App 圖示
 ```
+
+召喚祭壇背景每次進分頁隨機換一張。要新增背景：把原圖放進 `Moon_altar/`，
+壓成 WebP 放進 `assets/altar/`，再把檔名加進 `app.js` 的 `ALTAR_BACKDROPS`。
 
 ## 部署（Vercel）
 
 - Root Directory：`/`（repo 根目錄，遷移前是 `app/`）
 - 環境變數（只設在 Vercel，絕不進 git）：`ANTHROPIC_API_KEY`、
-  `NOTION_TOKEN`、`STARDUST_AI_MODEL`、`STARDUST_GOOGLE_CLIENT_ID`
+  `NOTION_TOKEN`、`STARDUST_AI_MODEL`、`STARDUST_GOOGLE_CLIENT_ID`、
+  `ACCOUNT_KV_URL`／`ACCOUNT_KV_TOKEN`（星塵帳號，見 `docs/account-setup.md`）、
+  `BOARD_KV_URL`／`BOARD_KV_TOKEN`（辣妹留言板）
 - 自訂網域：`stardust.bluechiou.com`

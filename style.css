@@ -200,6 +200,8 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   background: rgba(139, 127, 240, 0.05);
 }
 .btn.small { width: auto; padding: 7px 14px; font-size: .85rem; }
+.btn.danger { border-color: var(--danger); color: var(--danger); }
+.btn.danger:not(.ghost):not(.secondary) { background: var(--danger); color: #fff; border: none; }
 .btn:active { transform: scale(.98); }
 .btn-row { display: flex; gap: 8px; margin-top: 10px; }
 .btn-row .btn { flex: 1; }
@@ -405,6 +407,21 @@ nav.tabbar::after {
   background: rgba(255,170,60,.16); color: #d98a1f; border: 1px solid rgba(255,170,60,.4);
   border-radius: 999px; padding: 1px 8px; font-size: .68rem !important;
 }
+/* 測試中／不可逆操作的提醒框（帳號同步、雲端備份、換密碼⋯） */
+.warn-box {
+  margin: 10px 0; padding: 10px 12px; border-radius: 12px;
+  background: rgba(255,170,60,.1); border: 1px solid rgba(255,170,60,.34);
+  color: var(--ink-2); font-size: .78rem; line-height: 1.65;
+}
+.warn-box b { color: var(--ink); }
+
+/* 📲 安裝 App */
+.install-card { border-color: rgba(139,127,240,.4); }
+.install-steps {
+  margin: 8px 0 4px; padding-left: 22px; font-size: .84rem; line-height: 1.8; color: var(--ink-2);
+}
+.install-steps li { margin: 4px 0; }
+.install-steps b { color: var(--ink); }
 .shell-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; margin-top: 10px; }
 .shell-item {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -480,11 +497,16 @@ nav.tabbar::after {
 }
 .hc-move button:disabled { opacity: .3; }
 
-/* 🔮 召喚祭壇 */
+/* 🔮 召喚祭壇
+   --altar-bg 由 app.js 的 applyAltarBackdrop() 每次進頁面隨機換一張（assets/altar/*.webp）；
+   還沒換上去（或圖片抓不到）時，退回原本的 assets/altar.jpg。 */
 .altar {
   position: relative; margin: 10px 5px; border-radius: 18px; overflow: hidden;
   min-height: 540px; display: flex; align-items: flex-end;
-  background: #0b0a12 url("assets/altar.jpg") center / cover no-repeat;
+  background-color: #0b0a12;
+  background-image: var(--altar-bg, url("assets/altar.jpg"));
+  background-position: center; background-size: cover; background-repeat: no-repeat;
+  transition: background-image .45s ease;
   box-shadow: 0 12px 34px rgba(0,0,0,.4);
 }
 .altar-clouds { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }

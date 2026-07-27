@@ -1,6 +1,6 @@
 # AGENT_STATUS.md — ÆTHNOUS Project Network
 
-**Compiled:** 2026-07-23 · **Compiled by:** Claude (session `project-status-compilation`) · **For:** any AI agent (Claude, Gemini, ChatGPT, or other) picking up work in this repo or a sibling repo
+**Compiled:** 2026-07-23 · **Last updated:** 2026-07-27 · **Compiled by:** Claude (session `project-status-compilation`) · **For:** any AI agent (Claude, Gemini, ChatGPT, or other) picking up work in this repo or a sibling repo
 
 This file is a handoff briefing so any AI agent landing in *any* of Blue's repos with no other context can quickly understand who they're working for, what the whole project network looks like, which rules hold everywhere, and exactly where this repo stands right now. **This repo has no `CLAUDE.md` yet** (see the note at the end of section 4) — until one exists, this file is the only written orientation document here. Update it whenever this repo's status changes materially.
 
@@ -46,7 +46,28 @@ Compiled from the other six repos' `CLAUDE.md` files — this repo doesn't have 
 **星塵夢汐 Stardust DreamTide** (`stardust.bluechiou.com`) — a wellness/journaling PWA: CBT mood tracking (emotion + intensity), an "inner report," manifestation rituals, bedtime guidance, streak badges, an AI companion "夢汐" for chat and dream interpretation (via the Anthropic API), Notion sync, and a crystal encyclopedia (52 crystals with procedurally generated vintage-museum-style SVG illustrations) plus a virtual crystal shelf paired with moon-phase wishing rituals. Carries an explicit disclaimer that crystal effects are folk/energy tradition, not scientific or medical claims. Technically: a vanilla-JS static PWA (no build framework), Vercel serverless functions under `api/`. `package.json`: `stardust-dreamtide`, no version field, `private: true`, single dependency `@anthropic-ai/sdk`.
 
 ### Current status: active, brand-new
-Only 3 commits total, all within the last week: the app was migrated verbatim out of `Blue-essay-Jung`'s `app/` directory, then a large feature (crystal encyclopedia, virtual shelf, moon-phase pairing, 4 wish rituals — `crystals.js`, ~1,100 lines) shipped via PR #1 along with a planning doc, `docs/crystal-vision.md`.
+The app was migrated verbatim out of `Blue-essay-Jung`'s `app/` directory, then a large feature (crystal encyclopedia, virtual shelf, moon-phase pairing, 4 wish rituals — `crystals.js`, ~1,100 lines) shipped via PR #1 along with a planning doc, `docs/crystal-vision.md`.
+
+**2026-07-27 — real accounts landed.** The former "Email 註冊" was a placeholder: it wrote the
+email to `localStorage.settings.account` and posted it to a marketing list, so clearing browser
+data destroyed the account and there was no way to sign back in or recover anything. It has been
+replaced by **星塵帳號** (`account.js` + `api/account.js`): email + password, end-to-end encrypted
+sync backed by Upstash Redis. The client derives an AES-GCM key from the password
+(PBKDF2-SHA256, 200k) and uploads only ciphertext; the server receives a one-way `verifier`, never
+the password or the key, so **the backend cannot read anyone's dreams or moods** — which keeps the
+network-wide "personal data stays private" rule intact even though journals now leave the device.
+The key is never persisted, so reopening the app asks for the password once to unlock.
+Setup is two Vercel env vars (`ACCOUNT_KV_URL` / `ACCOUNT_KV_TOKEN`); unset → the feature reports
+`enabled:false` and the UI degrades to local + export. Full write-up: `docs/account-setup.md`.
+Trade-off to know about: no password reset is possible by design — forgetting the password means
+the cloud copy is unrecoverable (local data and JSON exports survive). Both sync blocks are
+labelled 測試中 and tell users to keep their own JSON exports.
+
+Also shipped that day: summon-altar backgrounds now rotate randomly through 30 moon-altar
+illustrations (`Moon_altar/` originals → `assets/altar/*.webp`, 1.6 MB PNG → ~75 KB each);
+meteor-shower easter egg retuned (3.3% appearance, 10s, skippable after 3s, 8% fragment drop);
+and the home tab gained an explicit "安裝 App" button because Chrome's automatic install prompt
+was not firing for users.
 
 ### Open / unfinished work
 `docs/crystal-vision.md` is a de facto product roadmap, with v1 marked shipped:
@@ -61,7 +82,9 @@ Only 3 commits total, all within the last week: the app was migrated verbatim ou
 **This repo has no `CLAUDE.md`.** Every sibling repo in the network has one codifying at minimum a secrets rule and a personal-data-never-in-git rule; given this app stores real user mood/journaling data, that gap is worth closing soon — recommend writing one that at least covers: secrets handling, the "no real user data in git" rule (adapted from the birth-data rule elsewhere), and this app's architecture map, mirroring the pattern used in the other six repos.
 
 ### Branches
-Only `main` and this session's branch exist; the one past feature branch (`claude/crystal-knowledge-collection-jcgq14`) is already merged via PR #1 — no other open feature work in flight.
+`main` plus the current feature branch `claude/moon-altar-account-system-op2yvx` (altar backgrounds,
+meteor tuning, 星塵帳號, install button). The earlier `claude/crystal-knowledge-collection-jcgq14`
+is already merged via PR #1.
 
 ---
 
