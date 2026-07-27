@@ -1,8 +1,8 @@
 /* 星塵夢汐 · 使用者註冊 / email 收集
    ────────────────────────────────────────
-   前端於 Google／Apple／Email 註冊後呼叫此 endpoint，把 email 送到後端行銷名單。
-   個人紀錄（夢境、日記、CBT⋯）仍存在本機 + 使用者自己的雲端，
-   後台只保留 email + provider + 選擇性暱稱 + 建議內容，用於功能更新通知。
+   前端於 Google／Apple／Email 註冊後呼叫此 endpoint，把 email 送到後端名單。
+   個人紀錄（夢境、日記、CBT⋯）仍存在user本機 + user自己的雲端，
+   後台只保留 email + provider + 選擇性暱稱 + 建議內容，用於功能更新與優惠碼通知。
 
    儲存方式（可選一種）：
    1. Vercel KV／Upstash Redis：設 REGISTER_KV_URL 與 REGISTER_KV_TOKEN
