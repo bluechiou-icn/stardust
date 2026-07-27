@@ -521,6 +521,24 @@ nav.tabbar::after {
 .summon-rules { margin: 8px 0 4px; padding-left: 20px; font-size: .82rem; line-height: 1.7; color: var(--ink-2); }
 .summon-rules li { margin: 4px 0; }
 
+/* 💋 辣妹留言板：預設約五則高度，可上下捲動看更多 */
+.board-list {
+  margin-top: 10px; max-height: 300px; overflow-y: auto;
+  border: 1px solid var(--line); border-radius: 12px; padding: 6px 10px;
+  background: var(--surface-2);
+  -webkit-overflow-scrolling: touch;
+}
+.bd-item { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.bd-item:last-child { border-bottom: none; }
+.bd-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.bd-head b { font-size: .84rem; }
+.bd-head span { font-size: .68rem; color: var(--ink-3); flex: none; }
+.bd-body { font-size: .84rem; color: var(--ink-2); margin-top: 3px; line-height: 1.6; overflow-wrap: anywhere; }
+.board-note { margin-top: 8px; opacity: .75; }
+
+/* 📕 封印魔法書 */
+.seal-fx { background: rgba(8,6,16,.72); }
+
 /* 召喚結果 */
 .summon-res { text-align: center; padding: 12px 4px 4px; }
 .summon-res .sr-emoji { font-size: 3.4rem; line-height: 1; animation: sr-pop .5s cubic-bezier(.2,1.4,.4,1); }
@@ -587,21 +605,48 @@ nav.tabbar::after {
 @keyframes fx-breathe { 0%,100% { opacity: .75; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .fx-overlay { display: none; } }
 
-/* 🌠 流星雨彩蛋 */
+/* 🌠 流星雨彩蛋：全面蓋版 */
+html.meteor-open, html.meteor-open body { overflow: hidden; }
 .meteor-fx {
-  position: fixed; inset: 0; z-index: 90; pointer-events: none;
-  transition: opacity .3s ease;
+  position: fixed; inset: 0; z-index: 480;
+  transition: opacity .4s ease;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  animation: meteor-in .5s ease;
 }
+@keyframes meteor-in { from { opacity: 0; } to { opacity: 1; } }
 .meteor-fx canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-.meteor-caption {
-  position: absolute; left: 50%; top: 14vh; transform: translateX(-50%); text-align: center;
-  color: #fff8e6; font-size: .88rem; letter-spacing: .05em;
-  text-shadow: 0 0 12px rgba(255,230,160,.7);
-  animation: fx-breathe 1.6s ease-in-out infinite;
-  background: rgba(10,8,22,.42); backdrop-filter: blur(3px);
-  border-radius: 999px; padding: 8px 18px; max-width: 86vw;
-  box-shadow: 0 4px 18px rgba(0,0,0,.25);
+.meteor-copy {
+  position: relative; z-index: 1; text-align: center; padding: 0 28px;
+  color: #fff8e6; text-shadow: 0 0 18px rgba(255,225,150,.55), 0 2px 10px rgba(0,0,0,.6);
 }
+.meteor-copy p { margin: 10px 0; line-height: 1.6; }
+.meteor-copy .mc-1 {
+  font-size: 1.5rem; font-weight: 700; letter-spacing: .06em;
+  animation: fx-breathe 2.4s ease-in-out infinite;
+}
+.meteor-copy .mc-2 { font-size: 1.06rem; color: #f6ecd8; }
+.meteor-copy .mc-3 { font-size: 1.06rem; color: #f6ecd8; }
+.meteor-foot {
+  position: absolute; left: 0; right: 0; z-index: 1;
+  bottom: calc(9vh + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.meteor-ring { position: relative; width: 44px; height: 44px; }
+.meteor-ring svg { width: 44px; height: 44px; transform: rotate(-90deg); }
+.meteor-ring circle { fill: none; stroke-width: 2; }
+.meteor-ring .mr-bg { stroke: rgba(255,255,255,.14); }
+.meteor-ring .mr-fg { stroke: rgba(255,236,190,.85); stroke-linecap: round; transition: stroke-dashoffset .3s linear; }
+.meteor-ring b {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; font-weight: 600; color: rgba(255,246,225,.85); font-variant-numeric: tabular-nums;
+}
+.meteor-skip {
+  color: rgba(255,255,255,.45); font-size: .74rem; letter-spacing: .18em;
+  padding: 6px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.05);
+  animation: meteor-in .5s ease;
+}
+.meteor-skip:hover { color: #fff; }
 @media (prefers-reduced-motion: reduce) { .meteor-fx { display: none; } }
 
 .modal-mask {

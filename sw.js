@@ -1,9 +1,18 @@
 /* 星塵夢汐 Stardust DreamTide service worker — 快取＋背景天象檢查 */
-const CACHE = "dreamtide-v13";
-const ASSETS = ["./", "index.html", "style.css", "app.js", "crystals.js", "cloud.js", "manifest.webmanifest", "assets/altar.jpg", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
+const CACHE = "dreamtide-v15";
+/* 核心殼層：一定要進快取才算安裝成功 */
+const CORE = ["./", "index.html", "style.css", "app.js", "crystals.js", "cloud.js", "manifest.webmanifest"];
+/* 加分資產：抓不到也不該讓整個 SW 安裝失敗（失敗 → 沒有 SW → PWA 就不能安裝了） */
+const EXTRA = ["assets/altar.jpg", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil((async () => {
+    const c = await caches.open(CACHE);
+    // 逐一快取並容許個別失敗：addAll 是全有全無，只要一支 404 就會讓安裝整個失敗
+    await Promise.allSettled(CORE.map(u => c.add(u)));
+    await Promise.allSettled(EXTRA.map(u => c.add(u)));
+    await self.skipWaiting();
+  })());
 });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
