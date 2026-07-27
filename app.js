@@ -168,13 +168,13 @@ function shellVaultHTML() {
 
 /* ---------- 心情 5 Level（心情日曆用；圖示可自訂） ----------
    level 1 = 最好、5 = 最壞；日曆格子只顯示圖示，方便和上方月相盈缺對照。 */
-const MOOD_LABELS = ["大晴天", "晴天", "陰天", "雨天", "颱風天（or軟今天）"];
+const MOOD_LABELS = ["大晴天", "晴天", "陰天", "雨天", "颱風天 （or軟今天）"];
 const MOOD_SETS = {
   weather: { name: "天氣", icons: ["☀️", "🌤", "☁️", "🌧", "🌪"] },
-  color:   { name: "顏色", icons: ["🟩", "🟦", "🟨", "🟧", "🟥"] },
+  color:   { name: "顏色", icons: ["🟦", "🟩", "🟨", "🟧", "🟥"] },
   face:    { name: "表情", icons: ["😄", "🙂", "😐", "😔", "😫"] },
   moon:    { name: "月相", icons: ["🌕", "🌔", "🌓", "🌒", "🌑"] },
-  heart:   { name: "愛心", icons: ["💚", "💙", "💛", "🧡", "❤️‍🔥"] },
+  heart:   { name: "愛心", icons: ["💙", "💚", "💛", "🧡", "❤️‍🔥"] },
 };
 function moodSetKey() { return store.data.settings.moodSet || "weather"; }
 function moodIcons() {
@@ -200,11 +200,11 @@ function setMood(ds, level, note) {
 
 /* ---------- 正向心態小工具：三件感謝、小勝利聖杯、自我關懷 ---------- */
 const SELF_COMPASSION = [
-  "如果今天的你只能做到一點點，那也已經足夠了。",
+  "如果今天的你只做到一點點，那也已經足夠了。",
   "對自己說一句，你平常會對好朋友說的安慰話語。",
   "情緒不需要被解決，它只需要先被你發現。",
-  "你不必時刻都堅強，暫停一下才能繼續前進。",
-  "犯錯不會損失你的價值，是你正在學習的證據。",
+  "你不必時刻都堅強，一邊流淚一邊勇敢也可以。",
+  "犯錯不會損失你的價值，那是你正在學習的證據。",
   "此刻的難受會過去，你已經撐過 99% 的難關。",
   "允許自己慢慢來，我們不需要跟任何人比賽。",
   "願意記錄自己內在輪廓，就是一種很深層的自我照顧。",
@@ -234,7 +234,7 @@ const store = {
     if (!this.data) this.data = { dreams: [], diary: [], cbt: [], focus: [], capsules: [], customEvents: [], settings: {} };
     for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "aiChat", "crystals", "notes", "todos", "feedback", "moods", "gratitude", "wins"]) this.data[k] ||= [];
     this.data.settings ||= {};
-    this.data.settings.symbols ||= [" 高山", "大海", "湖泊", "河流", "瀑布", "門", "迷宮", "下墜", "飛行", "追逐", "老房子", "牙齒", "樓梯", "考試", "迷路", "木", "火", "土", "金", "水",];
+    this.data.settings.symbols ||= [" 高山", "大海", "湖泊", "河流", "瀑布", "門", "迷宮", "下墜", "飛行", "追逐", "老房子", "牙齒", "樓梯", "考試", "迷路", "開車", "旅行", "朋友", "伴侶", "過去",];
     this.data.settings.emotions ||= ["焦慮", "羞愧", "悲傷", "憤怒", "恐懼", "委屈", "無力", "罪惡感"];
     // 自訂情緒清單（喜怒哀樂預設之外，使用者自己新增過的）；舊版存在 emotions 裡的自訂項目自動搬過來
     if (!this.data.settings.customEmotions) {
@@ -711,7 +711,7 @@ async function renderPhoto(imgEl, photoId) {
   if (data) imgEl.src = data; else imgEl.remove();
 }
 
-/* ---------- 主題（星塵之夜＝原本預設；暮色微光／綻藍晨霧＝莫蘭迪色票） ---------- */
+/* ---------- 主題（星塵之夜＝原本預設；暮色微光／綻藍晨霧＝New Version ） ---------- */
 const THEMES = {
   night: { name: "星塵之夜", dots: ["#0d0d14", "#8b7ff0", "#e8c874"], meta: "#0d0d14" },
   dusk: { name: "暮色微光", dots: ["#292643", "#e99e75", "#776483"], meta: "#1e1b36" },
@@ -728,7 +728,7 @@ function applyTheme(key) {
 /* ---------- 魔法過場特效（純視覺；資料在動畫前就已寫入，點擊可跳過） ---------- */
 const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const SIGIL_GLYPHS = ["☉", "☽", "☿", "♀", "♂", "♃", "♄", "א", "ב", "ג", "ה", "ש"];
-/* 顏色主題：金色（顯化）／紫色（Doctor Strange 風・開書儀式） */
+/* 顏色主題：金色（顯化）／紫色（Dr Strange Style・開書儀式） */
 const SIGIL_THEMES = {
   gold: { ink: "232,200,116", glow: "255,186,64", accent: "196,164,255", spark: "255,214,140", paper: "232,217,176", inkDark: "90,60,20" },
   purple: { ink: "196,164,255", glow: "180,130,255", accent: "245,205,120", spark: "220,190,255", paper: "48,26,84", inkDark: "230,210,255" },
@@ -788,7 +788,7 @@ function magicFX(mode, caption, done, { finale = "✦", color = "gold", dur } = 
     ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, cy, R * 0.55, R * 0.3, 0, 0, Math.PI * 2); ctx.fill();
   }
 
-  /* 魔法陣：Doctor Strange 風・紫金交織的動態曼陀羅
+  /* 魔法陣：Dr Strange Style・紫金交織的動態曼陀羅
      多層同心環反向旋轉 → 星形幾何與符文漸次浮現 → 靈光火花四射 → 金／紫光烙印 */
   const theme = SIGIL_THEMES[color] || SIGIL_THEMES.gold;
   const rgba = (c, a) => `rgba(${c},${a})`;
@@ -1550,7 +1550,7 @@ function openBookLanding({ force = false } = {}) {
         : `<label class="field book-label">你希望宇宙怎麼稱呼你？</label>
            <input type="text" id="book-nick" maxlength="20" placeholder="南港Lisa、中和李孝利" autocomplete="off">
            <div class="book-actions">
-             <button class="btn book-open-btn" id="book-open">✨ 寫上我的名字，解除封印，打開魔法書</button>
+             <button class="btn book-open-btn" id="book-open">✨ 寫上我的名字，締結契約，解除封印，打開魔法書</button>
            </div>`}
       <p class="book-foot">此書只專屬於你．紀錄僅存於此裝置或帳號</p>
     </div>`;
@@ -1733,8 +1733,8 @@ function renderToday() {
       </div>`,
     wins: () => `
       <div class="card">
-        <h2>🏆 小勝利罐 <span class="sub">${store.data.wins.length} 件</span></h2>
-        <p class="muted small">今天有什麼「其實我做到了」的小事？丟進罐子裡，難過的時候再拿出來看。</p>
+        <h2>🏆 小勝利聖杯 <span class="sub">${store.data.wins.length} 件</span></h2>
+        <p class="muted small">今天有什麼「其實我做到了」的小事？丟進聖杯裡，難過的時候再拿出來看。</p>
         <div class="add-emo">
           <input type="text" id="home-win-input" placeholder="例：今天準時起床了⋯按 Enter">
           <button type="button" class="btn small" id="home-win-add">＋</button>
@@ -1743,13 +1743,13 @@ function renderToday() {
       </div>`,
     compassion: () => `
       <div class="card">
-        <h2>💗 今日自我慈悲</h2>
+        <h2>💗 本日份自我鼓勵</h2>
         <p class="affirmation">「${esc(todaySelfCompassion())}」</p>
       </div>`,
   };
 
   el.innerHTML = `
-    ${intro ? `<div class="banner">🖤 歡迎使用星塵夢汐。此為<b>自我紀錄回顧工具</b>，不具醫療用途；統合內在後可做為心理諮商或專業醫療參考。所有資料僅儲存在這支手機裡。<div class="btn-row"><button class="btn small" id="intro-ok">我瞭解了</button></div></div>` : ""}
+    ${intro ? `<div class="banner">🖤 歡迎使用星塵夢汐。此為<b>自我紀錄回顧工具</b>，不具醫療用途；統合內在後可做為心理諮商或專業醫療參考。所有資料僅儲存在這支手機和你的帳號裡。<div class="btn-row"><button class="btn small" id="intro-ok">我瞭解了</button></div></div>` : ""}
     <div class="card greet-card">
       <div class="greet-row">
         <span class="greet-ico">${gicon}</span>
@@ -1805,7 +1805,7 @@ function renderToday() {
     const v = ($("#home-win-input", el)?.value || "").trim();
     if (!v) return;
     store.data.wins.push({ id: uid(), text: v, date: t, createdAt: new Date().toISOString() });
-    store.save(); checkSummonCharges(); toast("記下來了，這是你的功勞 🏆"); renderToday();
+    store.save(); checkSummonCharges(); toast("記下來了，這都是是你的功勞 🏆"); renderToday();
   };
   $("#home-win-add")?.addEventListener("click", addHomeWin);
   $("#home-win-input")?.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addHomeWin(); } });
@@ -2152,7 +2152,7 @@ function renderCBT() {
   });
   el.innerHTML = `
     <div class="card">
-      <h2>🧠 思考紀錄（7-Step）</h2>
+      <h2>🧠 思考紀錄（CBT 7-Step）</h2>
       <p class="muted small">情緒上來的時候，先倒出來再整理；宇宙只提問、不下結論，替代思考來自於你自己的潛意識。</p>
       <div class="btn-row">
         <button class="btn" id="cbt-start">開始 7 步驟引導</button>
@@ -2235,7 +2235,7 @@ function renderTodoList() {
     t.done = cb.checked;
     if (t.done) t.doneAt = new Date().toISOString();
     store.save();
-    if (!wasDone && t.done) toast("又完成了一項，記得謝謝自己 ❤️");
+    if (!wasDone && t.done) toast("又完成了一項，記得謝謝自己好不好 ❤️");
     checkSummonCharges(); // 每完成 3 件待辦換一次召喚機會
     renderTodoList();
     const todos2 = store.data.todos;
@@ -2744,7 +2744,7 @@ function renderMoon() {
 
     <div class="card">
       <h2>${todayMood ? moodIcon(todayMood.level) : "🌤"} 心情日曆 <span class="sub">${y} 年 ${mo + 1} 月・${monthMoods.length} 天已記錄</span></h2>
-      <p class="muted small">先選今天的心情，日曆上就會留下一個圖示；和上方月相同格式排列，方便你比對心情與月相的關聯。</p>
+      <p class="muted small">先選今天的心情，日曆上就會留下一個圖示；和上方月相同格式排列，方便你比對心情與月相的關聯＆共時性。</p>
       ${moodPickerHTML(todayMood?.level, "moon")}
       <div class="cal-grid mood-grid">
         ${WEEKDAYS.map(w => `<div class="dow">${w}</div>`).join("")}
@@ -2863,7 +2863,7 @@ function openMoodStyleForm() {
   });
 }
 
-/* 🙏 三件感謝（獨立入口，首頁區塊之外也能寫） */
+/* 🙏 三件感謝事物（獨立入口，首頁區塊之外也能寫） */
 function openGratitudeForm(ds = todayStr()) {
   const g = gratitudeOf(ds);
   const m = modal(`
@@ -2875,7 +2875,7 @@ function openGratitudeForm(ds = todayStr()) {
   $("#gf-save", m).addEventListener("click", () => {
     saveGratitude(ds, $$(".gf-in", m).map(i => i.value));
     checkSummonCharges();
-    m.remove(); toast("感謝已收下 🙏");
+    m.remove(); toast("已儲存 🙏");
     VIEWS[currentTab]();
   });
 }
@@ -2964,7 +2964,7 @@ function renderSummon() {
         </button>
         <p class="altar-hint">
           ${charges
-            ? "深呼吸，把手放在螢幕上，想著你想問的事。"
+            ? "深呼吸，把手放在螢幕上。"
             : `再連續紀錄 <b>${daysToNext}</b> 天，或再完成 <b>${todosToNext}</b> 件待辦，就能開啟一次。`}
         </p>
       </div>
@@ -3620,7 +3620,7 @@ function bindAutoReseal() {
   });
 }
 
-/* --- 🍆 茄子鐘（原番茄鐘，移到「思考」分頁） --- */
+/* --- 🍆 茄子鐘（原🍅鐘，移到「思考」分頁） --- */
 const focusState = { timer: null, endAt: 0, intent: "", mins: 25, distractions: [], running: false };
 function renderFocusBox() {
   const box = $("#focus-box");
@@ -3682,7 +3682,7 @@ function finishFocus(completed) {
     <label class="field">這一輪的專注度</label>
     <div class="slider-row"><input type="range" id="ff-rate" min="1" max="5" value="4"><output id="ff-out">4</output></div>
     <label class="field">現在的感覺</label><div class="chips" id="ff-emo"></div>
-    ${focusState.distractions.length ? `<label class="field">分心收件匣（會存起來，可轉待辦）</label><div class="tags">${focusState.distractions.map(d => `<span>${esc(d)}</span>`).join("")}</div>` : ""}
+    ${focusState.distractions.length ? `<label class="field">分心收件匣（會存起來，可轉to do list）</label><div class="tags">${focusState.distractions.map(d => `<span>${esc(d)}</span>`).join("")}</div>` : ""}
     <div class="btn-row"><button class="btn" id="ff-save">存檔</button></div>`);
   $("#ff-rate", m).addEventListener("input", e => $("#ff-out", m).value = e.target.value);
   chipGroup($("#ff-emo", m), ["滿足", "平靜", "煩躁", "疲憊", "亢奮"], ["滿足"], { multi: false });
@@ -3749,8 +3749,8 @@ async function openCapsule(id) {
     <h3>💌 來自 ${esc(c.created)} 的你</h3>
     <div class="body" style="white-space:pre-wrap;margin:10px 0">${esc(c.text)}</div>
     ${c.photoId ? `<img class="photo-thumb" alt="膠囊照片">` : ""}
-    <div class="socratic">讀完之後，那時的自己做對了什麼？對什麼盡心努力了？對自己說一句感謝。</div>
-    <textarea id="cap-thanks" placeholder="謝謝那時候的自己……"></textarea>
+    <div class="socratic">讀完之後，那時的自己做對了什麼？對什麼盡心努力了？對自己說一句感謝的話。</div>
+    <textarea id="cap-thanks" placeholder="謝謝那時候的自己…"></textarea>
     <div class="btn-row"><button class="btn" id="cap-thanks-save">存成今天的日記</button><button class="btn secondary" id="cap-close">關閉</button></div>`);
   if (c.photoId) renderPhoto($("img", m), c.photoId);
   $("#cap-close", m).addEventListener("click", () => { m.remove(); renderMore(); });
@@ -3792,7 +3792,7 @@ function renderInsights() {
     ${sleepRowsHTML()}
     ${Object.keys(symCount).length ? `<label class="field">最常出現的夢境符號</label>${barRows(symCount)}` : ""}
     ${Object.keys(distCount).length ? `<label class="field">最常出現的思考慣性</label>${barRows(distCount)}` : ""}
-    ${!D.dreams.length && !D.diary.length ? `<p class="muted small">開始記錄後，這裡會顯現出你的個人專屬潛意識圖鑑。</p>` : ""}`;
+    ${!D.dreams.length && !D.diary.length ? `<p class="muted small">開始記錄後，這裡會顯現出你的個人專屬潛意識圖鑑 🗂。</p>` : ""}`;
 }
 /* 連續紀錄：任何一種個人紀錄都算數（夢境、日記、思考、茄子鐘、快速心情、小本本、感謝、小勝利、顯化儀式） */
 function calcStreak() {
