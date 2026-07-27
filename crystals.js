@@ -111,15 +111,104 @@ const CRYSTAL_DB = [
     lore: "紫黃雙色天然共生於一顆晶體，主要僅玻利維亞 Anahí 礦區出產，傳說以西班牙征服者與原住民部落公主的聯姻為名。" },
 
   /* —— 石英隱晶質・瑪瑙玉髓 —— */
-  { id: "green-aventurine", zh: "東菱玉（綠東陵）", en: "Green Aventurine", alias: "機會之石", family: "石英家族",
-    form: "tumbled", pal: ["#7fae87", "#4a7a54", "#c2dcc6"], chakra: ["心輪"], element: "土", hard: "7",
-    origin: "印度・巴西",
-    fx: ["招好運與新機會", "溫和招財、適合小資理財", "撫慰心輪、樂觀開朗", "支持新的開始"],
-    uses: ["財富", "健康", "平靜"], nm: 2, fm: 1,
-    moonNote: "新月時換工作、開新專案時握著許願，傳統上是「賭運與機會」的幸運石。",
-    cleanse: ["月光", "流水", "晶簇"], avoid: [],
-    lore: "閃閃發亮的內含物是鉻雲母，義大利文 a ventura 意為「憑運氣」，原指偶然發明的金星玻璃。" },
-
+  { id: "aquamarine", zh: "海藍寶", en: "Aquamarine", alias: "海洋勇氣石", family: "綠柱石家族",
+    form: "point", pal: ["#a3cfe0", "#5b96b5", "#dbeef6"], chakra: ["喉輪"], element: "水", hard: "7.5–8",
+    origin: "巴西・巴基斯坦",
+    fx: ["冷靜表達、化解口舌之爭", "旅行（尤其海上）平安", "洗去累積的情緒鹽分", "給溫柔的人說真話的勇氣"],
+    uses: ["溝通", "勇氣", "平靜"], nm: 2, fm: 2,
+    moonNote: "水象月份（巨蟹・天蠍・雙魚月）的新月許願特別合拍。",
+    cleanse: ["月光", "流水", "晶簇"], avoid: ["長時間日曬"],
+    lore: "拉丁文「海水」之意，古羅馬水手帶它出航鎮浪；三月誕生石。" },
+  { id: "super-seven", zh: "超級七（三輪骨幹）", en: "Super Seven", alias: "七合一聖石", family: "石英家族",
+    form: "point", pal: ["#9a7ab0", "#6a4a80", "#d0b8e0"], chakra: ["全脈輪"], element: "風", hard: "7",
+    origin: "巴西 Espírito Santo",
+    fx: ["七種共生礦物的複合能量", "一石平衡所有脈輪", "身心靈全面升級", "傳統上認為免消磁且可淨化他石"],
+    uses: ["靈性", "淨化", "守護", "健康"], nm: 3, fm: 3,
+    moonNote: "新月滿月皆宜的全能選手；不知道帶哪顆時就帶它。",
+    cleanse: ["傳統上免消磁", "月光"], avoid: ["認明內含物層次，市售常以紫髮晶充數"],
+    lore: "白晶＋紫晶＋煙晶＋金紅石＋纖鐵礦＋針鐵礦＋鱗鐵礦七礦共生，由靈性作家 Melody 命名後風靡全球。" },
+  { id: "lapis-lazuli", zh: "青金石", en: "Lapis Lazuli", alias: "帝王之藍", family: "似長石礦物",
+    form: "tumbled", pal: ["#2e5aa8", "#1b3468", "#6d8fd0"], chakra: ["眉心輪", "喉輪"], element: "風", hard: "5–6",
+    origin: "阿富汗",
+    fx: ["開啟智慧與洞察", "說出真話、堅守立場", "古文明的王者護身石", "支持深度學習與研究"],
+    uses: ["靈性", "溝通", "事業"], nm: 2, fm: 2,
+    moonNote: "新月替學業、考試、著作立願；金色黃鐵礦斑點如夜空星辰。",
+    cleanse: ["晶簇", "薰香"], avoid: ["怕水怕汗，久泡會失光澤"],
+    lore: "圖坦卡門黃金面具的藍就是青金石；文藝復興畫家將它磨成比黃金昂貴的群青顏料，只捨得畫聖母的袍子。" },
+  { id: "herkimer", zh: "閃靈鑽（赫基蒙鑽石）", en: "Herkimer Diamond", alias: "夢之水晶", family: "石英家族",
+    form: "octa", pal: ["#eef0f4", "#c0c6d4", "#ffffff"], chakra: ["頂輪", "眉心輪"], element: "風", hard: "7.5",
+    origin: "美國紐約州 Herkimer 郡",
+    fx: ["增強夢境清晰度與記夢能力", "傳統的清明夢與星光體之石", "雙尖結構雙向傳導能量", "小體積高頻率的放大器"],
+    uses: ["睡眠", "靈性", "淨化"], nm: 2, fm: 3,
+    moonNote: "與夢境日記是天作之合：睡前握著說「我會記得今晚的夢」，醒來立刻記錄。",
+    cleanse: ["月光", "晶簇"], avoid: [],
+    lore: "五億年前海底白雲岩孔洞中緩慢長成的天然雙尖水晶，透亮如鑽而得名；是夢工作者的第一聖品。" },
+  { id: "lemurian", zh: "列姆尼亞（聖脈水晶）", en: "Lemurian Seed Quartz", alias: "刻著訊息的種子水晶", family: "石英家族",
+    form: "point", pal: ["#ebe7e2", "#b3aab6", "#fbf9f6"], chakra: ["頂輪", "全脈輪"], element: "風", hard: "7",
+    origin: "巴西米納斯吉拉斯・哥倫比亞",
+    fx: ["連結內在最原初的記憶與直覺", "柱身橫紋像階梯，適合一階一階梳理長期課題", "自帶淨化，不吸附也不囤積能量", "陪伴自我整合與靈性功課"],
+    uses: ["靈性", "淨化", "平靜"], nm: 3, fm: 3,
+    moonNote: "新月時用拇指輕撫柱身的天然橫紋（愛好者稱為「讀取階梯」），一階一句說出願望；滿月只需靜置感謝，不必特別充能。",
+    cleanse: ["不需要消磁"],
+    avoid: ["不要消磁：列姆尼亞被視為自帶淨化的水晶，不需要也不建議用鹽埋、日曬或超音波處理", "鹽會侵蝕表面的天然橫紋，日曬則會讓帶粉色的個體褪色", "真的想淨化，放在月光下或晶簇上「休息」就夠了"],
+    lore: "1999 年前後在巴西 Diamantina 一帶大量出土，柱面帶有天然的水平生長橫紋。名字取自傳說中沉入海底的列姆尼亞大陸——愛好者相信這些橫紋是被刻意留下、等待被讀取的訊息。" },
+  { id: "larimar", zh: "拉利瑪（海紋石）", en: "Larimar", alias: "加勒比海之心", family: "針鈉鈣石",
+    form: "cab", pal: ["#7cc3d8", "#4090ad", "#d4eef5"], chakra: ["喉輪"], element: "水", hard: "4.5–5",
+    origin: "多明尼加（全球唯一礦區）",
+    fx: ["如海浪般深層放鬆", "溫柔化解累積的委屈", "支持產後與照顧者的自我療癒", "與海豚能量、亞特蘭提斯傳說連結"],
+    uses: ["平靜", "溝通", "健康"], nm: 1, fm: 3,
+    moonNote: "滿月泡澡儀式的冥想石（石放旁邊勿入水）：想像月光海洗去疲憊。",
+    cleanse: ["月光", "晶簇"], avoid: ["怕曬怕汗，藍色會褪成白"],
+    lore: "1974 年才正式發現，發現者以女兒 Larissa ＋西語海洋 mar 命名；全球僅多明尼加一座山出產。" },
+  { id: "blue-chalcedony", zh: "藍玉髓（台灣藍寶）", en: "Blue Chalcedony", alias: "溫柔的表達之石", family: "石英家族",
+    form: "cab", pal: ["#8fc3d4", "#4d8fa6", "#d6ecf3"], chakra: ["喉輪"], element: "水", hard: "6.5–7",
+    origin: "台灣台東・土耳其・印尼",
+    fx: ["把想說的話說得溫柔又清楚", "化解人際之間的緊繃與誤會", "安撫過度亢奮或急躁的情緒", "支持需要長時間說話的工作"],
+    uses: ["溝通", "平靜", "愛情"], nm: 2, fm: 2,
+    moonNote: "新月許「把心裡話說出口」的願望；談判、告白、面試前握著它深呼吸三次。",
+    cleanse: ["月光", "流水", "晶簇"], avoid: ["長時間高溫或日曬會讓藍色變淡"],
+    lore: "台東都蘭山一帶產的藍玉髓俗稱「台灣藍寶」，由微量銅致色、藍中帶綠，是台灣少數在國際寶石市場闖出名號的礦物。" },
+  { id: "black-tourmaline", zh: "黑碧璽", en: "Black Tourmaline", alias: "電氣石守衛", family: "碧璽家族",
+    form: "blade", pal: ["#2e2e34", "#101013", "#55555f"], chakra: ["海底輪"], element: "土", hard: "7–7.5",
+    origin: "巴西・非洲",
+    fx: ["護盾級防護、隔絕負面環境", "傳統上認為可防小人、緩衝 3C 電磁干擾", "焦慮時促進平衡", "淨化所在空間氣場"],
+    uses: ["守護", "淨化", "平靜"], nm: 1, fm: 3,
+    moonNote: "滿月夜放家中四角「結界」淨化空間；高敏感人士的日常護身首選。",
+    cleanse: ["月光", "流水", "晶簇", "埋土"], avoid: [],
+    lore: "碧璽受熱或摩擦會產生電荷（熱電效應），故中文又名「電氣石」，居禮兄弟曾以它研究壓電現象。" },
+  { id: "calcite", zh: "方解石", en: "Calcite", alias: "空間的清道夫", family: "碳酸鹽礦物",
+    form: "cube", pal: ["#f0d9a8", "#c2a05c", "#fdf3dc"], chakra: ["全脈輪"], element: "土", hard: "3",
+    origin: "墨西哥・美國・中國",
+    fx: ["清理停滯已久的空間與心情", "放大意念，常作為儀式的基座", "不同顏色對應不同脈輪：橘＝創造、綠＝療癒、藍＝溝通", "幫助學習吸收與記憶整理"],
+    uses: ["淨化", "創造", "靈性"], nm: 2, fm: 3,
+    moonNote: "滿月大掃除的好夥伴：擺在書桌或玄關，象徵把整個空間的舊能量一起帶走。",
+    cleanse: ["月光", "薰香", "晶簇"],
+    avoid: ["硬度只有 3，指甲以外的東西幾乎都刮得傷它", "絕對不能碰水或醋——碳酸鈣遇酸會冒泡溶解"],
+    lore: "石灰岩與大理石的主成分，也是「冰洲石」雙折射現象的主角：透過它看字會變成兩行。維京人可能就是用這種石頭在陰天判斷太陽的方位。" },
+  { id: "tourmaline", zh: "碧璽（彩色電氣石）", en: "Tourmaline", alias: "落入凡間的彩虹", family: "碧璽家族",
+    form: "point", pal: ["#d76b8a", "#4f9d6b", "#f6d8e2"], chakra: ["心輪", "全脈輪"], element: "火", hard: "7–7.5",
+    origin: "巴西・莫三比克・美國加州",
+    fx: ["依顏色各有專長：粉招愛、綠招財、西瓜療癒心輪", "平衡身心兩極、化解內在的自我矛盾", "增強個人氣場與魅力", "帶動停滯的運勢重新流動"],
+    uses: ["愛情", "財富", "健康", "守護"], nm: 3, fm: 2,
+    moonNote: "新月依你今年的主題選色許願：想要感情選粉、想要事業選綠、想要整合矛盾選西瓜碧璽。",
+    cleanse: ["月光", "晶簇", "流水"], avoid: ["怕高溫驟變與超音波清洗，會沿內部裂隙碎開"],
+    lore: "名字源自錫蘭語 turamali「混合顏色的寶石」。具壓電性——加熱或加壓會帶靜電吸附灰塵，十八世紀荷蘭人拿它把菸斗裡的灰吸出來，因此舊稱「吸灰石」。" },
+  { id: "blue-apatite", zh: "藍磷灰石", en: "Blue Apatite", alias: "目標顯化石", family: "磷酸鹽礦物",
+    form: "point", pal: ["#2f9ec4", "#186f8e", "#8fd4e8"], chakra: ["喉輪"], element: "風", hard: "5",
+    origin: "馬達加斯加・巴西",
+    fx: ["聚焦目標、消除雜念", "激發學習與求知欲", "傳統上與健康節食的自律相關", "公開表達的清晰度"],
+    uses: ["事業", "溝通", "創造"], nm: 3, fm: 1,
+    moonNote: "新月訂目標的顯化清單石：一條目標唸一次，握石觀想完成畫面。",
+    cleanse: ["月光", "晶簇"], avoid: ["硬度低怕刮怕鹽，單獨收納"],
+    lore: "名字源自希臘文 apate「欺騙」，因外觀常被誤認成其他寶石；你的牙齒與骨骼主要成分就是磷灰石。" },
+  { id: "tanzanite", zh: "坦桑石（丹泉石）", en: "Tanzanite", alias: "一生一礦的紫藍", family: "黝簾石",
+    form: "point", pal: ["#6a6bb5", "#3b3a7a", "#b3b2e0"], chakra: ["喉輪", "眉心輪"], element: "風", hard: "6–7",
+    origin: "坦尚尼亞乞力馬札羅山麓（全球唯一產地）",
+    fx: ["把直覺化為說得出口的語言", "提升高層次覺知與靈性視野", "轉化長期壓抑不敢面對的情緒", "支持人生重大轉折期"],
+    uses: ["靈性", "溝通", "平靜"], nm: 2, fm: 3,
+    moonNote: "滿月做「說出真相」的儀式：寫下一直沒說出口的話，先讀給月亮聽，再決定要不要說給那個人聽。",
+    cleanse: ["月光", "晶簇"], avoid: ["有解理、怕撞擊，容易沿著同一個面裂開", "不可超音波清洗、不可高溫"],
+    lore: "1967 年才在坦尚尼亞被發現，Tiffany & Co. 以國名為它命名並推向世界。礦區只有約 7 平方公里，一般預估數十年內就會採罄，因此被稱為「一生一礦」的寶石。" },
   { id: "tigers-eye", zh: "虎眼石", en: "Tiger's Eye", alias: "勇氣之眼", family: "石英家族",
     form: "cab", pal: ["#c98f3d", "#6e4a1c", "#ecc37a"], chakra: ["太陽神經叢"], element: "火", hard: "7",
     origin: "南非・澳洲",
@@ -128,6 +217,39 @@ const CRYSTAL_DB = [
     moonNote: "新月替需要「膽識」的願望助攻：談判、比賽、提案或面試前配戴。",
     cleanse: ["月光", "日光", "流水"], avoid: [],
     lore: "絲絹光澤來自石英交錯青石棉後保留的纖維結構，轉動時如貓眼流動，羅馬士兵曾佩戴上戰場。" },
+  { id: "pietersite", zh: "彼得石（風暴之石）", en: "Pietersite", alias: "風暴中的定錨", family: "石英家族",
+    form: "cab", pal: ["#a5741f", "#4a3a5c", "#e0c48a"], chakra: ["太陽神經叢", "眉心輪"], element: "風", hard: "7",
+    origin: "納米比亞・中國河南",
+    fx: ["在混亂與變動之中穩住自己", "推動停滯太久的局面，帶來突破", "強化意志力與決斷", "兼具虎眼石的行動力與鷹眼石的洞察力"],
+    uses: ["勇氣", "事業", "守護"], nm: 3, fm: 1,
+    moonNote: "新月替「今年一定要改變的那件事」許願：離職、搬家、結束一段關係這類需要膽識的轉折特別適合。",
+    cleanse: ["月光", "晶簇", "薰香"], avoid: ["含纖維狀包裹體，避免長時間泡水或用鹽"],
+    lore: "1962 年由 Sid Pieters 在納米比亞發現並以其姓氏命名。虎眼石與鷹眼石的纖維被地質構造運動打碎後重新膠結，斷裂的絲光交錯翻騰如雲層，故名「風暴之石」。" },
+  { id: "topaz", zh: "托帕石（黃玉）", en: "Topaz", alias: "把願望說清楚的石頭", family: "黃玉",
+    form: "point", pal: ["#f2c98a", "#c08b3a", "#fdf0d6"], chakra: ["太陽神經叢", "喉輪"], element: "火", hard: "8",
+    origin: "巴西・巴基斯坦・奈及利亞",
+    fx: ["讓模糊的願望變成具體可執行的目標", "帶來自信、慷慨與豐盛感", "帝王托帕助事業、藍托帕助表達", "撫平焦躁，重新找回方向感"],
+    uses: ["財富", "事業", "溝通", "勇氣"], nm: 3, fm: 1,
+    moonNote: "新月顯化的實務派首選：許願時務必寫下「數字與期限」，傳統上托帕石對含糊的願望不太買單。",
+    cleanse: ["月光", "晶簇"],
+    avoid: ["硬度雖有 8，卻有完全解理，撞到就沿著同一面裂開", "長時間日曬會褪色；市售鮮豔藍托帕多為輻照處理"],
+    lore: "十一月誕生石，也是莫氏硬度表上「8」的標準礦物。名稱可能來自紅海的 Topazios 島，但該島實際出產的是橄欖石——這個誤會流傳了兩千年。" },
+  { id: "prehnite", zh: "葡萄石", en: "Prehnite", alias: "預言家之石", family: "矽酸鹽礦物",
+    form: "tumbled", pal: ["#bcd48f", "#8aa855", "#e6f0cc"], chakra: ["心輪"], element: "土", hard: "6–6.5",
+    origin: "澳洲・中國・馬利",
+    fx: ["連結直覺與預感", "療癒者與助人工作者的護持石", "溫潤招財（果凍綠如葡萄）", "安撫噩夢與擔憂"],
+    uses: ["財富", "靈性", "平靜"], nm: 2, fm: 2,
+    moonNote: "新月替助人志業與副業許願；夢工作者的枕邊石。",
+    cleanse: ["月光", "流水", "晶簇"], avoid: [],
+    lore: "第一個以人名命名的礦物（荷蘭上校 Hendrik von Prehn）；頂級冰種果凍體在亞洲市場稱「翡翠色的月光」。" },
+  { id: "green-aventurine", zh: "東菱玉（綠東陵）", en: "Green Aventurine", alias: "機會之石", family: "石英家族",
+    form: "tumbled", pal: ["#7fae87", "#4a7a54", "#c2dcc6"], chakra: ["心輪"], element: "土", hard: "7",
+    origin: "印度・巴西",
+    fx: ["招好運與新機會", "溫和招財、適合小資理財", "撫慰心輪、樂觀開朗", "支持新的開始"],
+    uses: ["財富", "健康", "平靜"], nm: 2, fm: 1,
+    moonNote: "新月時換工作、開新專案時握著許願，傳統上是「賭運與機會」的幸運石。",
+    cleanse: ["月光", "流水", "晶簇"], avoid: [],
+    lore: "閃閃發亮的內含物是鉻雲母，義大利文 a ventura 意為「憑運氣」，原指偶然發明的金星玻璃。" },
 
   { id: "carnelian", zh: "紅玉髓", en: "Carnelian", alias: "行動之火", family: "石英家族",
     form: "tumbled", pal: ["#d96f45", "#a03a1c", "#f2b795"], chakra: ["臍輪"], element: "火", hard: "7",
@@ -212,15 +334,6 @@ const CRYSTAL_DB = [
     cleanse: ["月光", "晶簇", "薰香"], avoid: ["傳統上建議定期淨化，因吸附力強"],
     lore: "火山熔岩急速冷卻的天然玻璃，斷口鋒利如刀，阿茲提克人用它做鏡面占卜、也做手術刀。" },
 
-  { id: "black-tourmaline", zh: "黑碧璽", en: "Black Tourmaline", alias: "電氣石守衛", family: "碧璽家族",
-    form: "blade", pal: ["#2e2e34", "#101013", "#55555f"], chakra: ["海底輪"], element: "土", hard: "7–7.5",
-    origin: "巴西・非洲",
-    fx: ["護盾級防護、隔絕負面環境", "傳統上認為可防小人、緩衝 3C 電磁干擾", "焦慮時促進平衡", "淨化所在空間氣場"],
-    uses: ["守護", "淨化", "平靜"], nm: 1, fm: 3,
-    moonNote: "滿月夜放家中四角「結界」淨化空間；高敏感人士的日常護身首選。",
-    cleanse: ["月光", "流水", "晶簇", "埋土"], avoid: [],
-    lore: "碧璽受熱或摩擦會產生電荷（熱電效應），故中文又名「電氣石」，居禮兄弟曾以它研究壓電現象。" },
-
   { id: "hematite", zh: "赤鐵礦（黑膽石）", en: "Hematite", alias: "鐵之意志", family: "氧化礦物",
     form: "tumbled", pal: ["#7d7f88", "#3f4147", "#b9bbc4"], chakra: ["海底輪"], element: "土", hard: "5–6",
     origin: "巴西・英國",
@@ -249,17 +362,9 @@ const CRYSTAL_DB = [
     lore: "約 20 億年前形成、含富勒烯（C60）結構的古老碳礦，彼得大帝曾在其礦泉旁建立俄國第一座療養地。" },
 
   /* —— 寶石級 Beryl・其他 —— */
-  { id: "aquamarine", zh: "海藍寶", en: "Aquamarine", alias: "海洋勇氣石", family: "綠柱石家族",
-    form: "point", pal: ["#a3cfe0", "#5b96b5", "#dbeef6"], chakra: ["喉輪"], element: "水", hard: "7.5–8",
-    origin: "巴西・巴基斯坦",
-    fx: ["冷靜表達、化解口舌之爭", "旅行（尤其海上）平安", "洗去累積的情緒鹽分", "給溫柔的人說真話的勇氣"],
-    uses: ["溝通", "勇氣", "平靜"], nm: 2, fm: 2,
-    moonNote: "水象月份（巨蟹・天蠍・雙魚月）的新月許願特別合拍。",
-    cleanse: ["月光", "流水", "晶簇"], avoid: ["長時間日曬"],
-    lore: "拉丁文「海水」之意，古羅馬水手帶它出航鎮浪；三月誕生石。" },
-
   { id: "morganite", zh: "摩根石", en: "Morganite", alias: "承諾之石", family: "綠柱石家族",
-    form: "point", pal: ["#f2c4c4", "#d18f9b", "#fce7e5"], chakra: ["心輪"], element: "水", hard: "7.5–8",
+    /* 三面各給一個粉色：正面粉紅、左面粉綠、右面粉藍（pal 依序對應 正面／左面／右面） */
+    form: "point", pal: ["#f6c3d0", "#bfdcc4", "#c5dcee"], chakra: ["心輪"], element: "水", hard: "7.5–8",
     origin: "巴西・馬達加斯加",
     fx: ["滋養成熟穩定的愛", "撫平心輪舊傷", "溫柔而堅定的承諾能量", "增進同理與耐心"],
     uses: ["愛情", "平靜"], nm: 2, fm: 2,
@@ -286,15 +391,6 @@ const CRYSTAL_DB = [
     lore: "極少數只有單一顏色的寶石；埃及人稱「太陽的寶石」，部分隕石（橄欖隕鐵）中也有宇宙橄欖石。" },
 
   /* —— 喉輪・藍色系 Blue Stones —— */
-  { id: "lapis-lazuli", zh: "青金石", en: "Lapis Lazuli", alias: "帝王之藍", family: "似長石礦物",
-    form: "tumbled", pal: ["#2e5aa8", "#1b3468", "#6d8fd0"], chakra: ["眉心輪", "喉輪"], element: "風", hard: "5–6",
-    origin: "阿富汗",
-    fx: ["開啟智慧與洞察", "說出真話、堅守立場", "古文明的王者護身石", "支持深度學習與研究"],
-    uses: ["靈性", "溝通", "事業"], nm: 2, fm: 2,
-    moonNote: "新月替學業、考試、著作立願；金色黃鐵礦斑點如夜空星辰。",
-    cleanse: ["晶簇", "薰香"], avoid: ["怕水怕汗，久泡會失光澤"],
-    lore: "圖坦卡門黃金面具的藍就是青金石；文藝復興畫家將它磨成比黃金昂貴的群青顏料，只捨得畫聖母的袍子。" },
-
   { id: "sodalite", zh: "蘇打石（方鈉石）", en: "Sodalite", alias: "理性直覺橋樑", family: "似長石礦物",
     form: "tumbled", pal: ["#3d5a9e", "#243a6e", "#8fa3d0"], chakra: ["眉心輪", "喉輪"], element: "風", hard: "5.5–6",
     origin: "巴西・加拿大",
@@ -312,24 +408,6 @@ const CRYSTAL_DB = [
     moonNote: "任何月相儀式前先握藍晶石一分鐘「校準」，如同樂器調音。",
     cleanse: ["傳統上免消磁", "月光"], avoid: ["層狀結構易裂，避免撞擊與泡水"],
     lore: "同一晶體兩個方向硬度不同（順紋 4.5、逆紋 7），地質學家用它判斷變質岩形成的溫壓條件。" },
-
-  { id: "blue-apatite", zh: "藍磷灰石", en: "Blue Apatite", alias: "目標顯化石", family: "磷酸鹽礦物",
-    form: "point", pal: ["#2f9ec4", "#186f8e", "#8fd4e8"], chakra: ["喉輪"], element: "風", hard: "5",
-    origin: "馬達加斯加・巴西",
-    fx: ["聚焦目標、消除雜念", "激發學習與求知欲", "傳統上與健康節食的自律相關", "公開表達的清晰度"],
-    uses: ["事業", "溝通", "創造"], nm: 3, fm: 1,
-    moonNote: "新月訂目標的顯化清單石：一條目標唸一次，握石觀想完成畫面。",
-    cleanse: ["月光", "晶簇"], avoid: ["硬度低怕刮怕鹽，單獨收納"],
-    lore: "名字源自希臘文 apate「欺騙」，因外觀常被誤認成其他寶石；你的牙齒與骨骼主要成分就是磷灰石。" },
-
-  { id: "larimar", zh: "拉利瑪（海紋石）", en: "Larimar", alias: "加勒比海之心", family: "針鈉鈣石",
-    form: "cab", pal: ["#7cc3d8", "#4090ad", "#d4eef5"], chakra: ["喉輪"], element: "水", hard: "4.5–5",
-    origin: "多明尼加（全球唯一礦區）",
-    fx: ["如海浪般深層放鬆", "溫柔化解累積的委屈", "支持產後與照顧者的自我療癒", "與海豚能量、亞特蘭提斯傳說連結"],
-    uses: ["平靜", "溝通", "健康"], nm: 1, fm: 3,
-    moonNote: "滿月泡澡儀式的冥想石（石放旁邊勿入水）：想像月光海洗去疲憊。",
-    cleanse: ["月光", "晶簇"], avoid: ["怕曬怕汗，藍色會褪成白"],
-    lore: "1974 年才正式發現，發現者以女兒 Larissa ＋西語海洋 mar 命名；全球僅多明尼加一座山出產。" },
 
   { id: "turquoise", zh: "綠松石（土耳其石）", en: "Turquoise", alias: "天空守護石", family: "磷酸鹽礦物",
     form: "tumbled", pal: ["#4fb5b0", "#2a807c", "#a8ddd8"], chakra: ["喉輪"], element: "風", hard: "5–6",
@@ -432,15 +510,6 @@ const CRYSTAL_DB = [
     cleanse: ["晶簇", "薰香"], avoid: ["怕水怕酸！含銅有毒勿磨粉勿泡水，戴後洗手"],
     lore: "古埃及人磨它做綠色眼影兼防蚊；俄國沙皇冬宮有整座孔雀石廳，數噸礦石貼出的綠色大廳。" },
 
-  { id: "prehnite", zh: "葡萄石", en: "Prehnite", alias: "預言家之石", family: "矽酸鹽礦物",
-    form: "tumbled", pal: ["#bcd48f", "#8aa855", "#e6f0cc"], chakra: ["心輪"], element: "土", hard: "6–6.5",
-    origin: "澳洲・中國・馬利",
-    fx: ["連結直覺與預感", "療癒者與助人工作者的護持石", "溫潤招財（果凍綠如葡萄）", "安撫噩夢與擔憂"],
-    uses: ["財富", "靈性", "平靜"], nm: 2, fm: 2,
-    moonNote: "新月替助人志業與副業許願；夢工作者的枕邊石。",
-    cleanse: ["月光", "流水", "晶簇"], avoid: [],
-    lore: "第一個以人名命名的礦物（荷蘭上校 Hendrik von Prehn）；頂級冰種果凍體在亞洲市場稱「翡翠色的月光」。" },
-
   { id: "jade", zh: "翡翠（玉）", en: "Jade / Jadeite", alias: "東方平安石", family: "輝石家族",
     form: "cab", pal: ["#5ba86f", "#2e7346", "#a8d8b4"], chakra: ["心輪"], element: "土", hard: "6.5–7",
     origin: "緬甸・瓜地馬拉",
@@ -488,23 +557,24 @@ const CRYSTAL_DB = [
     cleanse: ["月光", "晶簇"], avoid: ["市面偽品極多（綠玻璃），認明褶皺紋理與證書"],
     lore: "約 1,500 萬年前隕石撞擊巴伐利亞，熔融飛濺物冷凝成綠色玻璃雨落在捷克；TikTok 帶動全球缺貨與價格飆漲。" },
 
-  { id: "super-seven", zh: "超級七（三輪骨幹）", en: "Super Seven", alias: "七合一聖石", family: "石英家族",
-    form: "point", pal: ["#9a7ab0", "#6a4a80", "#d0b8e0"], chakra: ["全脈輪"], element: "風", hard: "7",
-    origin: "巴西 Espírito Santo",
-    fx: ["七種共生礦物的複合能量", "一石平衡所有脈輪", "身心靈全面升級", "傳統上認為免消磁且可淨化他石"],
-    uses: ["靈性", "淨化", "守護", "健康"], nm: 3, fm: 3,
-    moonNote: "新月滿月皆宜的全能選手；不知道帶哪顆時就帶它。",
-    cleanse: ["傳統上免消磁", "月光"], avoid: ["認明內含物層次，市售常以紫髮晶充數"],
-    lore: "白晶＋紫晶＋煙晶＋金紅石＋纖鐵礦＋針鐵礦＋鱗鐵礦七礦共生，由靈性作家 Melody 命名後風靡全球。" },
-
-  { id: "herkimer", zh: "閃靈鑽（赫基蒙鑽石）", en: "Herkimer Diamond", alias: "夢之水晶", family: "石英家族",
-    form: "octa", pal: ["#eef0f4", "#c0c6d4", "#ffffff"], chakra: ["頂輪", "眉心輪"], element: "風", hard: "7.5",
-    origin: "美國紐約州 Herkimer 郡",
-    fx: ["增強夢境清晰度與記夢能力", "傳統的清明夢與星光體之石", "雙尖結構雙向傳導能量", "小體積高頻率的放大器"],
-    uses: ["睡眠", "靈性", "淨化"], nm: 2, fm: 3,
-    moonNote: "與夢境日記是天作之合：睡前握著說「我會記得今晚的夢」，醒來立刻記錄。",
-    cleanse: ["月光", "晶簇"], avoid: [],
-    lore: "五億年前海底白雲岩孔洞中緩慢長成的天然雙尖水晶，透亮如鑽而得名；是夢工作者的第一聖品。" },
+  { id: "meteorite", zh: "天鐵（鐵隕石）", en: "Iron Meteorite", alias: "從天上掉下來的鐵", family: "隕石",
+    form: "rough", pal: ["#8d8f96", "#4a4c55", "#c9cbd2"], chakra: ["海底輪", "頂輪"], element: "火", hard: "4–5",
+    origin: "納米比亞 Gibeon・阿根廷 Campo del Cielo・俄羅斯 Sikhote-Alin",
+    fx: ["同時強力接地又連結宇宙，上下貫通", "突破舊有框架，帶來根本性的改變", "強化意志與行動的持久度", "傳統上視為擋煞護身的重器"],
+    uses: ["守護", "勇氣", "靈性"], nm: 3, fm: 2,
+    moonNote: "新月做「重新開始」的儀式：握著它想像自己也曾穿過大氣層才落到這裡——燒掉的是外殼，留下來的才是核心。",
+    cleanse: ["月光", "薰香", "晶簇"],
+    avoid: ["會生鏽：絕對不能泡水、不能用鹽，流汗接觸後要立刻擦乾", "建議上一層薄薄的礦物油，或收在附乾燥劑的密封盒裡"],
+    lore: "主成分是鐵鎳合金，來自小行星碎裂後的金屬核心，年齡約 45 億年，比地球上任何一塊岩石都老。切開拋光再用酸浸蝕，會浮現「維德曼花紋」——那是金屬在太空中每一百萬年才降溫一度、慢慢長出來的結晶，地球上無法人工複製。圖坦卡門陪葬的匕首，就是用天鐵打造的。" },
+  { id: "symbiotic", zh: "共生礦", en: "Symbiotic / Paragenetic Minerals", alias: "一塊石頭上的合奏", family: "共生礦組",
+    form: "cluster", pal: ["#b9a2c8", "#6d7f5e", "#efe3d0"], chakra: ["全脈輪"], element: "土", hard: "依組成而異",
+    fx: ["多種礦物的特質同時作用，能量層次比單一礦豐富", "象徵「不一樣的人事物可以在同一塊土地上共存」", "適合處理關係、團隊與家庭的課題", "一塊抵好幾種，是收藏入門 CP 值最高的選擇"],
+    origin: "世界各地（同一條熱液脈或同一個岩體內）",
+    uses: ["靈性", "守護", "平靜", "健康"], nm: 2, fm: 2,
+    moonNote: "新月適合許「合作、家庭、團隊」這類牽涉到很多人的願望；滿月時可以把它當成整組水晶的充能中心。",
+    cleanse: ["月光", "晶簇", "薰香"],
+    avoid: ["保養一律看「最脆弱的那一種」：含方解石就不能碰水、含黃鐵礦就怕潮濕、含天鐵就怕生鏽", "所以共生礦一律不建議用鹽、超音波或長時間日曬"],
+    lore: "地質學稱為「共生組合」（paragenesis）：在同一段時間、同一個熱液或岩漿環境裡，不同礦物依溫度與化學條件先後結晶，長在同一塊母岩上。常見組合有紫水晶＋方解石、螢石＋黃鐵礦、電氣石＋雲母＋長石、孔雀石＋藍銅礦。看懂共生組合就能反推這塊石頭形成時的溫度與深度——所以收藏家說，共生礦是「會說故事的標本」。" },
 ];
 
 /* 快速索引 */
@@ -752,6 +822,10 @@ const CRYSTAL_RITUALS = {
    ============================================================ */
 let _crystalFilter = { use: "", moon: "", q: "" };
 
+/* 對外連結（想換直接改這兩行） */
+const SOURCING_LINE_URL = "https://lin.ee/NhElh5L";              // Blue 的 LINE 官方帳號
+const VAULT_IG_URL = "https://www.instagram.com/blueicn/";        // Blue 的原礦寶庫 IG
+
 function renderCrystal() {
   const el = $("#view-crystal");
   const cod = crystalOfTheDay();
@@ -759,6 +833,7 @@ function renderCrystal() {
   const isWaxing = info.age <= SYNODIC / 2;
   const moonPicks = crystalsForMoon(isWaxing ? "new" : "full", 4);
   const col = store.data.crystals || [];
+  const brc = store.data.bracelets || [];
 
   el.innerHTML = `
     <div class="card">
@@ -784,12 +859,23 @@ function renderCrystal() {
     </div>
 
     <div class="card">
-      <h2>🗄 我的水晶收藏架 <span class="sub">${col.length} 顆</span></h2>
-      <p class="muted small">拍下你買回家的水晶，記錄日期・地點・價格，蒐集成一張自己的博物圖鑑海報。</p>
+      <h2>🗄 我的水晶原礦收藏架 <span class="sub">${col.length} 顆</span></h2>
+      <p class="muted small">拍下你買回家的原礦，記錄日期・地點・價格，蒐集成一張自己的博物圖鑑海報。
+      放進來的種類，會在下方圖鑑裡自動加上金色外框。</p>
       <div id="crystal-shelf"></div>
       <div class="btn-row">
-        <button class="btn" id="col-add">📷 收藏一顆新水晶</button>
+        <button class="btn" id="col-add">📷 收藏一顆新原礦</button>
         ${col.length ? `<button class="btn secondary" id="col-stats">📊 收藏統計</button>` : ""}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📿 我的客製化個人水晶手鍊收藏庫 <span class="sub">${brc.length} 條</span></h2>
+      <p class="muted small">Crystibee 為您訂製的，別的地方買的也可以放進來。</p>
+      <div id="bracelet-shelf"></div>
+      <div class="btn-row">
+        <button class="btn" id="brc-add">📷 收藏一條手鍊</button>
+        ${brc.length ? `<button class="btn secondary" id="brc-stats">📊 手鍊統計</button>` : ""}
       </div>
     </div>
 
@@ -815,14 +901,33 @@ function renderCrystal() {
       </div>
     </div>
 
+    <div class="card">
+      <h2>🔎 想入手原礦嗎？Blue 可以幫你代尋</h2>
+      <p class="muted small">還能為您確認能量，詳情請洽 LINE 官方帳號。</p>
+      <div class="btn-row">
+        <a class="btn" href="${SOURCING_LINE_URL}" target="_blank" rel="noopener">💬 用 LINE 找 Blue 代尋</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🏛 Blue 親自挑選的原礦寶庫在等你</h2>
+      <p class="muted small">每一顆都由 Blue 親手挑過、確認過能量，在 Instagram 陸續上架。</p>
+      <div class="btn-row">
+        <a class="btn secondary" href="${VAULT_IG_URL}" target="_blank" rel="noopener">📸 前往 Instagram 逛寶庫</a>
+      </div>
+    </div>
+
     <p class="disclaimer">水晶功效為各文化民俗與能量傳統之整理，屬心靈儀式與自我紀錄用途，非科學實證、不能替代醫療。</p>`;
 
   renderCrystalShelf();
+  renderBraceletShelf();
   renderCrystalPoster();
 
   $(".cod-row", el).addEventListener("click", () => openCrystalDetail(cod.id));
   $("#col-add", el).addEventListener("click", () => openCollectForm({}));
   $("#col-stats", el)?.addEventListener("click", openCollectionStats);
+  $("#brc-add", el).addEventListener("click", () => openBraceletForm({}));
+  $("#brc-stats", el)?.addEventListener("click", openBraceletStats);
   $("#cf-q", el).addEventListener("input", e => { _crystalFilter.q = e.target.value.trim(); renderCrystalPoster(); });
   $("#cf-use", el).addEventListener("click", e => {
     const b = e.target.closest(".chip"); if (!b) return;
@@ -858,13 +963,17 @@ function renderCrystalPoster() {
   if (!box) return;
   const list = filteredCrystals();
   const showSuggest = !_crystalFilter.q && !_crystalFilter.use && !_crystalFilter.moon;
+  // 收藏架上已經有的種類 → 圖鑑對應那格加金色外框，一眼看出自己蒐集到哪了
+  const ownedIds = new Set((store.data.crystals || []).map(x => x.crystalId).filter(Boolean));
   box.innerHTML = `
     <div class="mineral-poster">
       <div class="mp-title">MINÉRALOGIE</div>
       <div class="mp-subtitle">— 水晶礦石圖鑑 —</div>
+      ${ownedIds.size ? `<p class="mp-owned-note">✦ 金框 ${ownedIds.size} 種＝你的收藏架上已經有了</p>` : ""}
       <div class="mp-grid">
         ${list.map(c => `
-          <button type="button" class="mp-item" data-cid="${c.id}">
+          <button type="button" class="mp-item ${ownedIds.has(c.id) ? "mp-owned" : ""}" data-cid="${c.id}"
+            ${ownedIds.has(c.id) ? `title="收藏架上已有${esc(c.zh)}"` : ""}>
             <span class="mp-num">${CRYSTAL_DB.indexOf(c) + 1}.</span>
             <span class="mp-fig">${crystalSVG(c)}</span>
             <span class="mp-name">${esc(c.zh)}<small>${esc(c.en)}</small></span>
@@ -1096,6 +1205,193 @@ function openCollectForm({ crystalId = "", existing = null } = {}) {
     if (currentTab === "crystal") renderCrystal(); else renderCrystalShelf();
     toast(existing ? "已更新 💎" : "已放上收藏架 🗄✨");
   });
+}
+
+/* ============================================================
+   我的客製化個人水晶手鍊收藏庫
+   與原礦收藏架分開存（store.data.bracelets）：一條手鍊通常由多種水晶組成，
+   資料形狀跟「一顆原礦」不一樣，混在同一個清單裡統計會失真。
+   ============================================================ */
+const BRACELET_SOURCES = ["Crystibee 訂製", "其他店家", "自己串的", "朋友送的"];
+
+function renderBraceletShelf() {
+  const box = $("#bracelet-shelf");
+  if (!box) return;
+  const list = [...(store.data.bracelets || [])].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  if (!list.length) {
+    box.innerHTML = `<div class="mineral-poster mp-empty">
+      <div class="mp-title" style="font-size:1.05em">MES BRACELETS</div>
+      <p class="muted small" style="text-align:center;padding:14px 10px">手鍊收藏庫還空著。<br>把你手上那條放上來吧 📿</p>
+    </div>`;
+    return;
+  }
+  box.innerHTML = `
+    <div class="mineral-poster">
+      <div class="mp-title">MES BRACELETS</div>
+      <div class="mp-subtitle">— 我的水晶手鍊 —</div>
+      <div class="mp-grid">
+        ${list.map((it, i) => {
+          // 沒拍照就用組成水晶的插圖代替；一種都沒選就給一顆珠串符號
+          const beads = (it.crystalIds || []).map(id => CRYSTAL_BY_ID[id]).filter(Boolean);
+          return `<button type="button" class="mp-item" data-bid="${esc(it.id)}">
+            <span class="mp-num">${list.length - i}.</span>
+            <span class="mp-fig">${it.photoId
+              ? `<img class="brc-photo" data-photo="${esc(it.photoId)}" alt="${esc(it.name)}">`
+              : (beads.length ? `<span class="brc-beads">${beads.slice(0, 3).map(c => crystalSVG(c)).join("")}</span>`
+                              : `<span class="shelf-noimg">📿</span>`)}</span>
+            <span class="mp-name">${esc(it.name)}<small>${esc(it.source || "")}</small></span>
+          </button>`;
+        }).join("")}
+      </div>
+      <div class="mp-footer">· ${list.length} BRACELETS ·</div>
+    </div>`;
+  $$(".brc-photo", box).forEach(img => renderPhoto(img, img.dataset.photo));
+  $$(".mp-item", box).forEach(b => b.addEventListener("click", () => openBraceletItem(b.dataset.bid)));
+}
+
+function openBraceletItem(id) {
+  const it = (store.data.bracelets || []).find(x => x.id === id);
+  if (!it) return;
+  const beads = (it.crystalIds || []).map(cid => CRYSTAL_BY_ID[cid]).filter(Boolean);
+  const m = modal(`
+    <div class="cd-head">
+      <div class="cd-fig mineral-paper">${it.photoId ? `<img class="brc-photo big" alt="${esc(it.name)}">`
+        : (beads.length ? crystalSVG(beads[0]) : "📿")}</div>
+      <div>
+        <h3 style="margin:0">${esc(it.name)}</h3>
+        ${it.source ? `<p class="cd-en">${esc(it.source)}</p>` : ""}
+        <p class="muted small">${[it.date && `📅 ${esc(it.date)}`, it.place && `📍 ${esc(it.place)}`,
+          it.price && `💰 ${esc(it.price)} ${esc(it.currency || "")}`].filter(Boolean).join("<br>") || "尚未填寫購入資訊"}</p>
+      </div>
+    </div>
+    ${beads.length ? `<p class="small"><b>📿 組成水晶</b></p>
+      <div class="ritual-crystals">${beads.map(c =>
+        `<button type="button" class="rc-chip" data-cid="${c.id}"><span class="rc-fig">${crystalSVG(c)}</span>${esc(c.zh)}</button>`).join("")}</div>` : ""}
+    ${it.intent ? `<p class="small"><b>🎯 給它的任務</b>：${esc(it.intent)}</p>` : ""}
+    ${it.note ? `<p class="small muted">${esc(it.note)}</p>` : ""}
+    ${beads.some(c => c.avoid.length) ? `<p class="small" style="color:var(--danger)"><b>⚠️ 保養提醒</b>：
+      整條手鍊要遷就最脆弱的那一顆——${esc(beads.filter(c => c.avoid.length).map(c => `${c.zh}：${c.avoid[0]}`).join("；"))}</p>` : ""}
+    <div class="btn-row">
+      <button class="btn secondary" id="bi-edit">✏️ 編輯</button>
+      <button class="btn ghost" id="bi-del">🗑</button>
+      <button class="btn secondary" id="bi-close">關閉</button>
+    </div>`);
+  if (it.photoId) renderPhoto($(".brc-photo", m), it.photoId);
+  $("#bi-close", m).addEventListener("click", () => m.remove());
+  $("#bi-edit", m).addEventListener("click", () => { m.remove(); openBraceletForm({ existing: it }); });
+  $$(".rc-chip", m).forEach(b => b.addEventListener("click", () => { m.remove(); openCrystalDetail(b.dataset.cid); }));
+  $("#bi-del", m).addEventListener("click", async () => {
+    if (!confirm(`把「${it.name}」從手鍊收藏庫移除？`)) return;
+    if (it.photoId) await idb.del(it.photoId);
+    store.data.bracelets = store.data.bracelets.filter(x => x.id !== id);
+    store.save(); m.remove();
+    if (currentTab === "crystal") renderCrystal(); else renderBraceletShelf();
+    toast("已從手鍊收藏庫移除");
+  });
+}
+
+function openBraceletForm({ existing = null } = {}) {
+  const it = existing || {
+    name: "", source: BRACELET_SOURCES[0], crystalIds: [], date: todayStr(),
+    place: "", price: "", currency: "TWD", intent: "", note: "", photoId: "",
+  };
+  let photoData = null;
+  const m = modal(`
+    <h3>${existing ? "✏️ 編輯手鍊" : "📷 收藏一條手鍊"}</h3>
+    <label class="field">手鍊名稱</label>
+    <input type="text" id="bl-name" value="${esc(it.name)}" placeholder="例：招財主戰手鍊、生日訂製款">
+    <label class="field">來源</label>
+    <select id="bl-source">${BRACELET_SOURCES.map(s =>
+      `<option ${s === it.source ? "selected" : ""}>${esc(s)}</option>`).join("")}</select>
+    <label class="field">用了哪些水晶（可複選，會自動彙整保養禁忌）</label>
+    <div class="crystal-filters brc-pick" id="bl-beads">
+      ${CRYSTAL_DB.map(c => `<button type="button" class="chip ${(it.crystalIds || []).includes(c.id) ? "on" : ""}" data-v="${c.id}">${esc(c.zh)}</button>`).join("")}
+    </div>
+    <label class="field">照片</label>
+    <div class="btn-row">
+      <button class="btn secondary" id="bl-photo-btn">📷 拍照／選照片</button>
+      <span class="muted small" id="bl-photo-hint">${it.photoId ? "已有照片，可重新選擇" : "沒拍也沒關係，會用組成水晶的插圖代替"}</span>
+    </div>
+    <input type="file" id="bl-photo" accept="image/*" capture="environment" class="hidden">
+    <div class="field-row">
+      <div><label class="field">入手日期</label><input type="date" id="bl-date" value="${esc(it.date)}"></div>
+      <div><label class="field">地點／通路</label><input type="text" id="bl-place" value="${esc(it.place)}" placeholder="Crystibee／店名／網購"></div>
+    </div>
+    <div class="field-row">
+      <div><label class="field">價格</label><input type="number" id="bl-price" value="${esc(it.price)}" placeholder="0" min="0" step="any"></div>
+      <div><label class="field">幣別</label><select id="bl-cur">${["TWD", "USD", "JPY", "EUR", "CNY", "THB"].map(c =>
+        `<option ${c === (it.currency || "TWD") ? "selected" : ""}>${c}</option>`).join("")}</select></div>
+    </div>
+    <label class="field">給它的任務（意圖，選填）</label>
+    <input type="text" id="bl-intent" value="${esc(it.intent)}" placeholder="例：今年談成三個大案子">
+    <label class="field">筆記（選填）</label>
+    <textarea id="bl-note" style="min-height:48px" placeholder="訂製的緣由、當時的心情、設計師怎麼說…">${esc(it.note)}</textarea>
+    <div class="btn-row">
+      <button class="btn" id="bl-save">${existing ? "儲存" : "放進收藏庫 📿"}</button>
+      <button class="btn secondary" id="bl-cancel">取消</button>
+    </div>`);
+  const beadsBox = $("#bl-beads", m);
+  beadsBox.onclick = e => {
+    const c = e.target.closest(".chip");
+    if (c) c.classList.toggle("on");
+  };
+  $("#bl-photo-btn", m).addEventListener("click", () => $("#bl-photo", m).click());
+  $("#bl-photo", m).addEventListener("change", async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    photoData = await photoToDataURL(f);
+    $("#bl-photo-hint", m).textContent = "照片已選好 ✓";
+  });
+  $("#bl-cancel", m).addEventListener("click", () => m.remove());
+  $("#bl-save", m).addEventListener("click", async () => {
+    const rec = {
+      id: it.id || uid(),
+      name: $("#bl-name", m).value.trim() || "我的水晶手鍊",
+      source: $("#bl-source", m).value,
+      crystalIds: $$(".chip.on", beadsBox).map(c => c.dataset.v),
+      date: $("#bl-date", m).value, place: $("#bl-place", m).value.trim(),
+      price: $("#bl-price", m).value, currency: $("#bl-cur", m).value,
+      intent: $("#bl-intent", m).value.trim(), note: $("#bl-note", m).value.trim(),
+      photoId: it.photoId || "",
+    };
+    if (photoData) {
+      rec.photoId = rec.photoId || "bph_" + uid();
+      await idb.put(rec.photoId, photoData);
+    }
+    store.data.bracelets ||= [];
+    const i = store.data.bracelets.findIndex(x => x.id === rec.id);
+    if (i >= 0) store.data.bracelets[i] = rec; else store.data.bracelets.push(rec);
+    store.save(); m.remove();
+    if (currentTab === "crystal") renderCrystal(); else renderBraceletShelf();
+    toast(existing ? "已更新 📿" : "已放進手鍊收藏庫 📿✨");
+  });
+}
+
+function openBraceletStats() {
+  const list = store.data.bracelets || [];
+  const byCur = {};
+  for (const it of list) {
+    const p = parseFloat(it.price);
+    if (!isNaN(p) && p > 0) byCur[it.currency || "TWD"] = (byCur[it.currency || "TWD"] || 0) + p;
+  }
+  const beadCount = {};
+  for (const it of list) for (const id of it.crystalIds || []) beadCount[id] = (beadCount[id] || 0) + 1;
+  const topBeads = Object.entries(beadCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const bySource = {};
+  for (const it of list) bySource[it.source || "未分類"] = (bySource[it.source || "未分類"] || 0) + 1;
+  const first = [...list].filter(x => x.date).sort((a, b) => a.date.localeCompare(b.date))[0];
+  const m = modal(`
+    <h3>📊 手鍊統計</h3>
+    <div class="socratic">
+      📿 共 <b>${list.length}</b> 條手鍊
+      ${first ? `<br>📅 從 ${esc(first.date)} 開始（${esc(first.name)}）` : ""}
+      ${Object.keys(byCur).length ? `<br>💰 累計投入：${Object.entries(byCur).map(([c, v]) => `${v.toLocaleString()} ${c}`).join("＋")}` : ""}
+      ${Object.keys(bySource).length ? `<br>🏬 來源：${Object.entries(bySource).map(([s, n]) => `${esc(s)} ${n}`).join("・")}` : ""}
+      ${topBeads.length ? `<br>💎 最常出現的水晶：${topBeads.map(([id, n]) => `${esc(CRYSTAL_BY_ID[id]?.zh || id)}（${n}）`).join("・")}` : ""}
+    </div>
+    ${topBeads.length ? `<p class="muted small">同一種水晶反覆出現，通常代表那是你這陣子最想補的能量。</p>` : ""}
+    <div class="btn-row"><button class="btn secondary" id="bs-close">關閉</button></div>`);
+  $("#bs-close", m).addEventListener("click", () => m.remove());
 }
 
 function openCollectionStats() {

@@ -57,7 +57,14 @@
   // 從 serverless config 讀 Google Client ID（非機密，可入前端；未設定則雲端功能自動隱藏）
   fetch("api/config", { cache: "no-store" })
     .then(r => r.ok ? r.json() : {})
-    .then(c => { if (c.googleClientId) window.STARDUST_GOOGLE_CLIENT_ID = c.googleClientId; })
+    .then(c => {
+      if (c.googleClientId) {
+        window.STARDUST_GOOGLE_CLIENT_ID = c.googleClientId;
+        // GIS 可能已經比 fetch 先跑完；補呼叫一次讓 Drive 按鈕出現
+        if (typeof initCloud === "function") initCloud();
+        if (typeof refreshCloudUI === "function") refreshCloudUI();
+      }
+    })
     .catch(() => {});
 </script>
 <script src="app.js"></script>

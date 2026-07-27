@@ -112,7 +112,7 @@ async function accountCheckEnabled() {
 
 /* ---------- 合併：本機為主，雲端只補上本機沒有的 ---------- */
 const SYNC_LISTS = ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep",
-  "crystals", "notes", "todos", "moods", "gratitude", "wins", "aiChat", "feedback"];
+  "crystals", "bracelets", "notes", "todos", "moods", "gratitude", "wins", "aiChat", "feedback"];
 function mergeCloudData(cloudData) {
   if (!cloudData || typeof cloudData !== "object") return 0;
   let added = 0;

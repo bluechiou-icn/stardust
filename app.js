@@ -14,7 +14,10 @@ const todayStr = () => dstr(new Date());
 const fromDstr = s => { const [y, m, dd] = s.split("-").map(Number); return new Date(y, m - 1, dd); };
 const daysBetween = (a, b) => Math.round((fromDstr(b) - fromDstr(a)) / 86400000);
 const fmtMD = s => { const d = fromDstr(s); return `${d.getMonth() + 1}/${d.getDate()}`; };
-const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
+const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];          // 以 getDay() 直接索引（0=週日）
+/* 月曆以週一為一週起始：表頭順序，以及每月 1 號前要空幾格 */
+const WEEKDAYS_CAL = ["一", "二", "三", "四", "五", "六", "日"];
+const calOffset = d => (d.getDay() + 6) % 7;   // 週一=0 … 週日=6
 const fmtH = min => `${(min / 60).toFixed(1)} 小時`;
 /* 睡眠紀錄以「醒來那天」為 date（昨晚的睡眠 = 今天的紀錄） */
 const sleepForDate = ds => store.data.sleep.find(s => s.date === ds);
@@ -241,7 +244,7 @@ const store = {
   load() {
     try { this.data = JSON.parse(localStorage.getItem(DB_KEY)) || null; } catch { this.data = null; }
     if (!this.data) this.data = { dreams: [], diary: [], cbt: [], focus: [], capsules: [], customEvents: [], settings: {} };
-    for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "aiChat", "crystals", "notes", "todos", "feedback", "moods", "gratitude", "wins"]) this.data[k] ||= [];
+    for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "aiChat", "crystals", "bracelets", "notes", "todos", "feedback", "moods", "gratitude", "wins"]) this.data[k] ||= [];
     this.data.settings ||= {};
     this.data.settings.symbols ||= [" 高山", "大海", "湖泊", "河流", "瀑布", "門", "迷宮", "下墜", "飛行", "追逐", "老房子", "牙齒", "樓梯", "考試", "迷路", "開車", "旅行", "朋友", "伴侶", "過去","Deja Vu"];
     this.data.settings.emotions ||= ["焦慮", "羞愧", "悲傷", "憤怒", "恐懼", "委屈", "無力", "罪惡感"];
@@ -620,34 +623,71 @@ function allUpcomingEvents(days = 120) {
   return list.sort((a, b) => a.date.localeCompare(b.date));
 }
 
-/* ---------- 語音辨識 ---------- */
+/* ---------- 語音辨識 ----------
+   為什麼之前會一直重複同一句：
+   1) Android Chrome 每次 onresult 都會把「已經定案的段落」連同新段落一起重送。
+      舊寫法每次從頭累加字串，同一段就被貼上好幾次。
+      → 改成以「結果索引 i」為 key 寫進 finals[i]，同一段重送只會覆蓋、永遠不會變兩份。
+   2) Android Chrome 其實不支援 continuous：講完一句就會 onend。
+      舊寫法整個停掉；使用者再按一次錄音，索引從 0 重來，接著又把同樣的內容寫回去。
+      → 改成 onend 時先把這一輪的文字「封存」進 base，再自動開下一輪，
+        索引歸零也蓋不掉先前的內容，講多久都不會重複。 */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 function attachMic(btn, textarea, { onFinal } = {}) {
   if (!SR) {
     btn.addEventListener("click", () => toast("此瀏覽器不支援即時語音辨識，請點擊輸入框後，用鍵盤上的 🎤 語言輸入鍵"));
     return;
   }
-  let rec = null, listening = false;
-  btn.addEventListener("click", () => {
-    if (listening) { rec.stop(); return; }
+  let rec = null, listening = false, stopping = false;
+  let base = "";        // 已封存的文字（先前輪次＋使用者原本打的字）
+  let finals = [];      // 這一輪各索引的定案文字，索引即 key
+  let emptyRounds = 0;  // 連續空轉次數，用來擋住麥克風權限被拒時的無限重開
+
+  const finish = () => {
+    listening = false; stopping = false;
+    btn.classList.remove("rec"); btn.dataset.rec = "";
+    textarea.value = base;
+    if (onFinal) onFinal(textarea.value);
+  };
+
+  const startRound = () => {
     rec = new SR();
-    rec.lang = "zh-TW"; rec.continuous = true; rec.interimResults = true;
-    const base = textarea.value ? textarea.value + " " : "";
+    rec.lang = "zh-TW"; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+    finals = [];
     rec.onresult = ev => {
-      // Android Chrome 會重複回傳已定案段落，必須每次從整份結果重組，不能累加
-      let final = "", interim = "", prevSeg = "";
-      for (let i = 0; i < ev.results.length; i++) {
-        const t = ev.results[i][0].transcript;
-        if (ev.results[i].isFinal) {
-          if (t !== prevSeg) final += t; // 連續重複段直接丟棄
-          prevSeg = t;
-        } else interim += t;
+      emptyRounds = 0;
+      let interim = "";
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const r = ev.results[i];
+        if (r.isFinal) finals[i] = r[0].transcript;   // 覆蓋而非累加：重送同一段也只留一份
+        else interim += r[0].transcript;
       }
-      textarea.value = base + final + interim;
+      textarea.value = base + finals.join("") + interim;
     };
-    rec.onend = () => { listening = false; btn.classList.remove("rec"); btn.dataset.rec = ""; if (onFinal) onFinal(textarea.value); };
-    rec.onerror = () => { listening = false; btn.classList.remove("rec"); };
-    rec.start(); listening = true; btn.classList.add("rec");
+    rec.onerror = e => {
+      // no-speech／aborted 是正常結束；權限被拒才要真的停下來
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+        stopping = true;
+        toast("需要麥克風權限才能語音輸入，請在瀏覽器設定中允許");
+      }
+    };
+    rec.onend = () => {
+      base += finals.join("");        // 封存這一輪，下一輪索引歸零也不會覆蓋
+      finals = [];
+      if (!stopping && ++emptyRounds < 8) {
+        try { startRound(); return; } catch { /* 開不起來就收工 */ }
+      }
+      finish();
+    };
+    rec.start();
+  };
+
+  btn.addEventListener("click", () => {
+    if (listening) { stopping = true; try { rec.stop(); } catch {} return; }
+    base = textarea.value ? textarea.value.replace(/\s+$/, "") + " " : "";
+    stopping = false; listening = true; emptyRounds = 0;
+    btn.classList.add("rec");
+    try { startRound(); } catch { listening = false; btn.classList.remove("rec"); }
   });
 }
 
@@ -2019,7 +2059,7 @@ function renderDream() {
     <div class="card center">
       <h2 style="justify-content:center">黃金 90 秒 — 醒來立刻紀錄</h2>
       <button class="mic-big" id="dream-mic">🎙️<small>開始紀錄夢境</small></button>
-      <p class="muted small">直接說出：畫面、人物、事件、地點、情緒、顏色。<br>任何記得的情節，自動幫你標記欄位。<br>（內建語音輸入功能優化中，一直重複是正常的）<br>先快速說完再打字編輯也可以</p>
+      <p class="muted small">直接說出：畫面、人物、事件、地點、情緒、顏色。<br>任何記得的情節，自動幫你標記欄位。<br>可以一直講，講完再按一次麥克風停止。<br>先快速說完再打字編輯也可以</p>
     </div>
     <div class="card locked-card">
       <h2>🌌 星塵樹洞 <span class="sub">傾聽你的秘密</span></h2>
@@ -2791,7 +2831,7 @@ function renderMoon() {
     cbt: new Set(store.data.cbt.map(d => d.date)),
   };
   let cells = "";
-  for (let i = 0; i < first.getDay(); i++) cells += `<div class="cal-cell blank"></div>`;
+  for (let i = 0; i < calOffset(first); i++) cells += `<div class="cal-cell blank"></div>`;
   for (let day = 1; day <= daysInMonth; day++) {
     const dt = new Date(y, mo, day);
     const ds = dstr(dt);
@@ -2812,7 +2852,7 @@ function renderMoon() {
   /* 心情日曆：格式與上方月相相同，格子中只顯示心情圖示，方便對照心情與月相的關聯 */
   const mm = moodMap();
   let moodCells = "";
-  for (let i = 0; i < first.getDay(); i++) moodCells += `<div class="cal-cell blank"></div>`;
+  for (let i = 0; i < calOffset(first); i++) moodCells += `<div class="cal-cell blank"></div>`;
   for (let day = 1; day <= daysInMonth; day++) {
     const ds = dstr(new Date(y, mo, day));
     const rec = mm.get(ds);
@@ -2835,7 +2875,7 @@ function renderMoon() {
         <button class="btn secondary small" id="cal-next">›</button>
       </div>
       <div class="cal-grid">
-        ${WEEKDAYS.map(w => `<div class="dow">${w}</div>`).join("")}
+        ${WEEKDAYS_CAL.map(w => `<div class="dow">${w}</div>`).join("")}
         ${cells}
       </div>
       <div class="cal-legend">
@@ -2850,7 +2890,7 @@ function renderMoon() {
       <p class="muted small">先選今天的心情，日曆上就會留下一個圖示；和上方月相同格式排列，方便你比對心情與月相的關聯＆共時性。</p>
       ${moodPickerHTML(todayMood?.level, "moon")}
       <div class="cal-grid mood-grid">
-        ${WEEKDAYS.map(w => `<div class="dow">${w}</div>`).join("")}
+        ${WEEKDAYS_CAL.map(w => `<div class="dow">${w}</div>`).join("")}
         ${moodCells}
       </div>
       <div class="cal-legend mood-legend">
@@ -3212,9 +3252,9 @@ function renderCosmos() {
       <div class="btn-row"><button class="btn secondary" id="ev-ics">📆 匯出天象行事曆（.ics，含手機原生提醒）</button></div>
     </div>
     <div class="card">
-      <h2>📰 宇宙新聞 <span class="sub">NASA・預設英文</span></h2>
-      <p class="muted small">內容取自 NASA。點文章可切換中／英。</p>
-      <div id="news-list">${NEWS.map(newsRowHTML).join("")}</div>
+      <h2>📰 宇宙新聞 <span class="sub">NASA・每週更新</span></h2>
+      <p class="muted small" id="news-note">內容取自 NASA。點文章可切換中／英。</p>
+      <div id="news-list">${liveNews().map(newsRowHTML).join("")}</div>
     </div>
     <div class="card">
       <h2>📖 天文知識 <span class="sub">中英雙語</span></h2>
@@ -3224,14 +3264,44 @@ function renderCosmos() {
   bindEventRows(el);
   $("#ev-add").addEventListener("click", openCustomEventForm);
   $("#ev-ics").addEventListener("click", exportICS);
-  $$("#news-list .art-row", el).forEach(r => r.addEventListener("click", () => openArticle(NEWS.find(n => n.id === r.dataset.id), "en")));
+  bindNewsRows(el);
+  refreshSpaceNews();   // 背景抓當週最新，回來再換掉清單
   $$("#know-list .art-row", el).forEach(r => r.addEventListener("click", () => openArticle(KNOWLEDGE.find(k => k.id === r.dataset.id), "zh")));
+}
+
+/* ---------- 每週更新的宇宙新聞 ----------
+   api/space-news 從 NASA RSS 抓當週最新（CDN 一週只回源一次）。
+   抓失敗或還沒回來時，一律顯示 App 內建的 NEWS，畫面不會開天窗。 */
+let _liveNews = null;      // 後端回來的當週新聞；null = 還沒拿到
+let _newsFetched = false;
+const liveNews = () => (_liveNews?.length ? _liveNews : NEWS);
+const newsById = id => liveNews().find(n => n.id === id) || NEWS.find(n => n.id === id);
+
+function bindNewsRows(el) {
+  $$("#news-list .art-row", el).forEach(r =>
+    r.addEventListener("click", () => openArticle(newsById(r.dataset.id), "en")));
+}
+
+async function refreshSpaceNews() {
+  if (_newsFetched) return;              // 一次 session 抓一次就夠，其餘交給 CDN
+  _newsFetched = true;
+  try {
+    const r = await fetch("api/space-news", { cache: "no-store" });
+    const j = await r.json();
+    if (!j.ok || !j.items?.length) return;
+    _liveNews = j.items;
+  } catch { return; }
+  if (currentTab !== "cosmos") return;   // 使用者已經切走就不動畫面
+  const list = $("#news-list");
+  if (!list) return;
+  list.innerHTML = _liveNews.map(newsRowHTML).join("");
+  bindNewsRows($("#view-cosmos"));
 }
 function newsRowHTML(n) {
   return `<button type="button" class="entry art-row" data-id="${esc(n.id)}" style="width:100%;text-align:left">
-    <div class="meta">${n.icon} ${esc(n.date)}・NASA</div>
+    <div class="meta">${n.icon || "🛰️"} ${esc(n.date)}・${esc(n.source || "NASA")}</div>
     <div class="body" style="font-weight:600">${esc(n.enTitle)}</div>
-    <div class="muted small">${esc(n.zhTitle)}</div>
+    ${n.zhTitle ? `<div class="muted small">${esc(n.zhTitle)}</div>` : ""}
   </button>`;
 }
 function knowRowHTML(k) {
@@ -3619,8 +3689,45 @@ async function sendBoardMessage() {
 }
 
 /* ---------- 🎁 分享給好友（邀請碼） ----------
-   前端版：邀請連結帶上個人邀請碼，好友開啟魔法書後雙方各得一片碎片。
-   受邀方立即入帳；邀請方的碎片在同一裝置回訪時入帳（沒有後端可即時通知）。 */
+   邀請連結帶上個人邀請碼，好友開啟魔法書後雙方各得一片碎片。
+   受邀方在自己的裝置上立刻入帳；邀請方那一片需要後端幫忙歸戶
+   （兩台手機的 localStorage 看不到彼此），由 api/referral 記帳，
+   邀請方下次打開 App 時自動領回。後端沒設定時只有受邀方拿得到，功能不會壞。 */
+let _refEnabled = null;         // null = 還沒問過後端
+async function referralEnabled() {
+  if (_refEnabled !== null) return _refEnabled;
+  try {
+    const r = await fetch("api/referral?action=status", { cache: "no-store" });
+    _refEnabled = !!(await r.json()).enabled;
+  } catch { _refEnabled = false; }
+  return _refEnabled;
+}
+async function refApi(payload) {
+  try {
+    const r = await fetch("api/referral", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return await r.json();
+  } catch { return { ok: false }; }
+}
+/* 打開 App 時把別人用我的邀請碼換來的碎片領回來（後端用 GETDEL，不會重複領） */
+async function collectReferralRewards() {
+  if (!await referralEnabled()) return;
+  const st = store.data.settings;
+  if (!st.refCode) return;                    // 還沒產生過邀請碼＝從沒分享過
+  const { ok, count } = await refApi({ action: "collect", code: st.refCode });
+  if (!ok || !count) return;
+  let lastKey = null, mergedAny = false;
+  for (let i = 0; i < count; i++) {
+    const { key, merged } = awardShellFragment();
+    lastKey = key; mergedAny ||= merged;
+  }
+  store.save();
+  const info = SHELL_BY_KEY[lastKey];
+  toast(`🎁 有 ${count} 位好友用了你的邀請碼！獲得神奇海螺碎片 ×${count}`);
+  if (mergedAny) setTimeout(() => toast(`✨ 碎片集滿，合成一顆完整的${info.emoji}${info.name}神奇海螺！`), 1800);
+}
 function myReferralCode() {
   const st = store.data.settings;
   if (!st.refCode) {
@@ -3638,14 +3745,23 @@ function openShareForm() {
   const text = `分享乙個有趣的東西「星塵夢汐」可記錄夢境和心情 ✨ 用這個連結打開你的個人魔法書，我們都會拿到一片神奇海螺碎片 🐚`;
   const m = modal(`
     <h3>🎁 分享給好友</h3>
-    <p class="muted small">好友開啟個人魔法書後，雙方都能獲得一個隨機神奇海螺碎片。（測試中）</p>
+    <p class="muted small">好友開啟個人魔法書後，雙方都能獲得一個隨機神奇海螺碎片。</p>
     <label class="field">你的邀請連結</label>
     <input type="text" id="sh-url" readonly value="${esc(url)}">
     <div class="btn-row">
       ${navigator.share ? `<button class="btn" id="sh-native">📤 分享連結</button>` : ""}
       <button class="btn ${navigator.share ? "secondary" : ""}" id="sh-copy">📋 複製連結</button>
     </div>
-    <p class="muted small">邀請碼 <b>${esc(myReferralCode())}</b></p>`);
+    <p class="muted small">邀請碼 <b>${esc(myReferralCode())}</b></p>
+    <p class="muted small" id="sh-status">確認回饋狀態⋯</p>`);
+  referralEnabled().then(on => {
+    const s = $("#sh-status", m);
+    if (!s) return;
+    s.innerHTML = on
+      ? "好友那一片會立刻入帳；你的那一片下次打開 App 時自動送達 ✨"
+      : `目前只有好友那一端拿得到碎片。要讓你自己的那一片也發得出來，
+         需要在 Vercel 設定 <code>BOARD_KV_URL</code> 與 <code>BOARD_KV_TOKEN</code>（或 <code>REFERRAL_KV_*</code>）。`;
+  });
   $("#sh-copy", m).addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(url); toast("連結已複製 📋"); }
     catch { $("#sh-url", m).select(); toast("請長按選取複製"); }
@@ -3666,8 +3782,8 @@ function handleReferralHash() {
   st.pendingRef = code; store.save();
 }
 /* 開啟魔法書時結算邀請獎勵。
-   受邀方這一片可以立刻入帳；邀請方那一片需要後端做歸戶才發得出去，
-   這裡先把 invitedBy 記在本機，等之後接上帳號系統就能回頭補發。 */
+   受邀方這一片立刻在本機入帳；同時向後端回報「我是被誰邀來的」，
+   邀請方那一片就會記在他的帳上，等他下次打開 App 由 collectReferralRewards 領走。 */
 function settleReferral() {
   const st = store.data.settings;
   if (!st.pendingRef) return;
@@ -3676,6 +3792,8 @@ function settleReferral() {
   st.invitedBy = code;
   const { key, merged } = awardShellFragment();
   store.save();
+  // 回報給後端做歸戶（帶上自己的邀請碼當識別，同一支只會被算一次）
+  refApi({ action: "claim", code, self: myReferralCode() });
   const info = SHELL_BY_KEY[key];
   setTimeout(() => {
     toast(`🎁 來自好友的邀請！獲得「${info.emoji}${info.name}神奇海螺碎片」×1`);
@@ -4397,6 +4515,8 @@ addEventListener("appinstalled", () => {
   bindAutoReseal();
   // 星塵帳號：有 token 就標成「待解鎖」，並問後端這功能有沒有啟用
   if (typeof initAccount === "function") initAccount().catch(() => {});
+  // 有好友用了我的邀請碼 → 把累積的碎片領回來（延後一點，不跟開場動畫搶）
+  setTimeout(() => { collectReferralRewards().catch(() => {}); }, 4000);
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     navigator.serviceWorker.register("sw.js").then(async reg => {
       // Android Chrome：App 沒開也能背景檢查天象（best-effort，隨使用頻率調度）

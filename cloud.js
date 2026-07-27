@@ -34,6 +34,8 @@ const Cloud = {
 /* ---------- GIS 初始化 ---------- */
 function initCloud() {
   if (Cloud.tokenClient) return;
+  // api/config 是 async fetch，解析時 window.STARDUST_GOOGLE_CLIENT_ID 可能還沒到
+  if (!CloudCfg.clientId) CloudCfg.clientId = (typeof window !== "undefined" && window.STARDUST_GOOGLE_CLIENT_ID) || "";
   if (!CloudCfg.clientId) return;
   if (typeof google === "undefined" || !google.accounts?.oauth2) return;
   Cloud.tokenClient = google.accounts.oauth2.initTokenClient({
@@ -155,7 +157,7 @@ async function cloudSyncPullMerge() {
   const cloud = await loadCloudData();
   if (!cloud?.data) { await cloudSyncPush(); return { merged: 0, note: "首次上雲" }; }
   let added = 0;
-  for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "crystals", "notes", "todos", "moods", "gratitude", "wins"]) {
+  for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "crystals", "bracelets", "notes", "todos", "moods", "gratitude", "wins"]) {
     const local = new Map((store.data[k] || []).map(x => [x.id || JSON.stringify(x), x]));
     for (const item of cloud.data[k] || []) {
       const key = item.id || JSON.stringify(item);
@@ -237,7 +239,7 @@ async function cloudRestoreOpen() {
       const j = await r.json();
       if (!j || typeof j !== "object") throw new Error();
       store.data = { ...store.data, ...j };
-      for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "crystals", "notes", "todos", "moods", "gratitude", "wins"]) store.data[k] ||= [];
+      for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "crystals", "bracelets", "notes", "todos", "moods", "gratitude", "wins"]) store.data[k] ||= [];
       store.save();
       m.remove();
       if (typeof renderMore === "function") renderMore();
@@ -273,7 +275,7 @@ async function shareBackup() {
 function refreshCloudUI() {
   const box = document.getElementById("cloud-box");
   if (!box) return;
-  const hasClient = !!CloudCfg.clientId;
+  const hasClient = !!(CloudCfg.clientId || (typeof window !== "undefined" && window.STARDUST_GOOGLE_CLIENT_ID));
   box.innerHTML = `
     ${hasClient ? (Cloud.signedIn
       ? `<p class="muted small">☁ 已登入 <b>${esc(Cloud.email || "Google")}</b>——所有變更會即時同步到 Drive</p>

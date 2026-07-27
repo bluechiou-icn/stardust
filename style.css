@@ -15,6 +15,14 @@
   --chart-1: #3987e5;     /* 圖表單一系列（已驗證） */
   --good: #0ca30c;
   --danger: #e66767;
+  /* 月曆圖例五色：刻意「不跟著主題走」。
+     主題會改寫 --accent／--gold（暮色主題兩者甚至是同一個橘），
+     月曆若沿用就會出現兩種標記同色、看不出差別。 */
+  --cal-dream:    #8b7ff0;  /* 夢境・品牌紫 */
+  --cal-diary:    #4a9eff;  /* 日記・晴空藍 */
+  --cal-cbt:      #4ec9b0;  /* 思考紀錄・青綠 */
+  --cal-newmoon:  #9fb6cd;  /* 新月・朔夜銀藍 */
+  --cal-fullmoon: #e8c874;  /* 滿月・月亮金 */
   --radius: 16px;
   --nav-h: 62px;
 }
@@ -33,6 +41,8 @@
     --accent-soft: #e6e2fb;
     --gold: #a8862e;
     --chart-1: #2a78d6;
+    --cal-dream: #5d4fd6; --cal-diary: #2a78d6; --cal-cbt: #12897a;
+    --cal-newmoon: #6d8299; --cal-fullmoon: #b8912f;
   }
 }
 
@@ -69,6 +79,8 @@
   --accent-soft: #fcdcdc;
   --gold: #8f7570;
   --chart-1: #2a78d6;
+  --cal-dream: #5d4fd6; --cal-diary: #2a78d6; --cal-cbt: #12897a;
+  --cal-newmoon: #6d8299; --cal-fullmoon: #b8912f;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -347,18 +359,21 @@ nav.tabbar::after {
 .cal-cell.blank { background: none; }
 .cal-cell.today { border-color: var(--accent); }
 .cal-cell.sel { background: var(--accent-soft); }
-/* 新月／滿月高亮：外框顏色不同於「今天」 */
-.cal-cell.newmoon { border: 2px dashed #b3a4ff; box-shadow: inset 0 0 0 1px rgba(139,127,240,.25); }
-.cal-cell.fullmoon { border: 2px solid #e8c874; box-shadow: 0 0 12px rgba(232,200,116,.35), inset 0 0 0 1px rgba(232,200,116,.4); }
+/* 月曆五色各自獨立，不可互相撞色：
+   夢境=品牌紫／日記=藍／思考=青綠／新月=銀藍／滿月=金。
+   新月原為 #b3a4ff，與夢境的紫幾乎同色；改成「朔夜銀藍」——
+   新月是天空最暗的一晚，銀藍比紫更貼題，也和金色滿月形成冷暖對照。 */
+.cal-cell.newmoon { border: 2px dashed var(--cal-newmoon); box-shadow: inset 0 0 0 1px rgba(140,168,196,.28); }
+.cal-cell.fullmoon { border: 2px solid var(--cal-fullmoon); box-shadow: 0 0 12px rgba(232,200,116,.35), inset 0 0 0 1px rgba(232,200,116,.4); }
 .cal-cell.today.newmoon, .cal-cell.today.fullmoon { border-width: 2px; }
 .cal-cell .moon { font-size: .95rem; }
 .cal-cell .dots { display: flex; gap: 2px; height: 5px; }
 .cal-cell .dots i { width: 4px; height: 4px; border-radius: 50%; display: block; }
-.dot-dream { background: var(--accent); }
-.dot-diary { background: var(--chart-1); }
-.dot-cbt   { background: var(--gold); }
-.dot-newmoon { background: #b3a4ff; }
-.dot-fullmoon { background: #e8c874; box-shadow: 0 0 6px rgba(232,200,116,.6); }
+.dot-dream { background: var(--cal-dream); }
+.dot-diary { background: var(--cal-diary); }
+.dot-cbt   { background: var(--cal-cbt); }
+.dot-newmoon { background: var(--cal-newmoon); }
+.dot-fullmoon { background: var(--cal-fullmoon); box-shadow: 0 0 6px rgba(232,200,116,.6); }
 .cal-legend { display: flex; gap: 14px; margin-top: 8px; font-size: .72rem; color: var(--ink-3); flex-wrap: wrap; }
 .cal-legend i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; }
 
@@ -729,10 +744,29 @@ photo-thumb, .photo-thumb { max-width: 100%; border-radius: 10px; }
 .mp-footer span { letter-spacing: 0; font-style: italic; }
 .mp-empty { padding-bottom: 4px; }
 
+/* 圖鑑上「收藏架已經有這一種」的金框標記 */
+.mp-item.mp-owned {
+  border: 1.5px solid #b08d3a;
+  background: rgba(176, 141, 58, .09);
+  box-shadow: inset 0 0 0 1px rgba(176, 141, 58, .25);
+}
+.mp-item.mp-owned .mp-name { font-weight: 700; }
+.mp-item.mp-owned::after {
+  content: "✦"; position: absolute; top: 2px; right: 5px;
+  font-size: .7em; color: #b08d3a;
+}
+.mp-owned-note { text-align: center; font-size: .68em; color: #8a6d24; letter-spacing: .06em; margin: -4px 0 8px; }
+
 /* 收藏照片：復古暈影相片 */
-.shelf-photo { width: 100%; max-width: 88px; aspect-ratio: 1; object-fit: cover; border-radius: 4px; border: 3px solid #fffdf6; box-shadow: 0 1px 4px rgba(74, 58, 44, .4); filter: sepia(.18) saturate(.95); margin: 6px auto 0; display: block; }
-.shelf-photo.big { max-width: 100%; aspect-ratio: auto; }
+.shelf-photo, .brc-photo { width: 100%; max-width: 88px; aspect-ratio: 1; object-fit: cover; border-radius: 4px; border: 3px solid #fffdf6; box-shadow: 0 1px 4px rgba(74, 58, 44, .4); filter: sepia(.18) saturate(.95); margin: 6px auto 0; display: block; }
+.shelf-photo.big, .brc-photo.big { max-width: 100%; aspect-ratio: auto; }
 .shelf-noimg { font-size: 2em; display: block; padding: 18px 0; }
+
+/* 手鍊：沒拍照時用組成水晶的插圖疊成一小串珠 */
+.brc-beads { display: flex; justify-content: center; align-items: flex-end; gap: -6px; }
+.brc-beads svg { width: 34px; height: auto; margin: 0 -4px; }
+/* 手鍊表單的水晶複選：清單長，限制高度可捲動 */
+.brc-pick { max-height: 168px; overflow-y: auto; padding: 4px; border: 1px solid var(--line); border-radius: 10px; }
 
 /* 今日水晶 */
 .cod-row { display: flex; gap: 12px; align-items: flex-start; width: 100%; background: none; border: none; padding: 6px 0; cursor: pointer; color: var(--ink); text-align: left; font-family: inherit; }
