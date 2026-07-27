@@ -3296,6 +3296,13 @@ async function refreshSpaceNews() {
   if (!list) return;
   list.innerHTML = _liveNews.map(newsRowHTML).join("");
   bindNewsRows($("#view-cosmos"));
+  // 後端沒設 ANTHROPIC_API_KEY 時抓回來的是純英文，別再寫「可切換中／英」騙人
+  const note = $("#news-note");
+  if (note) {
+    note.textContent = _liveNews.some(n => n.zhTitle)
+      ? "內容取自 NASA，每週更新。點文章可切換中／英。"
+      : "內容取自 NASA，每週更新（原文為英文）。點文章可閱讀全文。";
+  }
 }
 function newsRowHTML(n) {
   return `<button type="button" class="entry art-row" data-id="${esc(n.id)}" style="width:100%;text-align:left">

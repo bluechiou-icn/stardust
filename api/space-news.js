@@ -45,9 +45,15 @@ function tag(block, name) {
 function parseFeed(xml) {
   const blocks = xml.match(/<item[\s\S]*?<\/item>/gi) || xml.match(/<entry[\s\S]*?<\/entry>/gi) || [];
   const out = [];
+  // NASA 的 feed 本身就會出現重複條目（同一則稿子登兩次），
+  // 不去重的話畫面上會連著看到兩則一模一樣的新聞
+  const seen = new Set();
   for (const b of blocks) {
     const title = clean(tag(b, "title"));
     if (!title) continue;
+    const key = title.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
     // RSS 用 <link>文字</link>；Atom 用 <link href="…"/>
     let url = clean(tag(b, "link"));
     if (!url) url = (b.match(/<link[^>]*href="([^"]+)"/i) || [])[1] || "";
@@ -55,7 +61,8 @@ function parseFeed(xml) {
     const dateRaw = clean(tag(b, "pubDate") || tag(b, "updated") || tag(b, "published"));
     const d = dateRaw ? new Date(dateRaw) : null;
     out.push({
-      id: "nasa-" + (url.split("/").filter(Boolean).pop() || out.length).slice(0, 60),
+      // 帶上序號：前端用 id 找回文章，兩則的網址尾段萬一相同就會抓錯篇
+      id: `nasa-${out.length}-` + (url.split("/").filter(Boolean).pop() || "").slice(0, 50),
       date: d && !isNaN(d) ? d.toISOString().slice(0, 10) : "",
       icon: ICONS[out.length % ICONS.length],
       enTitle: title,
