@@ -1,5 +1,5 @@
-/* 星塵夢汐 Stardust DreamTide v0.2 — 個人內在紀錄工具，非專業醫療用途。
-   全部資料存於裝置本機或你的帳號（localStorage + IndexedDB），無後端、無隱私外漏問題。 */
+/* 星塵夢汐 Stardust DreamTide v1.0 — 個人內在紀錄工具，非專業醫療用途。
+   全部資料存於裝置本機＆你的帳號（localStorage + IndexedDB），無後端、無隱私外漏問題。 */
 "use strict";
 
 /* ---------- 小工具 ---------- */
@@ -64,13 +64,13 @@ const AFFIRMATIONS = [
   "正視自己的陰影，也不需要立刻解決它。",
   "I do it antway，沒有什麼能擋住我的決心。",
   "Now or never，我的意念將即刻成為行動。",
-  "🐚神奇海螺聽見你的召喚，快許下一個心願🔮。",
+  "磨難看似很長，但人生其實更短，我能突破一切障礙。",
   "感謝過去的我，撐起了現在的我。",
 ];
 
 /* 連續紀錄徽章（[天數, 名稱]；想修改可直接編輯） */
 const STREAK_BADGES = [
-  [3, "🌱 星火"], [7, "✨ 星芒"], [14, "🌙 星軌"], [30, "🌌 星座"], [60, "🌠 星河"], [100, "💫 星系"],
+  [3, "🌱 意念"], [7, "✨ 星芒"], [14, "🌙 星軌"], [30, "🌌 星座"], [60, "🌠 星河"], [100, "💫 星系"],
 ];
 
 /* 🐚 神奇海螺碎片：以自然元素（木火土金水）分類，另有極罕見的星際版；同色 5 顆合成一顆完整海螺 */
@@ -317,7 +317,7 @@ function upcomingMoonEvents(days = 90) {
   return out;
 }
 
-/* ---------- 宇宙天象事件（資料整理自 Sea&Sky / Star Walk / Space.com；可見性視地區與天候而定） ---------- */
+/* ---------- 宇宙天象事件（資料整理自 Sea&Sky / Star Walk / Space.com，並由Blue編修；可見性視地區與天候而定） ---------- */
 const ASTRO_EVENTS = [
   { date: "2026-07-04", type: "conjunction", title: "火星合天王星", note: "僅相距 6 角分（約滿月直徑 1/5），金牛座黎明前東方低空" },
   { date: "2026-07-30", type: "meteor", title: "寶瓶座δ流星雨極大期", note: "南半球條件較佳，午夜後觀察" },
@@ -711,7 +711,7 @@ async function renderPhoto(imgEl, photoId) {
   if (data) imgEl.src = data; else imgEl.remove();
 }
 
-/* ---------- 主題（星塵之夜＝原本預設；暮色微光／綻藍晨霧＝New Version ） ---------- */
+/* ---------- 主題（星塵之夜＝預設；暮色微光／綻藍晨霧＝New Version ） ---------- */
 const THEMES = {
   night: { name: "星塵之夜", dots: ["#0d0d14", "#8b7ff0", "#e8c874"], meta: "#0d0d14" },
   dusk: { name: "暮色微光", dots: ["#292643", "#e99e75", "#776483"], meta: "#1e1b36" },
@@ -989,7 +989,7 @@ function magicFX(mode, caption, done, { finale = "✦", color = "gold", dur } = 
     drawSparks();
   }
 
-  /* 召喚陣：與開書的紫金曼陀羅不同構造——方中有圓、八芒星、四方節點與外圈符文弧，
+  /* 召喚陣：與開書的紫金曼陀羅不同構造—方中有圓、八芒星、四方節點與外圈符文弧，
      以銀白色線條由外而內收攏，最後在中心凝聚成一點光。 */
   const SUMMON_NODES = 8;
   function drawSummonSigil(p) {
@@ -1550,9 +1550,9 @@ function openBookLanding({ force = false } = {}) {
         : `<label class="field book-label">你希望宇宙怎麼稱呼你？</label>
            <input type="text" id="book-nick" maxlength="20" placeholder="南港Lisa、中和李孝利" autocomplete="off">
            <div class="book-actions">
-             <button class="btn book-open-btn" id="book-open">✨ 寫上我的名字，締結契約，解除封印，打開魔法書</button>
+             <button class="btn book-open-btn" id="book-open">✨ 寫上我的名字，締結契約，解除封印。<br>開啟魔法書</button>
            </div>`}
-      <p class="book-foot">此書只專屬於你．紀錄僅存於此裝置或帳號</p>
+      <p class="book-foot">此書只專屬於你．紀錄僅存於此裝置帳號</p>
     </div>`;
 
   const stopCosmos = startCosmos(el.querySelector(".book-stars")); // 啟動動態宇宙背景
@@ -1565,10 +1565,10 @@ function openBookLanding({ force = false } = {}) {
     el.innerHTML = "";
   };
   const enterApp = () => {
-    magicFX("sigil", "🔮 開啟你的專屬魔法書⋯", () => {
+    magicFX("sigil", "🔮 開啟你的個人魔法書⋯", () => {
       closeBook();
       switchTab("today");
-      settleReferral(); // 若是透過好友邀請連結進來的，開書後雙方各得一片碎片
+      settleReferral(); // 若是透過好友邀請連結進來的，啟動後雙方各得一片碎片
     }, { color: "purple", finale: "🔮", dur: 2900 });
   };
 
@@ -1590,7 +1590,7 @@ function openBookLanding({ force = false } = {}) {
   $("#book-editname")?.addEventListener("click", () => {
     closeBook();
     openNicknameForm();
-    // 修改完再打開一次魔法書
+    // 修改完再啟動一次魔法書
     const check = setInterval(() => {
       if (!document.querySelector(".modal-mask")) {
         clearInterval(check);
@@ -1619,7 +1619,7 @@ const HOME_BLOCKS = [
   { key: "entries",    name: "今日紀錄",           from: "首頁", def: true },
   { key: "todo",       name: "待辦事項",           from: "思考", def: false },
   { key: "notes",      name: "隨身小本本",         from: "思考", def: false },
-  { key: "wins",       name: "小勝利罐",           from: "寶庫", def: false },
+  { key: "wins",       name: "小勝利聖杯",           from: "寶庫", def: false },
   { key: "compassion", name: "今日自我慈悲",       from: "首頁", def: false },
 ];
 const HOME_BY_KEY = Object.fromEntries(HOME_BLOCKS.map(b => [b.key, b]));
@@ -1676,7 +1676,7 @@ function renderToday() {
       <div class="card">
         <h2>${todayMood ? moodIcon(todayMood.level) : "🌤"} 今天的心情 <span class="sub">${todayMood ? esc(moodLabel(todayMood.level)) : "點一下就記錄"}</span></h2>
         ${moodPickerHTML(todayMood?.level, "home")}
-        <p class="muted small">每天一個圖示，久了就能看出心情和月相的關聯。</p>
+        <p class="muted small">每天一個圖示，久了就能看出心情和月相的共時性。</p>
       </div>`,
     manifest: () => `
       <div class="card">
@@ -1698,7 +1698,7 @@ function renderToday() {
       <div class="card">
         <h2>🔮 召喚機會 <span class="sub">${charges ? `${charges} 次可用` : "尚未累積"}</span></h2>
         <p class="muted small">${charges
-          ? "祭壇上的魔法陣已經亮起，去看看今天的神奇海螺會給你什麼。"
+          ? "祭壇上的魔法能量已經滿盈，去看看今天的神奇海螺會給你什麼。"
           : `連續紀錄滿 ${SUMMON_PER_STREAK_DAYS} 天、或完成 ${SUMMON_PER_TODOS} 件待辦，就能開啟一次召喚儀式。`}</p>
         <div class="btn-row"><button class="btn ${charges ? "" : "secondary"}" id="home-summon">${charges ? "🔮 前往召喚祭壇" : "看看召喚祭壇"}</button></div>
       </div>`,
@@ -1729,12 +1729,12 @@ function renderToday() {
           <button type="button" class="btn small" id="home-nb-add">＋</button>
         </div>
         ${recentNotes.map(n => `<div class="nb-item"><div class="nb-body">${esc(n.text)}</div></div>`).join("")
-          || `<p class="muted small">小本本還是空白的，寫第一句吧。</p>`}
+          || `<p class="muted small">小本本還是空白的，要不要寫下第一句。</p>`}
       </div>`,
     wins: () => `
       <div class="card">
         <h2>🏆 小勝利聖杯 <span class="sub">${store.data.wins.length} 件</span></h2>
-        <p class="muted small">今天有什麼「其實我做到了」的小事？丟進聖杯裡，難過的時候再拿出來看。</p>
+        <p class="muted small">今天有什麼「其實我做到了」的小事？丟進聖杯裡，沮喪時再拿出來看。</p>
         <div class="add-emo">
           <input type="text" id="home-win-input" placeholder="例：今天準時起床了⋯按 Enter">
           <button type="button" class="btn small" id="home-win-add">＋</button>
@@ -1916,7 +1916,7 @@ function renderDream() {
     <div class="card center">
       <h2 style="justify-content:center">黃金 90 秒 — 醒來立刻紀錄</h2>
       <button class="mic-big" id="dream-mic">🎙️<small>開始紀錄夢境</small></button>
-      <p class="muted small">直接說出：畫面、人物、事件、地點、情緒、顏色。<br>任何你記得的情節，自動幫你標記欄位。<br>（內建語音輸入功能優化中，一直重複是正常的，先說再打字編輯也可以）</p>
+      <p class="muted small">直接說出：畫面、人物、事件、地點、情緒、顏色。<br>任何你記得的情節，自動幫你標記欄位。<br>（內建語音輸入功能優化中，一直重複是正常的）<br>先快速說完再打字編輯也可以</p>
     </div>
     <div class="card locked-card">
       <h2>🌌 星塵樹洞 <span class="sub">傾聽你的秘密</span></h2>
@@ -1931,7 +1931,7 @@ function renderDream() {
     <div class="card locked-card">
       <h2>🪬 心願購物車 <span class="sub">許願清單</span></h2>
       <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
-      <p class="muted small">儲存自己的購物清單，成為每天努力的原動力😍</p>
+      <p class="muted small">儲存自己的購物清單，成為每天努力工作的原動力😍</p>
     </div>
     <div class="card">
       <h2>夢境記錄 <span class="sub">共 ${dreams.length} 則</span></h2>
@@ -2131,16 +2131,16 @@ function diaryEntryEl(d) {
 
 /* ================= CBT 七步驟 ================= */
 const CBT_STEPS = [
-  { key: "situation", q: "發生了什麼事？只描述客觀事實——時間、地點、誰、說了什麼。先不加詮釋。", label: "① 情境", type: "text" },
-  { key: "emotions", q: "當下你感覺到哪些情緒？從喜怒哀樂選單挑選，或自行輸入。每一種有多強（0–100）？", label: "② 初始情緒與強度", type: "emotions" },
-  { key: "thoughts", q: "那一刻你腦中閃過什麼想法或畫面？一條一條說出來。", label: "③ 自動化思考", type: "text" },
+  { key: "situation", q: "發生了什麼事？只描述客觀事實：時間、地點、對象、說了什麼？先不必詮釋。", label: "① 情境", type: "text" },
+  { key: "emotions", q: "當下你感覺到哪些情緒？從喜怒哀樂選單中挑選，或自行輸入。每一種有多強（0–100）？", label: "② 初始情緒與強度", type: "emotions" },
+  { key: "thoughts", q: "那一刻，你腦中閃過什麼想法或反應？一條一條說出來。", label: "③ 自動化思考", type: "text" },
   { key: "belief", q: "你有多相信這個想法？0 = 完全不信，100 = 完全確信。", label: "④ 相信程度", type: "slider" },
   { key: "evFor", q: "有哪些「事實」支持這個想法？只算事實，不算感覺。", label: "⑤ 支持證據", type: "text" },
   { key: "evAgainst", q: "有哪些事實和它矛盾？如果是好朋友遇到同樣的事，你會提醒他注意什麼？", label: "⑥ 反對證據", type: "text" },
   { key: "alt", q: "看完兩邊證據，有沒有一個更平衡的說法？用你自己的話說，不需要完美。", label: "⑦ 替代思考", type: "text" },
   { key: "rerate", q: "現在重新評分：那個想法你還相信多少？情緒等級還有多強？", label: "⑦ 重新評分", type: "rerate" },
 ];
-const DISTORTIONS = ["災難化", "讀心術", "非黑即白", "過度類化", "應該句", "個人化", "情緒推理", "貼標籤", "放大縮小", "心理過濾"];
+const DISTORTIONS = ["災難化", "讀心術", "非黑即白", "過度類化", "應該的模糊地帶", "個人化", "情緒推理", "貼標籤", "放大縮小", "心理過濾"];
 
 function renderCBT() {
   const el = $("#view-cbt");
@@ -2174,7 +2174,7 @@ function renderCBT() {
     </div>
     <div class="card">
       <h2>✅ 代辦事項 <span class="sub" id="td-sub">${todos.filter(t => !t.done).length} 未完成 / ${todos.length} 總數</span></h2>
-      <p class="muted small">完成後打勾，讓宇宙記得，你也記得為自己拍手。</p>
+      <p class="muted small">完成後打勾，讓宇宙記得，你也記得為自己拍手三十六下（太多）。</p>
       <div class="add-emo">
         <input type="text" id="td-input" placeholder="今天想完成的一件事⋯按 Enter">
         <button type="button" class="btn small" id="td-add">＋</button>
@@ -2201,7 +2201,7 @@ function renderNotebookList() {
   const box = $("#nb-list");
   if (!box) return;
   const notes = [...store.data.notes].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  if (!notes.length) { box.innerHTML = `<p class="muted small">小本本還是空白的，寫第一句吧。</p>`; return; }
+  if (!notes.length) { box.innerHTML = `<p class="muted small">小本本還是空白的，趕快寫下第一句吧。</p>`; return; }
   box.innerHTML = notes.slice(0, 40).map(n => `
     <div class="nb-item" data-id="${esc(n.id)}">
       <div class="nb-body">${esc(n.text)}</div>
@@ -2472,7 +2472,7 @@ function openManifestRitual() {
     <h3>🌠 顯化儀式</h3>
     <div class="breath-wrap"><div class="breath-circle"></div></div>
     <p class="muted small center">先跟著圓圈呼吸三次：吸氣 4 秒・停留 7 秒・吐氣 8 秒</p>
-    <div class="socratic">今天的顯化語：「${esc(aff)}」<br>閉上眼、輕聲唸出它，想像實現時的畫面，預先感受那份喜悅。</div>
+    <div class="socratic">今天的顯化語：「${esc(aff)}」<br>閉上眼、輕聲唸出它，想像實現時的畫面，預先感受那份喜悅在心中。</div>
     ${typeof crystalRitualHintHTML === "function" ? crystalRitualHintHTML() : ""}
     <label class="field">今天我想顯化的意圖（用現在式、肯定句）</label>
     <textarea id="mf-intent" style="min-height:56px" placeholder="我正在……我已經……"></textarea>
@@ -2482,14 +2482,14 @@ function openManifestRitual() {
       <button class="btn" id="mf-save">存進今天的日記 ✨</button>
       <button class="btn secondary" id="mf-close">在心裡完成就好</button>
     </div>`);
-  $("#mf-close", m).addEventListener("click", () => { markDone(); m.remove(); toast("儀式完成 ✨ 宇宙聽見了"); });
+  $("#mf-close", m).addEventListener("click", () => { markDone(); m.remove(); toast("儀式完成 ✨ 宇宙都聽見了"); });
   $("#mf-save", m).addEventListener("click", () => {
     const intent = $("#mf-intent", m).value.trim();
     const thanks = $("#mf-thanks", m).value.trim();
     const text = [`🌠 顯化儀式`, `顯化語：${aff}`, intent && `意圖：${intent}`, thanks && `感恩：${thanks}`].filter(Boolean).join("\n");
     store.data.diary.push({ id: uid(), date: todayStr(), time: tstr(new Date()), mood: 7, emotions: ["感恩"], habits: ["許願"], text, three: "", incubation: "" });
     markDone(); m.remove();
-    magicFX("sigil", "把心願烙印進宇宙⋯", () => { if (currentTab === "today") renderToday(); toast("顯化儀式完成 ✨"); });
+    magicFX("sigil", "把心願傳送進宇宙通訊管線⋯", () => { if (currentTab === "today") renderToday(); toast("顯化儀式完成 ✨"); });
   });
 }
 
@@ -2513,7 +2513,7 @@ function openSleepRitual() {
       <div class="btn-row"><button class="btn" id="sr-next">下一步</button></div>`;
     else box.innerHTML = `
       <h3>🌜 睡前引導・交給明天</h3>
-      <label class="field">明天最重要的三件事（寫下來，今晚就不用再想了）</label>
+      <label class="field">明天最重要的三件事（寫下來，今晚就不用再想了，讓焦慮留在這邊就好）</label>
       <textarea id="sr-three" style="min-height:72px">${esc(data.three)}</textarea>
       <label class="field">今晚想在夢裡釐清之事（孵夢意圖，選填）</label>
       <input type="text" id="sr-incu" value="${esc(data.incu)}">
@@ -2554,8 +2554,8 @@ async function aiCall(mode, messages) {
 
 function openAiChat() {
   const m = modal(`
-    <h3>🩵 夢汐 AI 陪伴</h3>
-    <p class="muted small">夢汐是 AI 陪伴者，不能替代專業醫療與心理諮商；訊息會傳送至雲端 AI 處理。</p>
+    <h3>🩵 讓夢汐 AI 引路者：Lucian 陪伴你</h3>
+    <p class="muted small">Lucian 是 AI 陪伴者，不能替代專業醫療與心理諮商；訊息會傳送至你的Anthropic 帳號處理。</p>
     <div class="chat-log" id="ai-log"></div>
     <div class="add-emo">
       <input type="text" id="ai-input" placeholder="想說什麼都可以……">
@@ -2565,8 +2565,8 @@ function openAiChat() {
   const log = $("#ai-log", m), input = $("#ai-input", m);
   const draw = (typing = false) => {
     log.innerHTML = store.data.aiChat.map(x => `<div class="chat-msg ${x.role === "user" ? "user" : "assistant"}">${esc(x.content)}</div>`).join("")
-      + (typing ? `<div class="chat-msg assistant muted">夢汐正在輸入⋯</div>` : "")
-      + (!store.data.aiChat.length && !typing ? `<p class="muted small center">今天過得怎麼樣？跟夢汐說說吧。</p>` : "");
+      + (typing ? `<div class="chat-msg assistant muted">Lucian 正在輸入⋯</div>` : "")
+      + (!store.data.aiChat.length && !typing ? `<p class="muted small center">今天過得怎麼樣？跟Lucian說說吧。</p>` : "");
     log.scrollTop = log.scrollHeight;
   };
   const send = async () => {
@@ -2585,7 +2585,7 @@ function openAiChat() {
   $("#ai-send", m).addEventListener("click", send);
   input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); send(); } });
   $("#ai-clear", m).addEventListener("click", () => {
-    if (!confirm("清空與夢汐的對話？")) return;
+    if (!confirm("清空與Lucian的對話？")) return;
     store.data.aiChat = []; store.save(); draw();
   });
   draw();
@@ -2649,7 +2649,7 @@ function openReport(days, label) {
     ${Object.keys(catOrdered).length ? `<label class="field">喜怒哀樂占比（情緒被記錄的次數）</label>${barRows(catOrdered)}` : ""}
     ${Object.keys(emoCount).length ? `<label class="field">最常出現的情緒</label>${barRows(emoCount)}` : ""}
     ${Object.keys(symCount).length ? `<label class="field">最常出現的夢境符號</label>${barRows(symCount)}` : ""}
-    ${dropAvg != null ? `<p class="muted small">🧠 完成重評的思考紀錄 ${drops.length} 則，相信度平均下降 <b>${dropAvg}</b> 分</p>` : ""}
+    ${dropAvg != null ? `<p class="muted small">🧠 完成重新評估的思考紀錄 ${drops.length} 則，相信度平均下降 <b>${dropAvg}</b> 分</p>` : ""}
     ${focusMin ? `<p class="muted small">🍆 專注共 ${esc(fmtH(focusMin))}（${focus.length} 回合）</p>` : ""}
     <p class="muted small">🔥 目前連續紀錄 ${calcStreak()} 天</p>`}
     <div class="btn-row">
@@ -2797,7 +2797,7 @@ function renderMoon() {
   else diaries.slice(0, 20).forEach(d => dl.appendChild(diaryEntryEl(d)));
 }
 
-/* 單日心情：可補記過去某天的心情，也能直接接著寫日記 */
+/* 單日心情：可補充過去某天的心情，也能直接接著寫日記 */
 function openMoodDayForm(ds) {
   const rec = moodOf(ds);
   const m = modal(`
@@ -2805,7 +2805,7 @@ function openMoodDayForm(ds) {
     <p class="muted small">選一個最接近的天氣；再點一次同一個可以取消。</p>
     ${moodPickerHTML(rec?.level, "day")}
     <label class="field">想多寫一句嗎（選填）</label>
-    <input type="text" id="md-note" maxlength="80" placeholder="今天發生了什麼？" value="${esc(rec?.note || "")}">
+    <input type="text" id="md-note" maxlength="80" placeholder="今天發生了什麼事？" value="${esc(rec?.note || "")}">
     <div class="btn-row">
       <button class="btn" id="md-save">儲存</button>
       <button class="btn secondary" id="md-diary">✍️ 寫成完整日記</button>
