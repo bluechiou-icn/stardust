@@ -243,7 +243,7 @@ const store = {
     if (!this.data) this.data = { dreams: [], diary: [], cbt: [], focus: [], capsules: [], customEvents: [], settings: {} };
     for (const k of ["dreams", "diary", "cbt", "focus", "capsules", "customEvents", "sleep", "aiChat", "crystals", "notes", "todos", "feedback", "moods", "gratitude", "wins"]) this.data[k] ||= [];
     this.data.settings ||= {};
-    this.data.settings.symbols ||= [" 高山", "大海", "湖泊", "河流", "瀑布", "門", "迷宮", "下墜", "飛行", "追逐", "老房子", "牙齒", "樓梯", "考試", "迷路", "開車", "旅行", "朋友", "伴侶", "過去",];
+    this.data.settings.symbols ||= [" 高山", "大海", "湖泊", "河流", "瀑布", "門", "迷宮", "下墜", "飛行", "追逐", "老房子", "牙齒", "樓梯", "考試", "迷路", "開車", "旅行", "朋友", "伴侶", "過去","Deja Vu"];
     this.data.settings.emotions ||= ["焦慮", "羞愧", "悲傷", "憤怒", "恐懼", "委屈", "無力", "罪惡感"];
     // 自訂情緒清單（喜怒哀樂預設之外，使用者自己新增過的）；舊版存在 emotions 裡的自訂項目自動搬過來
     if (!this.data.settings.customEmotions) {
@@ -1784,7 +1784,7 @@ function renderToday() {
         <h2>🌠 今日顯化 <span class="sub">${manifestDone ? "今日已完成 ✓" : "每天一句，宇宙一直在等待接收"}</span></h2>
         <p class="affirmation">「${esc(todayAffirmation())}」</p>
         <div class="btn-row">
-          <button class="btn ${manifestDone ? "secondary" : ""}" id="manifest-start">🕯 開始顯化儀式</button>
+          <button class="btn ${manifestDone ? "secondary" : ""}" id="manifest-start">🕯 顯化儀式</button>
           <button class="btn secondary" id="sleep-ritual">🌜 睡前引導</button>
         </div>
       </div>`,
@@ -1908,7 +1908,7 @@ function renderToday() {
     const v = ($("#home-win-input", el)?.value || "").trim();
     if (!v) return;
     store.data.wins.push({ id: uid(), text: v, date: t, createdAt: new Date().toISOString() });
-    store.save(); checkSummonCharges(); toast("記下來了，這都是是你的功勞 🏆"); renderToday();
+    store.save(); checkSummonCharges(); toast("記下來了，這都是你的功勞 🏆"); renderToday();
   };
   $("#home-win-add")?.addEventListener("click", addHomeWin);
   $("#home-win-input")?.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addHomeWin(); } });
@@ -2024,12 +2024,12 @@ function renderDream() {
     <div class="card locked-card">
       <h2>🌌 星塵樹洞 <span class="sub">傾聽你的秘密</span></h2>
       <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
-      <p class="muted small">星塵樹洞AI「🕯Lucian」能靜靜聆聽你不想告訴別人的話，陪伴你分享心情或聊天。</p>
+      <p class="muted small">星塵樹洞AI「🧝‍♂️Lucian」能靜靜聆聽你不想告訴別人的話，陪伴你分享心情或聊天。</p>
     </div>
     <div class="card locked-card">
       <h2>🖼 夢境圖鑑 <span class="sub">共 ${dreams.length} 則</span></h2>
       <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
-      <p class="muted small">收錄你的夢境，為你排列出內心世界的魔幻地圖；技能解鎖後，這裡會成為你的夢境美術館 🎨</p>
+      <p class="muted small">收錄你的夢境，🧝‍♂️Lucian會幫你排列出內心世界的魔幻地圖；技能解鎖後，這裡會成為你的夢境美術館 🎨</p>
     </div>
     <div class="card locked-card">
       <h2>🪬 心願購物車 <span class="sub">許願清單</span></h2>
@@ -2057,9 +2057,9 @@ function dreamEntryEl(d) {
     <div class="body">${esc(d.text)}</div>
     ${tags.length ? `<div class="tags">${tags.map(x => `<span>${esc(x)}</span>`).join("")}</div>` : ""}
     ${d.sync ? `<div class="muted small" style="margin-top:4px">🔗 共時性：${esc(d.sync)}</div>` : ""}
-    ${d.aiNote ? `<div class="muted small" style="margin-top:4px">🔮 AI 參考：${esc(d.aiNote)}</div>` : ""}
+    ${d.aiNote ? `<div class="muted small" style="margin-top:4px">🧝‍♂️ AI 參考：${esc(d.aiNote)}</div>` : ""}
     <div class="entry-actions">
-      <button data-act="ai">🔮 AI 解夢參考</button>
+      <button data-act="ai">🧝‍♂️ AI 解夢參考</button>
       <button data-act="sync">建立共時性事件</button>
       <button data-act="edit">補充/編輯</button>
       <button data-act="del">刪除</button>
@@ -2657,8 +2657,8 @@ async function aiCall(mode, messages) {
 
 function openAiChat() {
   const m = modal(`
-    <h3>🩵 讓夢汐 AI 引路者：Lucian 陪伴你</h3>
-    <p class="muted small">Lucian 是 AI 陪伴者，不能替代專業醫療與心理諮商；訊息會傳送至你的Anthropic 帳號處理。</p>
+    <h3>讓夢汐 AI 引路者：🧝‍♂️Lucian 陪伴你</h3>
+    <p class="muted small">🧝‍♂️ Lucian 是 AI 陪伴者，不能替代專業醫療與心理諮商；串聯API後訊息會傳送至你的 Anthropic 帳號進行深度溝通。</p>
     <div class="chat-log" id="ai-log"></div>
     <div class="add-emo">
       <input type="text" id="ai-input" placeholder="想說什麼都可以……">
@@ -2669,7 +2669,7 @@ function openAiChat() {
   const draw = (typing = false) => {
     log.innerHTML = store.data.aiChat.map(x => `<div class="chat-msg ${x.role === "user" ? "user" : "assistant"}">${esc(x.content)}</div>`).join("")
       + (typing ? `<div class="chat-msg assistant muted">Lucian 正在輸入⋯</div>` : "")
-      + (!store.data.aiChat.length && !typing ? `<p class="muted small center">今天過得怎麼樣？跟Lucian說說吧。</p>` : "");
+      + (!store.data.aiChat.length && !typing ? `<p class="muted small center">今天過得怎麼樣？🧝‍♂️Lucian在等著你分享。</p>` : "");
     log.scrollTop = log.scrollHeight;
   };
   const send = async () => {
@@ -2688,7 +2688,7 @@ function openAiChat() {
   $("#ai-send", m).addEventListener("click", send);
   input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); send(); } });
   $("#ai-clear", m).addEventListener("click", () => {
-    if (!confirm("清空與Lucian的對話？")) return;
+    if (!confirm("清空與🧝‍♂️Lucian的對話？")) return;
     store.data.aiChat = []; store.save(); draw();
   });
   draw();
@@ -2697,8 +2697,8 @@ function openAiChat() {
 
 function openDreamAI(d) {
   const m = modal(`
-    <h3>🔮 AI 解夢參考</h3>
-    <p class="muted small">榮格取向的參考視角——夢的意義，最終由你自己的聯想決定。</p>
+    <h3>🧝‍♂️ AI 解夢參考</h3>
+    <p class="muted small">榮格／佛洛伊德取向的參考視角夢的意義，最終由你自己的聯想決定。</p>
     <div class="body" id="da-out" style="white-space:pre-wrap;min-height:80px">夢汐正在凝視你的夢境⋯</div>
     <div class="btn-row">
       <button class="btn" id="da-save" disabled>存進這則夢境</button>
@@ -2712,7 +2712,7 @@ function openDreamAI(d) {
     btn.disabled = false;
     btn.addEventListener("click", () => {
       d.aiNote = text; store.save(); m.remove();
-      VIEWS[currentTab](); toast("已存為這則夢境的 AI 參考筆記 🔮");
+      VIEWS[currentTab](); toast("已存為這則夢境的 AI 參考筆記 🧝‍♂️");
     });
   }).catch(e => { $("#da-out", m).textContent = e.message; });
 }
@@ -3375,11 +3375,11 @@ function renderMore() {
       <h2>🔮 命理顧問服務</h2>
       <p class="muted small">想更深入了解自己的命盤，也可以跟 Blue 分享好笑的事。</p>
       <div class="btn-row">
-        <a class="btn secondary" href="${MAIL_TO_BLUE}">💌 寫信告訴我，今天海是什麼顏色</a>
+        <a class="btn secondary" href="${MAIL_TO_BLUE}">💌 寫信告訴我，今天海是什麼顏色 🌊</a>
       </div>
       <div class="btn-row"><a class="btn" href="https://lin.ee/NhElh5L" target="_blank" rel="noopener">💬 加入 LINE 官方帳號</a></div>
     </div>
-    <p class="disclaimer">星塵夢汐僅供自我紀錄，非供替代專業醫療，不提供分析治療。</p>`;
+    <p class="disclaimer">星塵夢汐僅供自我紀錄，非供替代專業醫療，無分析治療功能。</p>`;
   $$("[data-report]", el).forEach(b => b.addEventListener("click", () => openReport(+b.dataset.report, b.textContent.trim())));
   renderSleepBox();
   renderInsights();
@@ -3442,10 +3442,10 @@ function renderSettings() {
         </button>`).join("")}</div>
     </div>
     <div class="card">
-      <h2>🧩 首頁與顯示</h2>
+      <h2>✏️ 首頁與顯示</h2>
       <p class="muted small">決定「首頁」要放哪些區塊、以及它們的順序；心情日曆的圖示也可以換一組。</p>
       <div class="btn-row">
-        <button class="btn secondary" id="set-home">🧩 自訂首頁區塊與排序</button>
+        <button class="btn secondary" id="set-home">✏️ 自訂首頁區塊與排序</button>
         <button class="btn secondary" id="set-mood">🎨 心情圖示（目前：${esc(msName)}）</button>
       </div>
     </div>
@@ -3453,15 +3453,15 @@ function renderSettings() {
       <h2>📖 魔法書首頁</h2>
       <p class="muted small">是否於每次開啟 App 時，先呈現你的 Book of Shadows。</p>
       <div class="btn-row">
-        <button class="btn secondary" id="book-toggle">${store.data.settings.skipBook ? "想再看見魔法書 📖" : "下次直接進首頁 →"}</button>
-        <button class="btn ghost" id="book-preview">🔮 立即打開魔法書</button>
+        <button class="btn secondary" id="book-toggle">${store.data.settings.skipBook ? "想看見魔法書 📖" : "下次直接進首頁🆗️"}</button>
+        <button class="btn ghost" id="book-preview">✡️再看乙次魔法書</button>
       </div>
     </div>
     <div class="card">
       <h2>🐰 星塵夢汐帳號 <span class="sub beta-tag">測試中</span></h2>
-      <p class="muted small">用 email＋密碼建立帳號，紀錄會<b>加密</b>後存進雲端；換手機、清掉瀏覽器資料、重灌，登入回來就把紀錄拿回去。</p>
-      <div class="warn-box">⚠️ <b>帳號同步仍在測試中</b>，請務必定期用下方「🔐 資料（本機儲存）」的<b>匯出 JSON</b> 自己留一份備份，
-      不要只依賴雲端。金鑰只存在你的手機裡，<b>宇宙不曉得也找不回你的密碼</b>如果忘記了，雲端永遠解不開（本機紀錄與匯出檔仍在）。</div>
+      <p class="muted small">用 email＋密碼建立帳號，紀錄會<b>加密</b>後存進雲端；換手機、清掉瀏覽器資料、重新安裝New Version，登入後回復紀錄。</p>
+      <div class="warn-box">⚠️ <b>帳號同步仍在測試中</b>，請務必定期用下方「🔐 資料（本機儲存）」的<b>  匯出 JSON</b> 自己留一份備份。
+<br>只依賴雲端偏危險，因金鑰只存在你的手機裡，<b>宇宙不曉得、也找不回你的密碼</b>，如果不小心忘記了，花時間寫下的資料都會掉進黑洞（但手機已匯出紀錄仍在）。</div>
       <div id="account-box"><p class="muted small">載入中⋯</p></div>
     </div>
     <div class="card">
@@ -3503,7 +3503,7 @@ function renderSettings() {
       <textarea id="bd-text" maxlength="300" rows="3" placeholder="想說的話⋯（最多 300 字）"></textarea>
       <div class="btn-row"><button class="btn" id="bd-send">💌 送出留言</button></div>
       <div class="board-list" id="bd-list"><p class="muted small">載入中⋯</p></div>
-      <p class="muted small board-note">送出即表示同意記錄暱稱、留言內容，連線位置不會公開顯示。</p>
+      <p class="muted small board-note">送出即表示同意記錄暱稱、留言內容，連線位置不會公開。</p>
     </div>
     <div class="card">
       <h2>🎁 分享給好友</h2>
@@ -3513,8 +3513,8 @@ function renderSettings() {
     </div>
     <div class="card">
       <h2>📕 封印魔法書</h2>
-      <p class="muted small">結束今天的紀錄時，把魔法書闔上重新封印，下次再由你親手開啟。</p>
-      <div class="btn-row"><button class="btn secondary" id="seal-btn">🔒 封印魔法書</button></div>
+      <p class="muted small">結束今天的紀錄時，把魔法書闔上重新封印，下次再由你親自開啟。</p>
+      <div class="btn-row"><button class="btn secondary" id="seal-btn">🔒 封印魔法書 ✡️</button></div>
     </div>
     <p class="disclaimer">星塵夢汐僅供自我紀錄，非供替代專業醫療，不提供分析治療。</p>`;
   renderBoard();
@@ -3533,7 +3533,7 @@ function renderSettings() {
   $("#book-toggle").addEventListener("click", () => {
     store.data.settings.skipBook = !store.data.settings.skipBook;
     store.save(); renderSettings();
-    toast(store.data.settings.skipBook ? "開啟進直接進首頁✨" : "我想親自開啟魔法書📖");
+    toast(store.data.settings.skipBook ? "進直接進首頁✨" : "想親自開啟魔法書📖");
   });
   $("#book-preview").addEventListener("click", () => openBookLanding({ force: true }));
   $("#sync-notion").addEventListener("click", notionSync);
@@ -4237,7 +4237,7 @@ function openNotionHelp() {
     <div class="btn-row"><button class="btn" onclick="this.closest('.modal-mask').remove()">知道了</button></div>`);
 }
 
-/* --- 行銷名單（選填的優惠碼／新功能通知） ---
+/* --- Email名單（選填的優惠碼／新功能通知） ---
    真正的帳號、登入與同步在 account.js（星塵帳號）；這裡只負責把 email 送進名單。
    舊版的 Apple／Email「註冊」只是把 email 寫進 localStorage，換裝置就消失，已由星塵帳號取代。 */
 async function registerMarketingEmail(email, provider = "email", nickname = "") {
