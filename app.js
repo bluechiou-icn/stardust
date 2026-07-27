@@ -1916,7 +1916,7 @@ function renderDream() {
     <div class="card center">
       <h2 style="justify-content:center">黃金 90 秒 — 醒來立刻紀錄</h2>
       <button class="mic-big" id="dream-mic">🎙️<small>開始紀錄夢境</small></button>
-      <p class="muted small">直接說出：畫面、人物、事件、地點、情緒、顏色。<br>任何你記得的情節，自動幫你標記欄位。</p>
+      <p class="muted small">直接說出：畫面、人物、事件、地點、情緒、顏色。<br>任何你記得的情節，自動幫你標記欄位。<br>（內建語音輸入功能優化中，一直重複是正常的，先說再打字編輯也可以）</p>
     </div>
     <div class="card locked-card">
       <h2>🌌 星塵樹洞 <span class="sub">傾聽你的秘密</span></h2>
