@@ -68,6 +68,15 @@ const AFFIRMATIONS = [
   "感謝過去的我，撐起了現在的我。",
 ];
 
+/* 📮 寫信給 Blue（設定頁「命理顧問服務」那張卡）
+   mailto: 會打開使用者手機／電腦上的預設信件 App，並先填好收件者與主旨。
+   想改收件信箱或主旨，直接改下面三個字串即可。 */
+const BLUE_EMAIL = "blue@bluechiou.com";
+const BLUE_MAIL_SUBJECT = "今天海是什麼顏色";
+const BLUE_MAIL_BODY = "今天我看到的海是⋯\n\n";
+const MAIL_TO_BLUE =
+  `mailto:${BLUE_EMAIL}?subject=${encodeURIComponent(BLUE_MAIL_SUBJECT)}&body=${encodeURIComponent(BLUE_MAIL_BODY)}`;
+
 /* 連續紀錄徽章（[天數, 名稱]；想修改可直接編輯） */
 const STREAK_BADGES = [
   [3, "🌱 意念"], [7, "✨ 星芒"], [14, "🌙 星軌"], [30, "🌌 星座"], [60, "🌠 星河"], [100, "💫 星系"],
@@ -3365,6 +3374,9 @@ function renderMore() {
     <div class="card">
       <h2>🔮 命理顧問服務</h2>
       <p class="muted small">想更深入了解自己的命盤，也可以跟 Blue 分享好笑的事。</p>
+      <div class="btn-row">
+        <a class="btn secondary" href="${MAIL_TO_BLUE}">💌 寫信告訴我，今天海是什麼顏色</a>
+      </div>
       <div class="btn-row"><a class="btn" href="https://lin.ee/NhElh5L" target="_blank" rel="noopener">💬 加入 LINE 官方帳號</a></div>
     </div>
     <p class="disclaimer">星塵夢汐僅供自我紀錄，非供替代專業醫療，不提供分析治療。</p>`;
@@ -3449,7 +3461,7 @@ function renderSettings() {
       <h2>👤 星塵帳號 <span class="sub beta-tag">測試中</span></h2>
       <p class="muted small">用 email＋密碼建立帳號，紀錄會<b>加密</b>後存進雲端；換手機、清掉瀏覽器資料、重灌，登入回來就把紀錄拿回去。</p>
       <div class="warn-box">⚠️ <b>帳號同步仍在測試中</b>，請務必定期用下方「🔐 資料（本機儲存）」的<b>匯出 JSON</b> 自己留一份備份，
-      不要只依賴雲端。忘記密碼時雲端那份會永遠解不開（本機紀錄與匯出檔仍在）。</div>
+      不要只依賴雲端。金鑰只存在你的手機裡，<b>宇宙不曉得也找不回你的密碼</b>——忘記了雲端那份就永遠解不開（本機紀錄與匯出檔仍在）。</div>
       <div id="account-box"><p class="muted small">載入中⋯</p></div>
     </div>
     <div class="card">

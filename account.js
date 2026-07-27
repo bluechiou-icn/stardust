@@ -322,9 +322,12 @@ function openAccountForm(mode) {
       <input type="password" id="ac-pwd2" autocomplete="new-password" placeholder="••••••••">
       <label class="field">暱稱（選填）</label>
       <input type="text" id="ac-nick" maxlength="20" placeholder="你希望宇宙怎麼稱呼你？" value="${esc(store.data.settings.nickname || "")}">
-      <div class="warn-box">⚠️ 資料是用你的密碼加密的，<b>忘記密碼＝雲端那份永遠解不開</b>（本機紀錄和匯出檔還在）。
+      <div class="warn-box">⚠️ 資料是用你的密碼加密的，金鑰只存在你的手機裡。
+      <b>宇宙不曉得也找不回你的密碼</b>——忘記了，雲端那份就永遠解不開（本機紀錄和匯出檔還在）。
       請把密碼記在安全的地方，並定期用「匯出 JSON」留一份自己的備份。</div>
-      <label class="field"><input type="checkbox" id="ac-optin" checked> 我想搶先體驗新功能，並接收神奇海螺專屬優惠碼</label>` : ""}
+      <label class="field"><input type="checkbox" id="ac-optin" checked> 我想搶先體驗新功能，並接收神奇海螺專屬優惠碼</label>`
+      : `<p class="muted small" style="margin-top:8px">
+           <button type="button" class="linkish" id="ac-forgot">忘記密碼了？</button></p>`}
     <div class="btn-row">
       <button class="btn" id="ac-go">${isSignup ? "建立帳號" : isUnlock ? "解鎖" : "登入"}</button>
       <button class="btn secondary" id="ac-cancel">取消</button>
@@ -332,6 +335,7 @@ function openAccountForm(mode) {
 
   const cancel = () => m.remove();
   m.querySelector("#ac-cancel").addEventListener("click", cancel);
+  m.querySelector("#ac-forgot")?.addEventListener("click", openForgotPasswordInfo);
   const go = m.querySelector("#ac-go");
   go.addEventListener("click", async () => {
     const email = (m.querySelector("#ac-email")?.value || knownEmail).trim();
@@ -366,6 +370,24 @@ function openAccountForm(mode) {
       go.disabled = false; go.textContent = label;
     }
   });
+}
+
+/* 忘記密碼：做不到重設，但至少要老實說清楚為什麼，並給還能走的路 */
+function openForgotPasswordInfo() {
+  const m = modal(`
+    <h3>🌌 宇宙不曉得也找不回你的密碼</h3>
+    <p class="muted small">你的紀錄是用密碼在<b>這台手機上</b>加密之後才上傳的，金鑰從來沒有離開過裝置。
+    所以雲端那邊存的只是一團誰都解不開的密文——連我們也沒有備份鑰匙，沒有「重設密碼」這個選項。
+    這是為了確保沒有人能偷看你的夢境與心情，代價就是密碼真的不能忘。</p>
+    <p class="muted small"><b>還能走的路：</b></p>
+    <ul class="summon-rules">
+      <li>這台手機上的紀錄<b>還在</b>，完全沒有受影響，可以照常使用</li>
+      <li>之前用「匯出 JSON」存的備份檔也還在，可以在設定頁「匯入 JSON」還原</li>
+      <li>想重新開始雲端同步：用同一個 email 建立新帳號前，要先在原本登入的裝置上刪掉舊的雲端帳號；
+      或直接改用另一個 email 註冊</li>
+    </ul>
+    <div class="btn-row"><button class="btn" id="fp-close">我瞭解了</button></div>`);
+  m.querySelector("#fp-close").addEventListener("click", () => m.remove());
 }
 
 function openChangePasswordForm() {
