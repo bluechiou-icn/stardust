@@ -2065,7 +2065,7 @@ function openDreamForm({ existing = null, autostart = false } = {}) {
 function openDiaryForm({ existing = null } = {}) {
   const d = existing || { id: uid(), date: todayStr(), time: tstr(new Date()), mood: 6, emotions: [], habits: [], text: "", three: "", incubation: "", photoId: "" };
   const m = modal(`
-    <h3>✍️ 日記・每日簽到</h3>
+    <h3>✍️ 日記・每日Check-in</h3>
     <label class="field">今天的天氣心情（也會同步到心情日曆）</label>
     ${moodPickerHTML(moodOf(d.date)?.level, "diary")}
     <label class="field">今天的心情（1–10）</label>
@@ -3336,8 +3336,8 @@ function renderSettings() {
       <div class="btn-row"><button class="btn" id="feedback-btn">✨ 分享你的靈感</button></div>
     </div>
     <div class="card">
-      <h2>💋 辣妹留言板 <span class="sub" id="board-sub">載入中⋯</span></h2>
-      <p class="muted small">留下你的暱稱和一句話，讓大家看看彼此的星塵日常。</p>
+      <h2>🔥 辣妹留言板 <span class="sub" id="board-sub">載入中⋯</span></h2>
+      <p class="muted small">留下你的暱稱和一句話，分享彼此的星塵日常。</p>
       <input type="text" id="bd-nick" maxlength="20" placeholder="暱稱（例：南港Lisa）" value="${esc(store.data.settings.nickname || "")}">
       <textarea id="bd-text" maxlength="300" rows="3" placeholder="想說的話⋯（最多 300 字）"></textarea>
       <div class="btn-row"><button class="btn" id="bd-send">💌 送出留言</button></div>
@@ -3390,7 +3390,7 @@ function renderSettings() {
   $("#feedback-btn").addEventListener("click", openFeedbackForm);
 }
 
-/* ---------- 💋 辣妹留言板 ---------- */
+/* ---------- 🔥 辣妹留言板 ---------- */
 let _boardCache = null;
 async function renderBoard() {
   const box = $("#bd-list"), sub = $("#board-sub");
@@ -3414,7 +3414,7 @@ function drawBoard(msgs) {
   const box = $("#bd-list"), sub = $("#board-sub");
   if (!box) return;
   if (sub) sub.textContent = `${msgs.length} 則`;
-  if (!msgs.length) { box.innerHTML = `<p class="muted small">還沒有人留言，當第一個吧 💋</p>`; return; }
+  if (!msgs.length) { box.innerHTML = `<p class="muted small">還沒有愣留言，你來當第一個 💋</p>`; return; }
   box.innerHTML = msgs.map(m => `
     <div class="bd-item">
       <div class="bd-head"><b>${esc(m.nickname || "訪客")}</b><span>${esc(fmtBoardTime(m.at))}</span></div>
@@ -3443,12 +3443,12 @@ async function sendBoardMessage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nickname: nick, content: text }),
     });
-    if (r.status === 429) { toast("留言太頻繁，休息一下再送 💋"); return; }
+    if (r.status === 429) { toast("留言太頻繁，休息一下再送 💓"); return; }
     const j = await r.json();
     if (!r.ok || j.error) { toast("送出失敗，稍後再試"); return; }
     $("#bd-text").value = "";
     if (nick && !store.data.settings.nickname) { store.data.settings.nickname = nick; store.save(); }
-    toast(j.enabled ? "留言已送出 💋" : "留言已送達後台 💌");
+    toast(j.enabled ? "留言已送出 ⚡️" : "留言已送達後台 💌");
     renderBoard();
   } catch {
     toast("網路連線失敗，稍後再試");
@@ -3474,10 +3474,10 @@ function shareUrl() {
 }
 function openShareForm() {
   const url = shareUrl();
-  const text = `我在用「星塵夢汐」記錄夢境和心情 ✨ 用這個連結打開你的個人魔法書，我們都會拿到一片神奇海螺碎片 🐚`;
+  const text = `分享有趣的東西「星塵夢汐」可記錄夢境和心情 ✨ 用這個連結打開你的個人魔法書，我們都會拿到一片神奇海螺碎片 🐚`;
   const m = modal(`
     <h3>🎁 分享給好友</h3>
-    <p class="muted small">好友開啟個人魔法書後，雙方都能獲得一個隨機神奇海螺碎片。</p>
+    <p class="muted small">好友開啟個人魔法書後，雙方都能獲得一個隨機神奇海螺碎片。（測試中）</p>
     <label class="field">你的邀請連結</label>
     <input type="text" id="sh-url" readonly value="${esc(url)}">
     <div class="btn-row">
@@ -4164,7 +4164,7 @@ function openEmailRegisterForm() {
     if (nickname) store.data.settings.nickname = nickname;
     store.save(); m.remove(); renderSettings();
     if (optin) registerMarketingEmail(email, "email", nickname);
-    toast(`已建立星塵帳號 ✨ ${email}`);
+    toast(`已建立星塵夢汐帳號 ✨ ${email}`);
   });
 }
 async function registerMarketingEmail(email, provider = "email", nickname = "") {
