@@ -2767,7 +2767,7 @@ function renderMoon() {
 
     <div class="card">
       <h2>📔 日記本 <span class="sub">共 ${diaries.length} 篇</span></h2>
-      <p class="muted small">想好好寫的時候就寫長一點；只想按一下心情，用上面的心情日曆就好。</p>
+      <p class="muted small">想好好寫的時候就寫長一點；只想按一下心情，用上面的圖樣紀錄也可以。</p>
       <div class="btn-row">
         <button class="btn" id="diary-new">✍️ 寫今天的日記</button>
         <button class="btn secondary" id="diary-gratitude">🙏 三件感謝</button>
@@ -2868,7 +2868,7 @@ function openGratitudeForm(ds = todayStr()) {
   const g = gratitudeOf(ds);
   const m = modal(`
     <h3>🙏 ${esc(fmtMD(ds))} 的三件感謝</h3>
-    <p class="muted small">再小的事都算數。持續寫下去，大腦會慢慢學會先看見好的部分。</p>
+    <p class="muted small">再小的事都算數。持續寫下去，大腦會學會先看見正向的部分。</p>
     ${[0, 1, 2].map(i => `<input type="text" class="gf-in" maxlength="60" placeholder="${i + 1}." value="${esc(g?.items?.[i] || "")}">`).join("")}
     <div class="btn-row"><button class="btn" id="gf-save">儲存</button><button class="btn secondary" id="gf-cancel">取消</button></div>`);
   $("#gf-cancel", m).addEventListener("click", () => m.remove());
@@ -2954,7 +2954,7 @@ function renderSummon() {
     <div class="altar">
       <canvas class="altar-clouds" aria-hidden="true"></canvas>
       <div class="altar-inner">
-        <p class="altar-kicker">✦ 月下祭壇 ✦</p>
+        <p class="altar-kicker">✦ 月光祭壇 ✦</p>
         <h2 class="altar-title">神奇海螺召喚儀式</h2>
         <p class="altar-sub">${charges
           ? `魔法陣已經亮起，你有 <b>${charges}</b> 次召喚機會`
@@ -3018,7 +3018,7 @@ function showSummonResult(miss, result) {
         <div class="sr-emoji">🌫</div>
         <h3>神奇海螺偏忙碌</h3>
         <p class="muted">下次一定會更讚 ✨</p>
-        <p class="muted small">辣妹不氣餒繼，續紀錄，明天的祭壇還會為你亮起。</p>
+        <p class="muted small">辣妹不氣餒，繼續紀錄，祭壇一直在這裡等著你。</p>
       </div>
       <div class="btn-row"><button class="btn" id="sr-close">好的</button></div>`);
     $("#sr-close", m).addEventListener("click", () => { m.remove(); renderSummon(); });
@@ -3183,7 +3183,7 @@ function renderMore() {
   el.innerHTML = `
     <div class="card">${shellVaultHTML()}</div>
     <div class="card">
-      <h2>⏳ 時空膠囊 <span class="sub">${caps.length} 顆</span></h2>
+      <h2>⏳ 時空膠囊 ☄️<span class="sub">${caps.length} 顆</span></h2>
       <p class="muted small">拍下現在、寫給未來的自己，過去的你，也能提醒當下、未來的你，到期之前將完全封存。</p>
       <div id="cap-list">${caps.map(c => capsuleHTML(c, t)).join("") || ""}</div>
       <div class="btn-row"><button class="btn" id="cap-new">✉️ 封印一顆新的時空膠囊 🐚</button></div>
@@ -3242,7 +3242,7 @@ function renderMore() {
     const v = ($("#win-input", el)?.value || "").trim();
     if (!v) return;
     store.data.wins.push({ id: uid(), text: v, date: todayStr(), createdAt: new Date().toISOString() });
-    store.save(); checkSummonCharges(); toast("記下來了，這是你的功勞 🏆"); renderMore();
+    store.save(); checkSummonCharges(); toast("記下來了，這都是你的功勞 🏆"); renderMore();
   };
   $("#win-add").addEventListener("click", addWin);
   $("#win-input").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addWin(); } });
@@ -3342,7 +3342,7 @@ function renderSettings() {
       <textarea id="bd-text" maxlength="300" rows="3" placeholder="想說的話⋯（最多 300 字）"></textarea>
       <div class="btn-row"><button class="btn" id="bd-send">💌 送出留言</button></div>
       <div class="board-list" id="bd-list"><p class="muted small">載入中⋯</p></div>
-      <p class="muted small board-note">送出即表示同意記錄暱稱、留言內容與連線 IP；IP 不會公開顯示，僅於發生惡意毀謗留言時供法律追溯使用。</p>
+      <p class="muted small board-note">送出即表示同意記錄暱稱、留言內容，連線位置不會公開顯示。</p>
     </div>
     <div class="card">
       <h2>🎁 分享給好友</h2>
@@ -3372,7 +3372,7 @@ function renderSettings() {
   $("#book-toggle").addEventListener("click", () => {
     store.data.settings.skipBook = !store.data.settings.skipBook;
     store.save(); renderSettings();
-    toast(store.data.settings.skipBook ? "下次進 App 直接進入本文 ✨" : "下次進 App 會先開啟魔法書 📖");
+    toast(store.data.settings.skipBook ? "下次進 App 直接進入首頁 ✨" : "下次進 App 先開啟魔法書 📖");
   });
   $("#book-preview").addEventListener("click", () => openBookLanding({ force: true }));
   $("#sync-notion").addEventListener("click", notionSync);
@@ -3385,7 +3385,7 @@ function renderSettings() {
   $("#notif-btn").addEventListener("click", async () => {
     if (!("Notification" in window)) return toast("此裝置不支援網頁通知");
     const p = await Notification.requestPermission();
-    toast(p === "granted" ? "通知已開啟 🔔（App 開啟時會提醒天象）" : "沒有取得通知權限");
+    toast(p === "granted" ? "通知已開啟 🔔（App 開啟時會提醒天象和許願提醒）" : "沒有取得通知權限");
   });
   $("#feedback-btn").addEventListener("click", openFeedbackForm);
 }
@@ -3401,7 +3401,7 @@ async function renderBoard() {
     _boardCache = j;
     if (!j.enabled && !(j.messages || []).length) {
       if (sub) sub.textContent = "尚未啟用";
-      box.innerHTML = `<p class="muted small">留言板尚未啟用（後台尚未設定儲存空間），留言仍會送達後台。</p>`;
+      box.innerHTML = `<p class="muted small">留言板尚未啟用（尚未完成設定），留言仍會送達後台。</p>`;
       return;
     }
     drawBoard(j.messages || []);
@@ -3474,7 +3474,7 @@ function shareUrl() {
 }
 function openShareForm() {
   const url = shareUrl();
-  const text = `分享有趣的東西「星塵夢汐」可記錄夢境和心情 ✨ 用這個連結打開你的個人魔法書，我們都會拿到一片神奇海螺碎片 🐚`;
+  const text = `分享乙個有趣的東西「星塵夢汐」可記錄夢境和心情 ✨ 用這個連結打開你的個人魔法書，我們都會拿到一片神奇海螺碎片 🐚`;
   const m = modal(`
     <h3>🎁 分享給好友</h3>
     <p class="muted small">好友開啟個人魔法書後，雙方都能獲得一個隨機神奇海螺碎片。（測試中）</p>
@@ -3493,14 +3493,14 @@ function openShareForm() {
     try { await navigator.share({ title: "星塵夢汐", text, url }); } catch { /* 使用者取消 */ }
   });
 }
-/* 被邀請方開啟連結：記下邀請碼，等他真的開啟魔法書時才發碎片 */
+/* 被邀請方開啟連結：記下邀請碼，對方真的開啟魔法書時才發碎片 */
 function handleReferralHash() {
   const m = location.hash.match(/[#&]ref=([A-Z0-9]{4,16})/i);
   if (!m) return;
   const code = m[1].toUpperCase();
   history.replaceState(null, "", location.pathname + location.search);
   const st = store.data.settings;
-  if (st.refCode === code) return;              // 不能自己邀自己
+  if (st.refCode === code) return;              // 不能自己邀自己哦
   if (st.invitedBy) return;                     // 已經被邀請過就不重複
   st.pendingRef = code; store.save();
 }
@@ -4125,14 +4125,14 @@ function openAppleSignInStub() {
     <label class="field">暱稱（選填）</label>
     <input type="text" id="ap-name" maxlength="20" placeholder="宇宙怎麼稱呼你？" value="${esc(store.data.settings.nickname || "")}">
     <div class="btn-row">
-      <button class="btn" id="ap-save">綁定為星塵帳號</button>
+      <button class="btn" id="ap-save">綁定為星塵夢汐帳號</button>
       <button class="btn secondary" id="ap-cancel">取消</button>
     </div>`);
   $("#ap-cancel", m).addEventListener("click", () => m.remove());
   $("#ap-save", m).addEventListener("click", async () => {
     const email = $("#ap-email", m).value.trim();
     const nickname = $("#ap-name", m).value.trim();
-    if (!/^\S+@\S+\.\S+$/.test(email)) return toast("email 格式看起來不對");
+    if (!/^\S+@\S+\.\S+$/.test(email)) return toast("email 格式看起來不對耶");
     store.data.settings.account = { provider: "apple", email, nickname };
     if (nickname) store.data.settings.nickname = nickname;
     store.save(); m.remove(); renderSettings();
@@ -4144,12 +4144,12 @@ function openEmailRegisterForm() {
   const cur = store.data.settings.account || {};
   const m = modal(`
     <h3>✉️ Email 註冊 / 登入</h3>
-    <p class="muted small">留下 email 就能建立一個星塵帳號；下次換手機時，能用同一組 email 收到重新連結指引。</p>
+    <p class="muted small">留下 email 就能建立一個星塵夢汐帳號；下次換手機時，能用同一組 email 收到重新連結指引。</p>
     <label class="field">Email</label>
     <input type="email" id="em-email" placeholder="you@example.com" value="${esc(cur.email || "")}">
     <label class="field">暱稱（選填）</label>
-    <input type="text" id="em-name" maxlength="20" placeholder="宇宙怎麼稱呼你？" value="${esc(store.data.settings.nickname || "")}">
-    <label class="field"><input type="checkbox" id="em-optin" checked> 我想搶先體驗新功能，並接收專屬優惠碼</label>
+    <input type="text" id="em-name" maxlength="20" placeholder="你希望宇宙怎麼稱呼你？" value="${esc(store.data.settings.nickname || "")}">
+    <label class="field"><input type="checkbox" id="em-optin" checked> 我想搶先體驗新功能，並接收神奇海螺專屬優惠碼</label>
     <div class="btn-row">
       <button class="btn" id="em-save">建立星塵帳號</button>
       <button class="btn secondary" id="em-cancel">取消</button>
@@ -4159,7 +4159,7 @@ function openEmailRegisterForm() {
     const email = $("#em-email", m).value.trim();
     const nickname = $("#em-name", m).value.trim();
     const optin = $("#em-optin", m).checked;
-    if (!/^\S+@\S+\.\S+$/.test(email)) return toast("email 格式看起來不對");
+    if (!/^\S+@\S+\.\S+$/.test(email)) return toast("email 格式看起來不對耶");
     store.data.settings.account = { provider: "email", email, nickname };
     if (nickname) store.data.settings.nickname = nickname;
     store.save(); m.remove(); renderSettings();
@@ -4180,8 +4180,8 @@ async function registerMarketingEmail(email, provider = "email", nickname = "") 
 function openFeedbackForm() {
   const m = modal(`
     <h3>✨ 分享你的靈感</h3>
-    <p class="muted small">你的建議幫助星塵夢汐變得更好。</p>
-    <label class="field">你的建議</label>
+    <p class="muted small">你的建議會讓星塵夢汐變得更好玩。</p>
+    <label class="field">辣妹的建議</label>
     <textarea id="fb-content" placeholder="分享你對功能、設計、體驗的任何想法..." rows="6"></textarea>
     <label class="field">聯絡方式（選填）</label>
     <input type="email" id="fb-email" placeholder="email@example.com（若想收取回覆）">
@@ -4207,7 +4207,7 @@ function openFeedbackForm() {
     store.save();
     m.remove();
     submitFeedback(feedback);
-    toast("感謝你的寶貴建議 ✨");
+    toast("感謝你的寶貴建議🙏Blue在此雙手合十");
   });
 }
 
@@ -4237,7 +4237,7 @@ function exportJSON() {
 }
 function exportMarkdown() {
   const D = store.data;
-  let md = `# 星塵夢汐紀錄匯出（${todayStr()}）\n\n> 個人自我紀錄，非醫療文件。\n`;
+  let md = `# 星塵夢汐紀錄匯出（${todayStr()}）\n\n> 僅供個人自我紀錄，非醫療諮商文件。\n`;
   if (D.dreams.length) {
     md += `\n## 🌙 夢境（${D.dreams.length}）\n`;
     for (const d of [...D.dreams].sort((a, b) => a.date.localeCompare(b.date)))
@@ -4255,7 +4255,7 @@ function exportMarkdown() {
   }
   if (D.focus.length) md += `\n## 🍆 專注（${D.focus.length} 回合）\n` + D.focus.map(f => `- ${f.date} ${f.time} ${f.slot}｜${f.intent}｜${f.mins} 分｜專注 ${f.rating}/5${f.distractions?.length ? `｜分心：${f.distractions.join("、")}` : ""}`).join("\n") + "\n";
   download(`dreamtide-export-${todayStr()}.md`, md, "text/markdown");
-  toast("Markdown 已匯出——回診準備包的雛形");
+  toast("Markdown 已匯出—回診準備包的雛形");
 }
 function importJSON(e) {
   const file = e.target.files[0];
