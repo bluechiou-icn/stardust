@@ -3449,7 +3449,7 @@ function renderSettings() {
       <h2>👤 星塵帳號 <span class="sub beta-tag">測試中</span></h2>
       <p class="muted small">用 email＋密碼建立帳號，紀錄會<b>加密</b>後存進雲端；換手機、清掉瀏覽器資料、重灌，登入回來就把紀錄拿回去。</p>
       <div class="warn-box">⚠️ <b>帳號同步仍在測試中</b>，請務必定期用下方「🔐 資料（本機儲存）」的<b>匯出 JSON</b> 自己留一份備份，
-      不要只依賴雲端。忘記密碼時雲端那份會永遠解不開（本機紀錄與匯出檔仍在）。</div>
+      不要只依賴雲端。金鑰只存在你的手機裡，<b>宇宙不曉得也找不回你的密碼</b>——忘記了雲端那份就永遠解不開（本機紀錄與匯出檔仍在）。</div>
       <div id="account-box"><p class="muted small">載入中⋯</p></div>
     </div>
     <div class="card">
