@@ -1,7 +1,7 @@
 /* 星塵夢汐 · 辣妹留言板
    ────────────────────────────────────────
    GET  /api/board        → 取回最近的留言（只回傳暱稱、內容、時間）
-   POST /api/board        → 新增一則留言（後台另外記錄 IP／UA 供法律追溯）
+   POST /api/board        → 新增一則留言（後台另外記錄 IP／UA）
 
    儲存方式：Upstash Redis REST（與 register.js／feedback.js 同一套環境變數風格）
      BOARD_KV_URL   例：https://xxx.upstash.io
@@ -69,8 +69,7 @@ export default async function handler(req, res) {
     nickname: nickname || "訪客",
     content,
     at: new Date().toISOString(),
-    // 以下僅存後台，供惡意毀謗留言的法律追溯使用
-    ip,
+    //,
     ua: (req.headers["user-agent"] || "").slice(0, 200),
   };
 
