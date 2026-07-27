@@ -34,6 +34,8 @@ const Cloud = {
 /* ---------- GIS 初始化 ---------- */
 function initCloud() {
   if (Cloud.tokenClient) return;
+  // api/config 是 async fetch，解析時 window.STARDUST_GOOGLE_CLIENT_ID 可能還沒到
+  if (!CloudCfg.clientId) CloudCfg.clientId = (typeof window !== "undefined" && window.STARDUST_GOOGLE_CLIENT_ID) || "";
   if (!CloudCfg.clientId) return;
   if (typeof google === "undefined" || !google.accounts?.oauth2) return;
   Cloud.tokenClient = google.accounts.oauth2.initTokenClient({
@@ -273,7 +275,7 @@ async function shareBackup() {
 function refreshCloudUI() {
   const box = document.getElementById("cloud-box");
   if (!box) return;
-  const hasClient = !!CloudCfg.clientId;
+  const hasClient = !!(CloudCfg.clientId || (typeof window !== "undefined" && window.STARDUST_GOOGLE_CLIENT_ID));
   box.innerHTML = `
     ${hasClient ? (Cloud.signedIn
       ? `<p class="muted small">☁ 已登入 <b>${esc(Cloud.email || "Google")}</b>——所有變更會即時同步到 Drive</p>
