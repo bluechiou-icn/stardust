@@ -85,10 +85,10 @@ const SHELL_COLORS = [
 const SHELL_BY_KEY = Object.fromEntries(SHELL_COLORS.map(c => [c.key, c]));
 const SHELL_FRAGMENTS_PER_SHELL = 5;
 /* 機率設定（內部用，不寫進公開文案）：
-   切換分頁時 8.8% 出現流星雨；流星雨出現後，再以 8.8% 掉落一片碎片（整體約 0.77%）。
+   切換分頁時 3.3% 出現流星雨；流星雨出現後，再以 8% 掉落一片碎片（整體約 0.26%）。
    召喚儀式有 10% 摃龜（神奇海螺偏忙碌）。 */
-const METEOR_SHOWER_CHANCE = 0.088;
-const METEOR_FRAGMENT_CHANCE = 0.088;
+const METEOR_SHOWER_CHANCE = 0.033;
+const METEOR_FRAGMENT_CHANCE = 0.08;
 const SUMMON_MISS_CHANCE = 0.10;
 const SUMMON_PER_STREAK_DAYS = 3;   // 連續紀錄幾天轉化一次召喚機會
 const SUMMON_PER_TODOS = 3;         // 完成幾件待辦轉化一次召喚機會
@@ -250,6 +250,8 @@ const store = {
       clearTimeout(this._syncTimer);
       this._syncTimer = setTimeout(() => { cloudSyncPush().catch(() => {}); }, 3000);
     }
+    // 已登入星塵帳號 → 同樣 debounce 推一份加密備份上去（account.js 自己管節流）
+    if (typeof accountSyncPushSoon === "function") accountSyncPushSoon();
   },
 };
 
@@ -1303,7 +1305,8 @@ function switchTab(tab) {
    切換分頁時 METEOR_SHOWER_CHANCE 機率觸發：整個畫面被流星雨蓋版 METEOR_DURATION_MS，
    讓使用者真的放下手機許願；期間持續有流星劃過。
    出現後再以 METEOR_FRAGMENT_CHANCE 的機率掉落一片隨機碎片（機率不寫在公開文案裡）。 */
-const METEOR_DURATION_MS = 24000;
+const METEOR_DURATION_MS = 10000;
+const METEOR_SKIP_AFTER_MS = 3000;
 function meteorShowerFX() {
   if (document.querySelector(".meteor-fx")) return; // 避免重疊觸發
   const ov = document.createElement("div");
@@ -1358,6 +1361,19 @@ function meteorShowerFX() {
   const CIRC = 2 * Math.PI * 19;
   ringFg.style.strokeDasharray = CIRC;
 
+  // 掉落碎片（機率刻意不寫在公開文案）：先結算，等蓋版收掉才報喜，
+  // 否則 toast（z-index 200）會被流星雨蓋版（z-index 480）壓在底下看不到。
+  let announceReward = null;
+  if (Math.random() < METEOR_FRAGMENT_CHANCE) {
+    const { key, merged } = awardShellFragment();
+    store.save();
+    const info = SHELL_BY_KEY[key];
+    announceReward = () => {
+      toast(`🐚 願望被聽見了！獲得「${info.emoji}${info.name}神奇海螺碎片」×1`);
+      if (merged) setTimeout(() => toast(`✨ 碎片集滿，合成一顆完整的${info.emoji}${info.name}神奇海螺！`), 1800);
+    };
+  }
+
   const finish = () => {
     if (ended) return; ended = true;
     cancelAnimationFrame(raf);
@@ -1365,6 +1381,7 @@ function meteorShowerFX() {
     ov.style.opacity = "0";
     document.documentElement.classList.remove("meteor-open");
     setTimeout(() => ov.remove(), 400);
+    if (announceReward) setTimeout(announceReward, 500);
   };
 
   const frame = now => {
@@ -1421,21 +1438,10 @@ function meteorShowerFX() {
   };
   raf = requestAnimationFrame(frame);
 
-  // 8 秒後才給跳過，讓許願的儀式感有機會發生
+  // METEOR_SKIP_AFTER_MS 之後才給跳過，讓許願的儀式感有機會發生
   const skipBtn = $("#mtr-skip", ov);
-  setTimeout(() => skipBtn.classList.remove("hidden"), 8000);
+  setTimeout(() => skipBtn.classList.remove("hidden"), METEOR_SKIP_AFTER_MS);
   skipBtn.addEventListener("click", finish);
-
-  // 掉落碎片（機率刻意不寫在公開文案）
-  if (Math.random() < METEOR_FRAGMENT_CHANCE) {
-    const { key, merged } = awardShellFragment();
-    store.save();
-    const info = SHELL_BY_KEY[key];
-    setTimeout(() => {
-      toast(`🐚 願望被聽見了！獲得「${info.emoji}${info.name}神奇海螺碎片」×1`);
-      if (merged) setTimeout(() => toast(`✨ 碎片集滿，合成一顆完整的${info.emoji}${info.name}神奇海螺！`), 1800);
-    }, 3200);
-  }
 }
 
 /* ================= 今天 ================= */
@@ -1606,6 +1612,92 @@ function openBookLanding({ force = false } = {}) {
   }
 }
 
+/* ---------- 📲 安裝 App（PWA）----------
+   Chrome／Edge 會在「它覺得該出現的時候」才丟安裝提示，實務上常常等不到，
+   所以首頁固定放一顆按鈕：抓得到 beforeinstallprompt 就直接叫出原生安裝視窗，
+   抓不到（iOS Safari、或提示還沒被觸發）就顯示各平台的手動步驟。 */
+let _installPrompt = null;
+function appIsInstalled() {
+  return matchMedia("(display-mode: standalone)").matches
+    || matchMedia("(display-mode: window-controls-overlay)").matches
+    || navigator.standalone === true;
+}
+function installPlatform() {
+  const ua = navigator.userAgent || "";
+  // LINE／FB／IG 的內建瀏覽器不能安裝 PWA，得先用系統瀏覽器打開
+  if (/\bLine\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(ua)) return "inapp";
+  if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return "ios";
+  if (/Android/i.test(ua)) return "android";
+  return "desktop";
+}
+function installBlockHTML() {
+  if (appIsInstalled()) return "";
+  return `
+    <div class="card install-card">
+      <h2>📲 把星塵夢汐裝到手機 <span class="sub">${_installPrompt ? "可直接安裝" : "免下載・免 App Store"}</span></h2>
+      <p class="muted small">裝起來就有自己的圖示，開啟速度更快、離線也能寫紀錄，還能收到天象通知。</p>
+      <div class="btn-row"><button class="btn" id="home-install">📲 安裝 App</button></div>
+    </div>`;
+}
+async function doInstallApp() {
+  if (appIsInstalled()) { toast("這台裝置已經裝好了 ✨"); return; }
+  if (_installPrompt) {
+    try {
+      _installPrompt.prompt();
+      const { outcome } = await _installPrompt.userChoice;
+      _installPrompt = null;                       // 原生提示用過就失效，必須重新等事件
+      if (outcome === "accepted") toast("安裝中⋯完成後在桌面就能看到 🌙");
+      else { toast("先不裝也沒關係，之後隨時可以回來按"); renderToday(); }
+      return;
+    } catch { /* 提示過期 → 落到下面的手動說明 */ _installPrompt = null; }
+  }
+  openInstallGuide();
+}
+function openInstallGuide() {
+  const p = installPlatform();
+  const STEPS = {
+    inapp: {
+      title: "先用系統瀏覽器打開",
+      body: `<p class="muted small">你現在是在 LINE／FB 這類 App 內建的瀏覽器裡，它不支援安裝 App。</p>
+        <ol class="install-steps">
+          <li>點右上角的 <b>⋯</b>（或右下角選單）</li>
+          <li>選「<b>用預設瀏覽器開啟</b>」／「<b>在 Safari 中開啟</b>」</li>
+          <li>在 Safari／Chrome 裡再按一次首頁的「安裝 App」</li>
+        </ol>`,
+    },
+    ios: {
+      title: "iPhone／iPad（Safari）",
+      body: `<ol class="install-steps">
+          <li>點畫面下方（或右上角）的<b>分享</b>圖示 <b>􀈂</b></li>
+          <li>往下捲，選「<b>加入主畫面</b>」</li>
+          <li>右上角按「<b>加入</b>」，桌面就會出現星塵夢汐 🌙</li>
+        </ol>
+        <p class="muted small">iOS 只有 Safari 能加到主畫面；用 Chrome 開的話請先切到 Safari。</p>`,
+    },
+    android: {
+      title: "Android（Chrome）",
+      body: `<ol class="install-steps">
+          <li>點右上角的 <b>⋮</b></li>
+          <li>選「<b>安裝應用程式</b>」或「<b>加到主畫面</b>」</li>
+          <li>確認後桌面就會出現星塵夢汐 🌙</li>
+        </ol>`,
+    },
+    desktop: {
+      title: "電腦（Chrome／Edge）",
+      body: `<ol class="install-steps">
+          <li>看網址列右側的<b>安裝圖示</b>（⊕ 或螢幕圖示）</li>
+          <li>沒看到的話，點右上角 <b>⋮</b> →「<b>投放、儲存及分享</b>」→「<b>安裝頁面即應用程式</b>」</li>
+        </ol>`,
+    },
+  }[p];
+  const m = modal(`
+    <h3>📲 安裝星塵夢汐</h3>
+    <p class="muted small">${esc(STEPS.title)}</p>
+    ${STEPS.body}
+    <div class="btn-row"><button class="btn" id="ig-close">知道了</button></div>`);
+  $("#ig-close", m).addEventListener("click", () => m.remove());
+}
+
 /* 首頁可自訂區塊：使用者可決定哪些區塊出現在預設開啟的首頁，並自由上下排序。
    def:false 代表預設不顯示（仍可在「自訂首頁」開啟）。 */
 const HOME_BLOCKS = [
@@ -1761,6 +1853,7 @@ function renderToday() {
         <button class="greet-edit" id="edit-nickname" title="編輯暱稱">✎</button>
       </div>
     </div>
+    ${installBlockHTML()}
     ${order.filter(homeOn).map(k => BLOCK_HTML[k]?.() || "").join("")}
     <div class="btn-row" style="margin:4px 5px 0">
       <button class="btn ghost" id="home-customize">🧩 自訂首頁區塊與排序</button>
@@ -1772,6 +1865,7 @@ function renderToday() {
   });
   $("#edit-nickname").addEventListener("click", openNicknameForm);
   $("#home-customize").addEventListener("click", openHomeCustomizer);
+  $("#home-install")?.addEventListener("click", doInstallApp);
   $("#quick-dream")?.addEventListener("click", () => openDreamForm());
   $("#quick-diary")?.addEventListener("click", () => openDiaryForm());
   $("#manifest-start")?.addEventListener("click", openManifestRitual);
@@ -2886,6 +2980,57 @@ function openGratitudeForm(ds = todayStr()) {
 let _altarStop = null;
 function stopAltar() { _altarStop?.(); _altarStop = null; }
 
+/* ---------- 🌙 祭壇背景輪播 ----------
+   原圖在 repo 根目錄的 Moon_altar/（PNG，每張 1.6MB 以上，太重不適合直接餵給手機），
+   assets/altar/ 放的是同一批圖壓成 1280px WebP 的版本（每張約 50–110 KB）。
+   想新增背景：把新圖丟進 Moon_altar/，壓成 WebP 放進 assets/altar/，再把檔名加進下面陣列即可。
+
+   目前是「每次進召喚頁就隨機換一張」（reload、切分頁都會換，且不會連續重複同一張）。
+   測試階段刻意不對齊當下月相；之後要對齊時，用 altarPhaseOf() 依 moonInfo() 篩選同相位的圖即可。 */
+const ALTAR_BACKDROPS = [
+  "altar_combo",
+  "blood_darkmoon", "blood_fullmoon", "blood_halffullmoon", "blood_lunar_eclipse", "blood_newmoon",
+  "blue_fullmoon", "blue_fullmoon_conch", "blue_halfmoon", "blue_lunar_eclipse", "blue_newmoon",
+  "blue_summer_newmoon", "blue_summer_sink_fullmoon", "blue_summer_supermoon",
+  "gold_lunar_eclipse",
+  "green_fullmoon", "green_halfmoon", "green_newmoon",
+  "orange_fullmoon", "orange_halfmoon", "orange_newmoon",
+  "purple_fullmoon", "purple_lunar_eclipse", "purple_newmoon_crystal",
+  "white_fullmoon_crystal", "white_lunar_eclipse", "white_newmoon", "white_supermoon",
+  "yellow_halfmoon_conch", "yellow_newmoon_conch",
+];
+/* 由檔名推月相標籤，之後要「背景跟著今天的月相走」就靠這個分類 */
+function altarPhaseOf(name) {
+  if (/eclipse/.test(name)) return "eclipse";
+  if (/newmoon|darkmoon/.test(name)) return "new";
+  if (/halfmoon|halffullmoon/.test(name)) return "quarter";
+  if (/fullmoon|supermoon/.test(name)) return "full";
+  return "any";
+}
+const ALTAR_BG_DIR = "assets/altar/";
+let _lastAltarBg = null;
+function pickAltarBackdrop() {
+  const pool = ALTAR_BACKDROPS.length > 1
+    ? ALTAR_BACKDROPS.filter(n => n !== _lastAltarBg)   // 避免連續兩次同一張
+    : ALTAR_BACKDROPS;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  _lastAltarBg = pick;
+  return pick;
+}
+/* 先把圖預載好再換上去，避免祭壇閃一下黑底 */
+function applyAltarBackdrop(el) {
+  if (!el) return;
+  const name = pickAltarBackdrop();
+  const url = `${ALTAR_BG_DIR}${name}.webp`;
+  el.dataset.bg = name;
+  const swap = () => { el.style.setProperty("--altar-bg", `url("${url}")`); };
+  const img = new Image();
+  img.onload = swap;
+  img.onerror = () => { /* 圖缺了就留在 CSS 的預設底圖，不要弄壞整頁 */ };
+  img.src = url;
+  if (img.complete) swap(); // 已在快取裡就直接換，不等 onload
+}
+
 function startAltarClouds(cv) {
   if (!cv || !cv.getContext) return null;
   const ctx = cv.getContext("2d");
@@ -2991,6 +3136,7 @@ function renderSummon() {
     </div>`;
 
   stopAltar();
+  applyAltarBackdrop($(".altar", el));
   _altarStop = startAltarClouds($(".altar-clouds", el));
   $("#summon-go")?.addEventListener("click", doSummon);
 }
@@ -3300,12 +3446,15 @@ function renderSettings() {
       </div>
     </div>
     <div class="card">
-      <h2>👤 帳號 <span class="sub">跨裝置同步／註冊會員</span></h2>
-      <p class="muted small">選一種方式建立你的星塵帳號。個人紀錄仍存在本機與你的雲端裡；系統後台僅保留你的 email，作為之後新功能與辣妹優惠碼通知。</p>
-      <div id="account-box"></div>
+      <h2>👤 星塵帳號 <span class="sub beta-tag">測試中</span></h2>
+      <p class="muted small">用 email＋密碼建立帳號，紀錄會<b>加密</b>後存進雲端；換手機、清掉瀏覽器資料、重灌，登入回來就把紀錄拿回去。</p>
+      <div class="warn-box">⚠️ <b>帳號同步仍在測試中</b>，請務必定期用下方「🔐 資料（本機儲存）」的<b>匯出 JSON</b> 自己留一份備份，
+      不要只依賴雲端。忘記密碼時雲端那份會永遠解不開（本機紀錄與匯出檔仍在）。</div>
+      <div id="account-box"><p class="muted small">載入中⋯</p></div>
     </div>
     <div class="card">
-      <h2>☁ 雲端備份</h2>
+      <h2>☁ 雲端備份（Google Drive） <span class="sub beta-tag">測試中</span></h2>
+      <div class="warn-box">⚠️ <b>此區塊仍在測試中</b>，最保險的做法還是先用下方的「匯出 JSON」把資料存一份到自己手上。</div>
       <div id="cloud-box"><p class="muted small">載入中⋯</p></div>
     </div>
     <div class="card">
@@ -3365,7 +3514,7 @@ function renderSettings() {
     store.save(); renderSettings();
     toast(`主題已切換：${THEMES[store.data.settings.theme].name} 🎨`);
   }));
-  renderAccountBox();
+  if (typeof refreshAccountUI === "function") refreshAccountUI();
   if (typeof refreshCloudUI === "function") refreshCloudUI();
   $("#set-home").addEventListener("click", openHomeCustomizer);
   $("#set-mood").addEventListener("click", openMoodStyleForm);
@@ -4076,97 +4225,9 @@ function openNotionHelp() {
     <div class="btn-row"><button class="btn" onclick="this.closest('.modal-mask').remove()">知道了</button></div>`);
 }
 
-/* --- 帳號登入／註冊（Google／Apple／Email） ---
-   Google Sign-In 由 cloud.js 的 GIS 走 Drive scope 完成；此區域只提供入口。
-   Apple Sign In 需在 Apple Developer 後台先設定 Service ID 與 Return URL，
-   若尚未設定，按鈕會提示使用者 Google 或 Email。
-   Email 註冊：只寄回 email + 暱稱到 /api/register 作為行銷名單。 */
-function renderAccountBox() {
-  const box = $("#account-box");
-  if (!box) return;
-  const acc = store.data.settings.account || {};
-  const gEmail = (typeof Cloud !== "undefined" && Cloud.email) || "";
-  box.innerHTML = `
-    ${acc.email ? `<p class="small">✅ 目前登入：<b>${esc(acc.email)}</b>（${esc(acc.provider || "email")}）${acc.nickname ? `・暱稱 ${esc(acc.nickname)}` : ""}</p>` : ""}
-    ${gEmail && !acc.email ? `<p class="muted small">Google Drive 已登入 ${esc(gEmail)}；可綁定為星塵帳號。</p>` : ""}
-    <div class="btn-col">
-      <button class="btn" id="acc-google">🔐 使用 Google 帳號登入</button>
-      <button class="btn secondary" id="acc-apple">🍎 使用 Apple 帳號登入</button>
-      <button class="btn secondary" id="acc-email">✉️ 用 Email 註冊新帳號</button>
-      ${acc.email ? `<button class="btn ghost" id="acc-logout">登出目前帳號</button>` : ""}
-    </div>
-    <p class="muted small" style="margin-top:8px">個人資料儲存於你的 Google／Apple／Email 帳號中；系統後台僅記錄 email，作為新功能搶先體驗與優惠碼接收用。</p>`;
-  $("#acc-google", box).addEventListener("click", () => {
-    if (typeof cloudSignIn === "function") {
-      cloudSignIn();
-      // 授權完成後 cloud.js 會把 email 寫回 Cloud.email；1 秒後同步入 account
-      setTimeout(() => {
-        if (Cloud?.email) {
-          store.data.settings.account = { provider: "google", email: Cloud.email, nickname: store.data.settings.nickname || "" };
-          store.save(); renderAccountBox();
-          registerMarketingEmail(Cloud.email, "google");
-        }
-      }, 1500);
-    } else toast("Google 登入尚未就緒");
-  });
-  $("#acc-apple", box).addEventListener("click", openAppleSignInStub);
-  $("#acc-email", box).addEventListener("click", openEmailRegisterForm);
-  $("#acc-logout", box)?.addEventListener("click", () => {
-    if (!confirm("登出目前帳號？（本機紀錄不會被刪除）")) return;
-    store.data.settings.account = null; store.save(); renderAccountBox();
-  });
-}
-function openAppleSignInStub() {
-  const m = modal(`
-    <h3>🍎 使用 Apple 帳號登入</h3>
-    <p class="muted small">Apple Sign In 需先在 Apple Developer 後台建立 Service ID 並綁定星塵夢汐網址，前端才能顯示 Apple 授權視窗。若你已完成設定，請填入你要當作帳號的 email。</p>
-    <label class="field">你的 Apple ID email</label>
-    <input type="email" id="ap-email" placeholder="you@icloud.com">
-    <label class="field">暱稱（選填）</label>
-    <input type="text" id="ap-name" maxlength="20" placeholder="宇宙怎麼稱呼你？" value="${esc(store.data.settings.nickname || "")}">
-    <div class="btn-row">
-      <button class="btn" id="ap-save">綁定為星塵夢汐帳號</button>
-      <button class="btn secondary" id="ap-cancel">取消</button>
-    </div>`);
-  $("#ap-cancel", m).addEventListener("click", () => m.remove());
-  $("#ap-save", m).addEventListener("click", async () => {
-    const email = $("#ap-email", m).value.trim();
-    const nickname = $("#ap-name", m).value.trim();
-    if (!/^\S+@\S+\.\S+$/.test(email)) return toast("email 格式看起來不對耶");
-    store.data.settings.account = { provider: "apple", email, nickname };
-    if (nickname) store.data.settings.nickname = nickname;
-    store.save(); m.remove(); renderSettings();
-    registerMarketingEmail(email, "apple", nickname);
-    toast(`已綁定 Apple 帳號 🍎 ${email}`);
-  });
-}
-function openEmailRegisterForm() {
-  const cur = store.data.settings.account || {};
-  const m = modal(`
-    <h3>✉️ Email 註冊 / 登入</h3>
-    <p class="muted small">留下 email 就能建立一個星塵夢汐帳號；下次換手機時，能用同一組 email 收到重新連結指引。</p>
-    <label class="field">Email</label>
-    <input type="email" id="em-email" placeholder="you@example.com" value="${esc(cur.email || "")}">
-    <label class="field">暱稱（選填）</label>
-    <input type="text" id="em-name" maxlength="20" placeholder="你希望宇宙怎麼稱呼你？" value="${esc(store.data.settings.nickname || "")}">
-    <label class="field"><input type="checkbox" id="em-optin" checked> 我想搶先體驗新功能，並接收神奇海螺專屬優惠碼</label>
-    <div class="btn-row">
-      <button class="btn" id="em-save">建立星塵帳號</button>
-      <button class="btn secondary" id="em-cancel">取消</button>
-    </div>`);
-  $("#em-cancel", m).addEventListener("click", () => m.remove());
-  $("#em-save", m).addEventListener("click", async () => {
-    const email = $("#em-email", m).value.trim();
-    const nickname = $("#em-name", m).value.trim();
-    const optin = $("#em-optin", m).checked;
-    if (!/^\S+@\S+\.\S+$/.test(email)) return toast("email 格式看起來不對耶");
-    store.data.settings.account = { provider: "email", email, nickname };
-    if (nickname) store.data.settings.nickname = nickname;
-    store.save(); m.remove(); renderSettings();
-    if (optin) registerMarketingEmail(email, "email", nickname);
-    toast(`已建立星塵夢汐帳號 ✨ ${email}`);
-  });
-}
+/* --- 行銷名單（選填的優惠碼／新功能通知） ---
+   真正的帳號、登入與同步在 account.js（星塵帳號）；這裡只負責把 email 送進名單。
+   舊版的 Apple／Email「註冊」只是把 email 寫進 localStorage，換裝置就消失，已由星塵帳號取代。 */
 async function registerMarketingEmail(email, provider = "email", nickname = "") {
   try {
     await fetch("api/register", {
@@ -4294,6 +4355,18 @@ function checkEventNotifications() {
 }
 
 /* ---------- 啟動 ---------- */
+/* 安裝提示要在 init 之前就掛上：beforeinstallprompt 有可能在 App 還在初始化時就送達 */
+addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();              // 擋掉瀏覽器自己的小橫幅，改由首頁那顆按鈕觸發
+  _installPrompt = e;
+  if (currentTab === "today") renderToday(); // 讓按鈕的副標即時變成「可直接安裝」
+});
+addEventListener("appinstalled", () => {
+  _installPrompt = null;
+  toast("已安裝到裝置上 🌙 下次直接從桌面打開");
+  if (currentTab === "today") renderToday();
+});
+
 (async function init() {
   store.load();
   applyTheme(store.data.settings.theme || "night");
@@ -4310,6 +4383,8 @@ function checkEventNotifications() {
   checkEventNotifications();
   checkSummonCharges({ silent: true });
   bindAutoReseal();
+  // 星塵帳號：有 token 就標成「待解鎖」，並問後端這功能有沒有啟用
+  if (typeof initAccount === "function") initAccount().catch(() => {});
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     navigator.serviceWorker.register("sw.js").then(async reg => {
       // Android Chrome：App 沒開也能背景檢查天象（best-effort，隨使用頻率調度）
