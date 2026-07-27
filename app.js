@@ -1550,7 +1550,7 @@ function openBookLanding({ force = false } = {}) {
         : `<label class="field book-label">你希望宇宙怎麼稱呼你？</label>
            <input type="text" id="book-nick" maxlength="20" placeholder="南港Lisa、中和李孝利" autocomplete="off">
            <div class="book-actions">
-             <button class="btn book-open-btn" id="book-open">✨ 寫上我的名字，締結契約，解除封印。<br>開啟魔法書</button>
+             <button class="btn book-open-btn" id="book-open">✨寫上姓名，締結契約，解除封印。<br>開啟魔法書</button>
            </div>`}
       <p class="book-foot">此書只專屬於你．紀錄僅存於此裝置帳號</p>
     </div>`;
@@ -1931,7 +1931,7 @@ function renderDream() {
     <div class="card locked-card">
       <h2>🪬 心願購物車 <span class="sub">許願清單</span></h2>
       <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
-      <p class="muted small">儲存自己的購物清單，成為每天努力工作的原動力😍</p>
+      <p class="muted small">儲存自己的購物清單，成為每天努力工作的原動力 😍</p>
     </div>
     <div class="card">
       <h2>夢境記錄 <span class="sub">共 ${dreams.length} 則</span></h2>
