@@ -1643,8 +1643,8 @@ function installBlockHTML() {
   if (appIsInstalled()) return "";
   return `
     <div class="card install-card">
-      <h2>📲 把星塵夢汐裝到手機 <span class="sub">${_installPrompt ? "可直接安裝" : "免下載・免 App Store"}</span></h2>
-      <p class="muted small">裝起來就有自己的圖示，開啟速度更快、離線也能寫紀錄，還能收到天象通知。</p>
+      <h2>📲 把星塵夢汐直接召喚進辣妹手機 <span class="sub">${_installPrompt ? "可直接安裝" : "免下載・免 App Store"}</span></h2>
+      <p class="muted small">安裝後就不用找網址，光速開啟、離線也能紀錄，還可收到許願提醒＆天象通知。</p>
       <div class="btn-row"><button class="btn" id="home-install">📲 安裝 App</button></div>
     </div>`;
 }
@@ -1667,7 +1667,7 @@ function openInstallGuide() {
   const STEPS = {
     inapp: {
       title: "先用系統瀏覽器打開",
-      body: `<p class="muted small">你現在是在 LINE／FB 這類 App 內建的瀏覽器裡，它不支援安裝 App。</p>
+      body: `<p class="muted small">你現在是在 IG／LINE／FB 這類 App 內建的瀏覽器對不對，它不支援安裝 App。</p>
         <ol class="install-steps">
           <li>點右上角的 <b>⋯</b>（或右下角選單）</li>
           <li>選「<b>用預設瀏覽器開啟</b>」／「<b>在 Safari 中開啟</b>」</li>
@@ -1688,7 +1688,7 @@ function openInstallGuide() {
       body: `<ol class="install-steps">
           <li>點右上角的 <b>⋮</b></li>
           <li>選「<b>安裝應用程式</b>」或「<b>加到主畫面</b>」</li>
-          <li>確認後桌面就會出現星塵夢汐 🌙</li>
+          <li>確認後桌面就會出現星塵夢汐🌙</li>
         </ol>`,
     },
     desktop: {
@@ -1716,7 +1716,7 @@ const HOME_BLOCKS = [
   { key: "gratitude",  name: "三件感謝",           from: "首頁", def: true },
   { key: "summon",     name: "召喚機會",           from: "召喚", def: true },
   { key: "upcoming",   name: "即將到來的宇宙星象", from: "宇宙", def: true },
-  { key: "resurface",  name: "時空回聲",           from: "首頁", def: true },
+  { key: "resurface",  name: "時空膠囊",           from: "首頁", def: true },
   { key: "entries",    name: "今日紀錄",           from: "首頁", def: true },
   { key: "todo",       name: "待辦事項",           from: "思考", def: false },
   { key: "notes",      name: "隨身小本本",         from: "思考", def: false },
@@ -1793,13 +1793,13 @@ function renderToday() {
         <h2>🙏 三件感謝 <span class="sub">${grat ? "今天已寫 ✓" : "睡前的小練習"}</span></h2>
         <p class="muted small">寫下今天三件值得感謝的小事，再小都算數，這是挖掘生命快樂泉源的最佳管道。</p>
         ${[0, 1, 2].map(i => `<input type="text" class="grat-in" data-i="${i}" maxlength="60" placeholder="${i + 1}. ${["有人對我說了一句什麼話，讓我很開心", "今天吃到了什麼讓你感到很幸福？", "今天忍下來，撐過去的那件事也寫下來"][i]}" value="${esc(grat?.items?.[i] || "")}">`).join("")}
-        <div class="btn-row"><button class="btn" id="grat-save">存下今天的感謝</button></div>
+        <div class="btn-row"><button class="btn" id="grat-save">存下今天的小感謝</button></div>
       </div>`,
     summon: () => `
       <div class="card">
         <h2>🔮 召喚機會 <span class="sub">${charges ? `${charges} 次可用` : "尚未累積"}</span></h2>
         <p class="muted small">${charges
-          ? "祭壇上的魔法能量已經滿盈，去看看今天的神奇海螺會給你什麼。"
+          ? "祭壇上的魔法能量已經滿盈，快去召喚神奇海螺。"
           : `連續紀錄滿 ${SUMMON_PER_STREAK_DAYS} 天、或完成 ${SUMMON_PER_TODOS} 件待辦，就能開啟一次召喚儀式。`}</p>
         <div class="btn-row"><button class="btn ${charges ? "" : "secondary"}" id="home-summon">${charges ? "🔮 前往召喚祭壇" : "看看召喚祭壇"}</button></div>
       </div>`,
@@ -1820,7 +1820,7 @@ function renderToday() {
         <h2>✅ 待辦事項 <span class="sub">${undone.length ? `${undone.length} 件待完成` : "都完成了 🎉"}</span></h2>
         <div id="home-td-list">${undone.length
           ? undone.map(x => `<label class="td-item"><input type="checkbox" data-id="${esc(x.id)}"><span class="td-text">${esc(x.text)}</span></label>`).join("")
-          : `<p class="muted small">目前沒有未完成的事，為自己拍拍手。</p>`}</div>
+          : `<p class="muted small">目前沒有未完成的事，為自己拍拍手五十八下。</p>`}</div>
       </div>`,
     notes: () => `
       <div class="card">
@@ -2019,12 +2019,12 @@ function renderDream() {
     <div class="card center">
       <h2 style="justify-content:center">黃金 90 秒 — 醒來立刻紀錄</h2>
       <button class="mic-big" id="dream-mic">🎙️<small>開始紀錄夢境</small></button>
-      <p class="muted small">直接說出：畫面、人物、事件、地點、情緒、顏色。<br>任何你記得的情節，自動幫你標記欄位。<br>（內建語音輸入功能優化中，一直重複是正常的）<br>先快速說完再打字編輯也可以</p>
+      <p class="muted small">直接說出：畫面、人物、事件、地點、情緒、顏色。<br>任何記得的情節，自動幫你標記欄位。<br>（內建語音輸入功能優化中，一直重複是正常的）<br>先快速說完再打字編輯也可以</p>
     </div>
     <div class="card locked-card">
       <h2>🌌 星塵樹洞 <span class="sub">傾聽你的秘密</span></h2>
       <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
-      <p class="muted small">星塵樹洞AI能靜靜聆聽你不想告訴別人的話，陪伴你分享心情或聊天。</p>
+      <p class="muted small">星塵樹洞AI「🕯Lucian」能靜靜聆聽你不想告訴別人的話，陪伴你分享心情或聊天。</p>
     </div>
     <div class="card locked-card">
       <h2>🖼 夢境圖鑑 <span class="sub">共 ${dreams.length} 則</span></h2>
@@ -3124,9 +3124,9 @@ function renderSummon() {
       </div>
     </div>
     <div class="card">
-      <h2>🔮 召喚機會怎麼來 <span class="sub beta-tag">測試中</span></h2>
+      <h2>🔮 召喚能量如何累積 <span class="sub beta-tag">測試中</span></h2>
       <ul class="summon-rules">
-        <li><b>連續紀錄 ${SUMMON_PER_STREAK_DAYS} 天</b>：夢境、思考紀錄、快速心情、日記、小本本、三件感謝、小勝利、顯化儀式⋯任何一種都算數（目前連續 ${streak} 天）</li>
+        <li><b>連續紀錄 ${SUMMON_PER_STREAK_DAYS} 天</b>：夢境、思考紀錄、快速心情、日記、小本本、三件感謝、小勝利聖杯、顯化儀式⋯任何一種都算數（目前連續 ${streak} 天）</li>
         <li><b>完成 ${SUMMON_PER_TODOS} 件待辦</b>：在「思考」分頁的待辦事項打勾（已完成 ${countDoneTodos()} 件）</li>
         <li><b>流星雨</b>：切換分頁時偶爾會出現，記得趕快許願，有機會拿到神奇海螺碎片</li>
       </ul>
@@ -3507,8 +3507,8 @@ function renderSettings() {
     </div>
     <div class="card">
       <h2>🎁 分享給好友</h2>
-      <p class="muted small">好友開啟個人魔法書後，雙方都能獲得一個隨機神奇海螺碎片。</p>
-      <div class="btn-row"><button class="btn" id="share-btn">🔗 分享我的魔法書邀請</button></div>
+      <p class="muted small">好友開啟魔法書後，雙方都能獲得一個隨機神奇海螺碎片。</p>
+      <div class="btn-row"><button class="btn" id="share-btn">🔗 邀請朋友進入星塵</button></div>
       <p class="muted small">你的邀請碼：<b>${esc(myReferralCode())}</b></p>
     </div>
     <div class="card">
@@ -3533,7 +3533,7 @@ function renderSettings() {
   $("#book-toggle").addEventListener("click", () => {
     store.data.settings.skipBook = !store.data.settings.skipBook;
     store.save(); renderSettings();
-    toast(store.data.settings.skipBook ? "下次進 App 直接進入首頁 ✨" : "下次進 App 先開啟魔法書 📖");
+    toast(store.data.settings.skipBook ? "開啟進直接進首頁✨" : "我想親自開啟魔法書📖");
   });
   $("#book-preview").addEventListener("click", () => openBookLanding({ force: true }));
   $("#sync-notion").addEventListener("click", notionSync);
@@ -3561,8 +3561,8 @@ async function renderBoard() {
     const j = await r.json();
     _boardCache = j;
     if (!j.enabled && !(j.messages || []).length) {
-      if (sub) sub.textContent = "尚未啟用";
-      box.innerHTML = `<p class="muted small">留言板尚未啟用（尚未完成設定），留言仍會送達後台。</p>`;
+      if (sub) sub.textContent = "測試中";
+      box.innerHTML = `<p class="muted small">留言板測試中，但仍會送達後台Blue看得到。</p>`;
       return;
     }
     drawBoard(j.messages || []);
@@ -3661,7 +3661,7 @@ function handleReferralHash() {
   const code = m[1].toUpperCase();
   history.replaceState(null, "", location.pathname + location.search);
   const st = store.data.settings;
-  if (st.refCode === code) return;              // 不能自己邀自己哦
+  if (st.refCode === code) return;              // 不能自己邀自己鵝
   if (st.invitedBy) return;                     // 已經被邀請過就不重複
   st.pendingRef = code; store.save();
 }
@@ -3955,7 +3955,7 @@ function renderInsights() {
     ${Object.keys(distCount).length ? `<label class="field">最常出現的思考慣性</label>${barRows(distCount)}` : ""}
     ${!D.dreams.length && !D.diary.length ? `<p class="muted small">開始記錄後，這裡會顯現出你的個人專屬潛意識圖鑑 🗂。</p>` : ""}`;
 }
-/* 連續紀錄：任何一種個人紀錄都算數（夢境、日記、思考、茄子鐘、快速心情、小本本、感謝、小勝利、顯化儀式） */
+/* 連續紀錄：任何一種個人紀錄都算數（夢境、日記、思考、茄子鐘、快速心情、小本本、感謝、小勝利聖杯、顯化儀式） */
 function calcStreak() {
   const dates = new Set([
     ...store.data.dreams, ...store.data.diary, ...store.data.cbt, ...store.data.focus,
