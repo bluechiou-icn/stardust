@@ -1683,7 +1683,7 @@ function installBlockHTML() {
   if (appIsInstalled()) return "";
   return `
     <div class="card install-card">
-      <h2>📲 把星塵夢汐直接召喚進辣妹手機 <span class="sub">${_installPrompt ? "可直接安裝" : "免下載・免 App Store"}</span></h2>
+      <h2>📲 把星塵夢汐直接召喚進辣妹手機 <span class="sub">${_installPrompt ? "可直接安裝" : "無需App Store"}</span></h2>
       <p class="muted small">安裝後就不用找網址，光速開啟、離線也能紀錄，還可收到許願提醒＆天象通知。</p>
       <div class="btn-row"><button class="btn" id="home-install">📲 安裝 App</button></div>
     </div>`;
