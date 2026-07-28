@@ -591,7 +591,27 @@ nav.tabbar::after {
 .sr-merged { color: var(--accent); font-size: .86rem; font-weight: 600; margin: 6px 0; }
 @keyframes sr-pop { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .altar-btn, .summon-res .sr-emoji { animation: none; }
+  .altar-btn, .summon-res .sr-emoji, .broadcast .bc-icon { animation: none; }
+}
+
+/* 站內通報卡片 */
+.broadcast { text-align: center; padding: 10px 4px 2px; }
+.broadcast .bc-tag { color: var(--accent); letter-spacing: .28em; font-size: .68rem; margin-bottom: 6px; }
+.broadcast .bc-icon { font-size: 3.2rem; line-height: 1; animation: sr-pop .5s cubic-bezier(.2,1.4,.4,1); }
+.broadcast h3 { margin: 10px 0 6px; }
+.bc-reward {
+  margin: 12px auto 4px; display: inline-block; padding: 6px 14px; border-radius: 999px;
+  background: var(--accent-soft); border: 1px solid var(--accent); font-size: .84rem; font-weight: 600;
+}
+
+/* 星塵專欄・中英對照閱讀器 */
+.art-bi .art-sub { color: var(--accent); font-size: .88rem; margin: -4px 0 6px; }
+.art-bi .art-text { line-height: 1.8; margin: 10px 0 4px; }
+.art-bi .art-sep { border: 0; border-top: 1px solid var(--line); width: 42%; margin: 20px auto; }
+.art-bi .art-lang {
+  margin: 26px 0 16px; text-align: center; color: var(--ink-2);
+  letter-spacing: .3em; font-size: .7rem; text-transform: uppercase;
+  border-top: 1px solid var(--line); padding-top: 14px;
 }
 
 /* misc */
