@@ -1595,7 +1595,7 @@ function openBookLanding({ force = false } = {}) {
         </svg>
       </div>
       <h1 class="book-title">Book of Shadows</h1>
-      <p class="book-sub">你的個人專屬魔法書</p>
+      <p class="book-sub">星塵夢汐，你的專屬魔法書</p>
       ${nickname
         ? `<p class="book-hi">歡迎回來，<b>${esc(nickname)}</b></p>
            <div class="book-actions">
@@ -3530,7 +3530,7 @@ function renderSettings() {
       <h2>📖 魔法書首頁</h2>
       <p class="muted small">是否於每次開啟 App 時，先呈現你的 Book of Shadows。</p>
       <div class="btn-row">
-        <button class="btn secondary" id="book-toggle">${store.data.settings.skipBook ? "想看見魔法書 📖" : "下次直接進首頁🆗️"}</button>
+        <button class="btn secondary" id="book-toggle">${store.data.settings.skipBook ? "還想看見魔法書 📖" : "下次直接進首頁🆗️"}</button>
         <button class="btn ghost" id="book-preview">✡️再看乙次魔法書</button>
       </div>
     </div>
