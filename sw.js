@@ -1,5 +1,5 @@
 /* 星塵夢汐 Stardust DreamTide service worker — 快取＋背景天象檢查 */
-const CACHE = "dreamtide-v16";
+const CACHE = "dreamtide-v17";
 /* 核心殼層：一定要進快取才算安裝成功 */
 const CORE = ["./", "index.html", "style.css", "app.js", "crystals.js", "cloud.js", "account.js", "manifest.webmanifest"];
 /* 加分資產：抓不到也不該讓整個 SW 安裝失敗（失敗 → 沒有 SW → PWA 就不能安裝了）。
@@ -32,37 +32,89 @@ self.addEventListener("fetch", e => {
 });
 
 /* ---- 背景天象檢查（Android Chrome Periodic Background Sync）----
-   月相演算法與內建事件表與 app.js 同步維護。 */
-const SYNODIC = 29.530588853, EPOCH_JD = 2451550.26;
-const moonAge = d => (((d.getTime() / 86400000 + 2440587.5) - EPOCH_JD) % SYNODIC + SYNODIC) % SYNODIC;
+   月相演算法與內建事件表與 app.js 同步維護。
+   朔望改用 Meeus 第 49 章的真實時刻（見 app.js 的說明）：平均值會讓
+   2026-07-29 22:35（台灣時間）的滿月被標成 7/30，整整差一天。 */
+const SYNODIC = 29.530588853, D2R = Math.PI / 180;
+const PHASE_PERTURB = [
+  [0.000325, 299.77, 0.107408, -0.009173], [0.000165, 251.88, 0.016321, 0],
+  [0.000164, 251.83, 26.651886, 0], [0.000126, 349.42, 36.412478, 0],
+  [0.000110, 84.66, 18.206239, 0], [0.000062, 141.74, 53.303771, 0],
+  [0.000060, 207.14, 2.453732, 0], [0.000056, 154.84, 7.306860, 0],
+  [0.000047, 34.52, 27.261239, 0], [0.000042, 207.19, 0.121824, 0],
+  [0.000040, 291.34, 1.844379, 0], [0.000037, 161.72, 24.198154, 0],
+  [0.000035, 239.56, 25.513099, 0], [0.000023, 331.55, 3.592518, 0],
+];
+function truePhaseJDE(kk, phase) {
+  const k = kk + phase, T = k / 1236.85, isNew = phase === 0, sin = Math.sin;
+  let jde = 2451550.09766 + 29.530588861 * k + 0.00015437 * T ** 2 - 0.00000015 * T ** 3 + 0.00000000073 * T ** 4;
+  const E = 1 - 0.002516 * T - 0.0000074 * T ** 2;
+  const M = (2.5534 + 29.10535670 * k - 0.0000014 * T ** 2 - 0.00000011 * T ** 3) * D2R;
+  const Mp = (201.5643 + 385.81693528 * k + 0.0107582 * T ** 2 + 0.00001238 * T ** 3 - 0.000000058 * T ** 4) * D2R;
+  const F = (160.7108 + 390.67050284 * k - 0.0016118 * T ** 2 - 0.00000227 * T ** 3 + 0.000000011 * T ** 4) * D2R;
+  const O = (124.7746 - 1.56375588 * k + 0.0020672 * T ** 2 + 0.00000215 * T ** 3) * D2R;
+  jde += (isNew ? -0.40720 : -0.40614) * sin(Mp)
+    + (isNew ? 0.17241 : 0.17302) * E * sin(M)
+    + (isNew ? 0.01608 : 0.01614) * sin(2 * Mp)
+    + (isNew ? 0.01039 : 0.01043) * sin(2 * F)
+    + (isNew ? 0.00739 : 0.00734) * E * sin(Mp - M)
+    - (isNew ? 0.00514 : 0.00515) * E * sin(Mp + M)
+    + (isNew ? 0.00208 : 0.00209) * E * E * sin(2 * M)
+    - 0.00111 * sin(Mp - 2 * F) - 0.00057 * sin(Mp + 2 * F)
+    + 0.00056 * E * sin(2 * Mp + M) - 0.00042 * sin(3 * Mp)
+    + 0.00042 * E * sin(M + 2 * F) + 0.00038 * E * sin(M - 2 * F)
+    - 0.00024 * E * sin(2 * Mp - M) - 0.00017 * sin(O) - 0.00007 * sin(Mp + 2 * M);
+  for (const [amp, base, rate, t2] of PHASE_PERTURB) jde += amp * sin((base + rate * k + t2 * T ** 2) * D2R);
+  return jde;
+}
+const DELTA_T_DAYS = 70 / 86400;
+const phaseDate = (k, phase) => new Date((truePhaseJDE(k, phase) - DELTA_T_DAYS - 2440587.5) * 86400000);
+const kNear = d => Math.floor(((d.getFullYear() + (d.getMonth() + d.getDate() / 30.4) / 12) - 2000) * 12.3685);
 const ASTRO = [
   ["2026-07-30", "寶瓶座δ流星雨極大期"], ["2026-08-12", "日全食"], ["2026-08-12", "六星晨會（行星連珠）"],
   ["2026-08-13", "英仙座流星雨極大期"], ["2026-08-15", "水星合木星"], ["2026-08-28", "月偏食"],
   ["2026-09-25", "海王星衝"], ["2026-10-21", "獵戶座流星雨極大期"], ["2026-11-15", "火星合木星"],
   ["2026-11-17", "獅子座流星雨極大期"], ["2026-11-24", "超級月亮"], ["2026-11-25", "天王星衝"],
-  ["2026-12-14", "雙子座流星雨極大期"], ["2026-12-23", "超級滿月（近八年最大）"],
+  ["2026-12-14", "雙子座流星雨極大期"], ["2026-12-24", "超級滿月（近八年最大）"],
   ["2027-01-03", "象限儀座流星雨極大期"], ["2027-02-06", "日環食"], ["2027-08-02", "日全食"],
 ];
+/* 站內通報：和 app.js 的 BROADCASTS 同步維護。
+   這是唯一能在「App 沒打開」時送到使用者眼前的管道（Android 已安裝的 PWA）。 */
+const BROADCAST = {
+  id: "2026-07-28-column-01", from: "2026-07-28", until: "2026-08-11",
+  title: "🌕 星塵專欄創刊號上線",
+  body: "為何農曆十五卻不是滿月？打開星塵夢汐即可閱讀，並領取 🪐 星際・完整神奇海螺 ×1。",
+};
 function upcomingWithin(days) {
   const out = [], now = new Date();
   const pad = n => String(n).padStart(2, "0");
   const ds = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  let prev = moonAge(now);
-  for (let i = 1; i <= days; i++) {
-    const d = new Date(); d.setDate(d.getDate() + i); d.setHours(12, 0, 0, 0);
-    const age = moonAge(d);
-    if (age < prev) out.push([ds(d), "新月 🌑 許願之夜"]);
-    if (prev < SYNODIC / 2 && age >= SYNODIC / 2) out.push([ds(d), "滿月 🌕 感恩與釋放"]);
-    prev = age;
-  }
   const today = ds(now);
   const limit = new Date(); limit.setDate(limit.getDate() + days);
-  for (const [date, title] of ASTRO) if (date >= today && new Date(date) <= limit) out.push([date, title]);
-  return out;
+  const limitStr = ds(limit);
+  const k0 = kNear(now) - 1;
+  for (let k = k0; k <= k0 + Math.ceil(days / SYNODIC) + 2; k++) {
+    for (const [phase, title] of [[0, "新月 🌑 許願之夜"], [0.5, "滿月 🌕 感恩與釋放"]]) {
+      const date = ds(phaseDate(k, phase));
+      if (date >= today && date <= limitStr) out.push([date, title]);
+    }
+  }
+  for (const [date, title] of ASTRO) if (date >= today && date <= limitStr) out.push([date, title]);
+  return out.sort((a, b) => a[0].localeCompare(b[0]));
 }
 self.addEventListener("periodicsync", e => {
   if (e.tag !== "astro-check") return;
   e.waitUntil((async () => {
+    const pad = n => String(n).padStart(2, "0");
+    const now = new Date();
+    const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    // 通報排在天象前面：這是要請使用者打開 App 的那一則
+    if (today >= BROADCAST.from && today <= BROADCAST.until) {
+      await self.registration.showNotification(BROADCAST.title, {
+        body: BROADCAST.body,
+        icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "bc-" + BROADCAST.id,
+      });
+    }
     for (const [date, title] of upcomingWithin(2)) {
       await self.registration.showNotification("✨ " + title, {
         body: `${date}（未來兩天內）。點開星塵夢汐查看儀式建議。`,

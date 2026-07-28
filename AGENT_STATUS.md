@@ -1,6 +1,6 @@
 # AGENT_STATUS.md — ÆTHNOUS Project Network
 
-**Compiled:** 2026-07-23 · **Last updated:** 2026-07-27 · **Compiled by:** Claude (session `project-status-compilation`) · **For:** any AI agent (Claude, Gemini, ChatGPT, or other) picking up work in this repo or a sibling repo
+**Compiled:** 2026-07-23 · **Last updated:** 2026-07-28 · **Compiled by:** Claude (session `project-status-compilation`) · **For:** any AI agent (Claude, Gemini, ChatGPT, or other) picking up work in this repo or a sibling repo
 
 This file is a handoff briefing so any AI agent landing in *any* of Blue's repos with no other context can quickly understand who they're working for, what the whole project network looks like, which rules hold everywhere, and exactly where this repo stands right now. **This repo has no `CLAUDE.md` yet** (see the note at the end of section 4) — until one exists, this file is the only written orientation document here. Update it whenever this repo's status changes materially.
 
@@ -69,6 +69,41 @@ meteor-shower easter egg retuned (3.3% appearance, 10s, skippable after 3s, 8% f
 and the home tab gained an explicit "安裝 App" button because Chrome's automatic install prompt
 was not firing for users.
 
+### 2026-07-28 — 星塵專欄創刊 + 真實朔望演算法 + 站內通報
+Three connected changes, all on `claude/stardust-fullmoon-article-translation-311edj`:
+
+1. **星塵專欄 (Stardust Column)** — a new card on the 宇宙 tab holding Blue's own original
+   astronomy writing, kept in the `COLUMN` array and deliberately separate from `NEWS`
+   (the NASA feed in `api/space-news` overwrites `NEWS` wholesale, so a column entry placed
+   there would be washed away on the next fetch). Column entries set `bilingual: true` and
+   render through `openBilingualArticle()`: full Chinese first, then the full English
+   underneath in one scroll, no language toggle. First entry is Blue's 7/28 full-moon piece,
+   translated into British English for Blue to cross-post to social.
+2. **Moon phases now use true syzygy times** (Meeus, *Astronomical Algorithms* ch. 49) instead
+   of a fixed 29.53-day mean. The mean model put the July 2026 full moon on 7/30 for a Taipei
+   device; the true instant is 2026-07-29 22:35 Taiwan time. Dates are always derived in the
+   device's own time zone. Same code is mirrored in `sw.js` (kept in sync by hand, as before).
+   Knock-on fixes: illumination percentage is interpolated across the real 朔→望→朔 of the
+   current lunation (7/28 now reads 99%, not 100%); the calendar's new/full-moon outline
+   highlight starts on the day the phase actually occurs rather than the day after; and
+   `ASTRO_EVENTS`' December supermoon moved 12/23 → 12/24, which is the Taiwan date (the
+   Western-sourced 12/23 would otherwise have rendered as a second, contradictory full-moon row).
+3. **站內通報 (in-app broadcast)** — `BROADCASTS` in `app.js` + a matching `BROADCAST` constant
+   in `sw.js`. There is no Web Push server here and no push subscriptions are collected, so
+   delivery is two-track: installed Android PWAs that granted notifications get a background
+   system notification through the existing `periodicsync` pipeline; everyone else (including
+   all of iOS) sees a card the next time they open the app. Both routes end at the same claim
+   action, which grants one complete 神奇海螺 via `awardCompleteShell()` and writes the
+   broadcast id into `settings.broadcasts` so it never fires twice. The card waits for
+   `#book-landing` and any open modal to clear before showing — the 魔法書 opener is not a
+   `.modal-mask` and will otherwise swallow the taps.
+
+**If you want real server-sent push later**, that is a genuine build: VAPID keypair (private key
+as a Vercel env var, never in git), a subscription store in Upstash Redis alongside the existing
+account/board KV, an authenticated broadcast endpoint, `push`/`pushsubscriptionchange` handlers
+in `sw.js`, and a permission-request flow. Note iOS only delivers Web Push to PWAs installed to
+the home screen.
+
 ### Open / unfinished work
 `docs/crystal-vision.md` is a de facto product roadmap, with v1 marked shipped:
 - **v1.5 (next):** collection achievement badges, a shareable collection poster (canvas → PNG export), full-moon cleansing push notifications (reusing the existing `sw.js` notification pipeline).
@@ -82,9 +117,10 @@ was not firing for users.
 **This repo has no `CLAUDE.md`.** Every sibling repo in the network has one codifying at minimum a secrets rule and a personal-data-never-in-git rule; given this app stores real user mood/journaling data, that gap is worth closing soon — recommend writing one that at least covers: secrets handling, the "no real user data in git" rule (adapted from the birth-data rule elsewhere), and this app's architecture map, mirroring the pattern used in the other six repos.
 
 ### Branches
-`main` plus the current feature branch `claude/moon-altar-account-system-op2yvx` (altar backgrounds,
-meteor tuning, 星塵帳號, install button). The earlier `claude/crystal-knowledge-collection-jcgq14`
-is already merged via PR #1.
+`main`, `claude/moon-altar-account-system-op2yvx` (altar backgrounds, meteor tuning, 星塵帳號,
+install button), and `claude/stardust-fullmoon-article-translation-311edj` (星塵專欄創刊, true
+syzygy times, 站內通報 — see the 2026-07-28 entry above). The earliest branch,
+`claude/crystal-knowledge-collection-jcgq14`, is already merged via PR #1.
 
 ---
 

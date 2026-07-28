@@ -131,6 +131,14 @@ function awardShellFragment(colorKey) {
   }
   return { key: c, merged };
 }
+/* 直接給一顆完整神奇海螺（站內通報的贈禮用，不經過碎片合成） */
+function awardCompleteShell() {
+  const s = shellState();
+  s.complete = (s.complete || 0) + 1;
+  s.gifted = (s.gifted || 0) + 1;   // 分開記，之後要看有多少是活動送的
+  store.save();
+  return s.complete;
+}
 /* 召喚機會：連續紀錄每滿 3 天 ＋ 待辦每完成 3 件，各換一次；用「前次觀察值」判斷跨越 */
 function countDoneTodos() { return (store.data.todos || []).filter(t => t.done).length; }
 function checkSummonCharges({ silent = false } = {}) {
@@ -254,6 +262,7 @@ const store = {
       this.data.settings.customEmotions = this.data.settings.emotions.filter(e => !preset.has(e));
     }
     this.data.settings.notified ||= {};
+    this.data.settings.broadcasts ||= {};   // 站內通報：領過的 id → 領取時間
   },
   save() {
     localStorage.setItem(DB_KEY, JSON.stringify(this.data));
@@ -300,35 +309,105 @@ const idb = {
   },
 };
 
-/* ---------- 月相 ---------- */
+/* ---------- 月相 ----------
+   為什麼不再用「固定 29.53 天平均值」推朔望：
+   月球軌道是橢圓的（正是星塵專欄第一篇在講的事），近地點快、遠地點慢，
+   真正的「朔」與「望」最多會比平均值早或晚約 14 小時。換算成當地日期
+   就可能整整差一天——2026-07-29 22:35（台灣時間）的滿月，舊演算法會標成 7/30。
+   改用 Meeus《Astronomical Algorithms》第 49 章的真實朔望時刻，誤差在數分鐘內，
+   而且一律用「使用者裝置的當地時區」換算日期，台灣看到的就是台灣的日期。 */
 const SYNODIC = 29.530588853;
-const NEW_MOON_EPOCH_JD = 2451550.26; // 2000-01-06 18:14 UTC 新月
 const MOON_PHASES = [
   { e: "🌑", n: "新月" }, { e: "🌒", n: "眉月" }, { e: "🌓", n: "上弦月" }, { e: "🌔", n: "盈凸月" },
   { e: "🌕", n: "滿月" }, { e: "🌖", n: "虧凸月" }, { e: "🌗", n: "下弦月" }, { e: "🌘", n: "殘月" },
 ];
+const D2R = Math.PI / 180;
+/* Meeus 49.a 的行星攝動修正項：[振幅, 角度常數, k 係數, T² 係數]，合計影響約 1～2 分鐘，
+   但朔望剛好落在午夜前後時，這一兩分鐘就是「今天」與「明天」的差別，所以照收 */
+const PHASE_PERTURB = [
+  [0.000325, 299.77, 0.107408, -0.009173], [0.000165, 251.88, 0.016321, 0],
+  [0.000164, 251.83, 26.651886, 0], [0.000126, 349.42, 36.412478, 0],
+  [0.000110, 84.66, 18.206239, 0], [0.000062, 141.74, 53.303771, 0],
+  [0.000060, 207.14, 2.453732, 0], [0.000056, 154.84, 7.306860, 0],
+  [0.000047, 34.52, 27.261239, 0], [0.000042, 207.19, 0.121824, 0],
+  [0.000040, 291.34, 1.844379, 0], [0.000037, 161.72, 24.198154, 0],
+  [0.000035, 239.56, 25.513099, 0], [0.000023, 331.55, 3.592518, 0],
+];
+/* 第 k 個朔望月的朔（phase 0）或望（phase 0.5）時刻，回傳力學時 JDE */
+function truePhaseJDE(kk, phase) {
+  const k = kk + phase, T = k / 1236.85, isNew = phase === 0, sin = Math.sin;
+  let jde = 2451550.09766 + 29.530588861 * k + 0.00015437 * T ** 2 - 0.00000015 * T ** 3 + 0.00000000073 * T ** 4;
+  const E = 1 - 0.002516 * T - 0.0000074 * T ** 2;                 // 地球軌道離心率修正
+  const M = (2.5534 + 29.10535670 * k - 0.0000014 * T ** 2 - 0.00000011 * T ** 3) * D2R;                                    // 太陽平近點角
+  const Mp = (201.5643 + 385.81693528 * k + 0.0107582 * T ** 2 + 0.00001238 * T ** 3 - 0.000000058 * T ** 4) * D2R;         // 月球平近點角
+  const F = (160.7108 + 390.67050284 * k - 0.0016118 * T ** 2 - 0.00000227 * T ** 3 + 0.000000011 * T ** 4) * D2R;          // 月球升交點角距
+  const O = (124.7746 - 1.56375588 * k + 0.0020672 * T ** 2 + 0.00000215 * T ** 3) * D2R;                                   // 升交點黃經
+  jde += (isNew ? -0.40720 : -0.40614) * sin(Mp)
+    + (isNew ? 0.17241 : 0.17302) * E * sin(M)
+    + (isNew ? 0.01608 : 0.01614) * sin(2 * Mp)
+    + (isNew ? 0.01039 : 0.01043) * sin(2 * F)
+    + (isNew ? 0.00739 : 0.00734) * E * sin(Mp - M)
+    - (isNew ? 0.00514 : 0.00515) * E * sin(Mp + M)
+    + (isNew ? 0.00208 : 0.00209) * E * E * sin(2 * M)
+    - 0.00111 * sin(Mp - 2 * F) - 0.00057 * sin(Mp + 2 * F)
+    + 0.00056 * E * sin(2 * Mp + M) - 0.00042 * sin(3 * Mp)
+    + 0.00042 * E * sin(M + 2 * F) + 0.00038 * E * sin(M - 2 * F)
+    - 0.00024 * E * sin(2 * Mp - M) - 0.00017 * sin(O) - 0.00007 * sin(Mp + 2 * M);
+  for (const [amp, base, rate, t2] of PHASE_PERTURB) jde += amp * sin((base + rate * k + t2 * T ** 2) * D2R);
+  return jde;
+}
+const DELTA_T_DAYS = 70 / 86400;                       // 力學時 → 世界時，2020 年代約差 70 秒
+const jdToDate = jd => new Date((jd - 2440587.5) * 86400000);
+const phaseDate = (k, phase) => jdToDate(truePhaseJDE(k, phase) - DELTA_T_DAYS);
+/* 某個時刻大約落在第幾個朔望月（Meeus 的 k 估算式，誤差不超過 ±1） */
+const kNear = d => Math.floor(((d.getFullYear() + (d.getMonth() + d.getDate() / 30.4) / 12) - 2000) * 12.3685);
+
+/* 此刻落在哪一輪朔望月：回傳這輪的朔、望，以及下一輪的朔（世界時 JD） */
+function lunation(jd, hint) {
+  let k = kNear(hint) + 1;
+  // kNear 最多差 1，往回找到第一個不晚於此刻的朔即可；上限純粹防呆
+  for (let i = 0; i < 4 && truePhaseJDE(k, 0) - DELTA_T_DAYS > jd; i++) k--;
+  return {
+    newMoon: truePhaseJDE(k, 0) - DELTA_T_DAYS,
+    full: truePhaseJDE(k, 0.5) - DELTA_T_DAYS,
+    nextNew: truePhaseJDE(k + 1, 0) - DELTA_T_DAYS,
+  };
+}
+/* 月齡＝距離「最近一次真實朔」幾天 */
 function moonAge(date) {
   const jd = date.getTime() / 86400000 + 2440587.5;
-  return ((jd - NEW_MOON_EPOCH_JD) % SYNODIC + SYNODIC) % SYNODIC;
+  return jd - lunation(jd, date).newMoon;
 }
+/* 月相角（0°＝朔、180°＝望）用「這一輪真實的朔→望→朔」內插，不用平均月長換算。
+   月球走得忽快忽慢，這一輪從朔到望要 15.2 天，用平均值算會讓 7/28 的照度
+   直接顯示 100%——那正是專欄文章說「還沒到全面發光」的那一天。 */
 function moonInfo(date) {
-  const age = moonAge(date);
-  const idx = Math.round(age / SYNODIC * 8) % 8;
-  const illum = Math.round((1 - Math.cos(2 * Math.PI * age / SYNODIC)) / 2 * 100);
-  return { age, ...MOON_PHASES[idx], illum };
+  const jd = date.getTime() / 86400000 + 2440587.5;
+  const { newMoon, full, nextNew } = lunation(jd, date);
+  const age = jd - newMoon;
+  const elong = jd < full ? 180 * age / (full - newMoon) : 180 + 180 * (jd - full) / (nextNew - full);
+  const idx = Math.round(elong / 45) % 8;
+  const illum = Math.round((1 - Math.cos(elong * D2R)) / 2 * 100);
+  return { age, elong, ...MOON_PHASES[idx], illum };
 }
-/* 未來 N 天內的新月/滿月日期（逐日掃描年齡跨越點） */
+const MOON_EVENT_META = [
+  [0, { type: "newmoon", title: "新月 🌑", note: "設定意念與許願的起點" }],
+  [0.5, { type: "fullmoon", title: "滿月 🌕", note: "感恩、釋放與回顧的節點" }],
+];
+/* 未來 N 天內的新月/滿月日期（以真實朔望時刻換算成當地日期） */
 function upcomingMoonEvents(days = 90) {
+  const today = todayStr();
+  const lim = new Date(); lim.setDate(lim.getDate() + days);
+  const limStr = dstr(lim);
+  const k0 = kNear(new Date()) - 1;
   const out = [];
-  let prev = moonAge(new Date());
-  for (let i = 1; i <= days; i++) {
-    const d = new Date(); d.setDate(d.getDate() + i); d.setHours(12, 0, 0, 0);
-    const age = moonAge(d);
-    if (age < prev) out.push({ date: dstr(d), type: "newmoon", title: "新月 🌑", note: "設定意念與許願的起點" });
-    if (prev < SYNODIC / 2 && age >= SYNODIC / 2) out.push({ date: dstr(d), type: "fullmoon", title: "滿月 🌕", note: "感恩、釋放與回顧的節點" });
-    prev = age;
+  for (let k = k0; k <= k0 + Math.ceil(days / SYNODIC) + 2; k++) {
+    for (const [phase, meta] of MOON_EVENT_META) {
+      const date = dstr(phaseDate(k, phase));
+      if (date >= today && date <= limStr) out.push({ date, ...meta });
+    }
   }
-  return out;
+  return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 
 /* ---------- 宇宙天象事件（資料整理自 Sea&Sky / Star Walk / Space.com，並由Blue編修；可見性視地區與天候而定） ---------- */
@@ -361,7 +440,7 @@ const ASTRO_EVENTS = [
   { date: "2026-12-14", type: "meteor", title: "雙子座流星雨極大期", note: "年度最穩定的大流星雨，入夜即可觀察，每小時可達百顆" },
   { date: "2026-12-21", type: "seasonal", title: "冬至・北半球夜最長", note: "太陽直射南回歸線，一年中最長的夜，適合安靜內省的儀式" },
   { date: "2026-12-22", type: "meteor", title: "小熊座流星雨極大期", note: "數量少但流量穩定，適合寒冷冬夜靜心觀察" },
-  { date: "2026-12-23", type: "supermoon", title: "超級滿月（近八年最大）", note: "2019 年以來最接近地球的滿月，全年最大最亮" },
+  { date: "2026-12-24", type: "supermoon", title: "超級滿月（近八年最大）", note: "2019 年以來最接近地球的滿月，全年最大最亮；台灣時間 12/24 09:28 最圓（歐美時區為 12/23）" },
   { date: "2027-01-03", type: "meteor", title: "象限儀座流星雨極大期", note: "極大期短暫，凌晨觀察，每小時可達 40 顆" },
   { date: "2027-01-24", type: "conjunction", title: "金星合土星", note: "日落後西南方低空，兩顆行星相距約 3 度" },
   { date: "2027-02-06", type: "eclipse", title: "日環蝕", note: "環蝕帶經南美洲與大西洋；台灣不可見" },
@@ -373,7 +452,7 @@ const ASTRO_EVENTS = [
   { date: "2027-08-02", type: "eclipse", title: "日全蝕", note: "本世紀最長時間的日全蝕之一（ 6 分 23 秒），全蝕帶經北非、中東" },
   { date: "2027-09-14", type: "opposition", title: "木星衝", note: "整夜可見的木星最亮時刻，小望遠鏡可見四大衛星與雲帶" },
 ];
-const SUPERMOON_ANNOT = { "2026-01-03": "超級滿月", "2026-11-24": "超級滿月", "2026-12-23": "超級滿月（近八年最大）" };
+const SUPERMOON_ANNOT = { "2026-01-03": "超級滿月", "2026-11-24": "超級滿月", "2026-12-24": "超級滿月（近八年最大）" };
 const RITUALS = {
   newmoon: { name: "新月許願儀式", steps: ["今晚預留 10 分鐘給自己，點燃一根蠟燭", "寫下 1 至 10 個願望，用現在式、肯定句（「我正在、我已經...」）", "字句寫下後，逐條唸出，閉上眼去想像，當這些願望實現時，喜悅佈滿內心的情緒，在腦海中預先體會這份幸福", "存進本日日記，於滿月時再回顧乙次"] },
   fullmoon: { name: "滿月感恩與釋放", steps: ["回顧這半個月的自己：寫下 3 件感謝的事", "也寫下 1 件想放下的念頭或習慣", "深呼吸三次，想像問題都隨月光釋放、隨潮汐流走", "可回顧上個新月的願望清單是否已實現，即便還沒也沒關係，可趁著本輪滿月再次寫下心願"] },
@@ -607,6 +686,83 @@ const NEWS = [
       "研究像 3I/ATLAS 這樣的星際訪客，讓天文學家得以直接取樣其他行星系統的物質，這是讓我們能從太陽系以外，得到「宇宙的原料」，進而進行比對的難得機會。",
     ],
     source: "NASA Science — Webb Mission", url: "https://science.nasa.gov/missions/webb/nasas-webb-finds-clues-to-ancient-distant-origin-of-comet-3i-atlas/",
+  },
+];
+
+/* ---------- 星塵專欄（Blue 親筆原創，中英對照） ----------
+   和 NASA 新聞分開放：api/space-news 回來會整批覆蓋 NEWS，專欄不能被洗掉。
+   bodySep 這個字串單獨成段時，閱讀器會畫一條分隔線。
+   英文為英式英語（-ise、per cent、full stop 用法），Blue 會同步發到 SNS。 */
+const COLUMN_SEP = "———";
+const COLUMN = [
+  {
+    id: "blue-2026-07-fullmoon", date: "2026-07-28", icon: "🌕", author: "Blue", bilingual: true,
+    zhTitle: "為何農曆十五卻不是滿月🤔",
+    zhSub: "月相想告訴你的浪漫小秘密",
+    enTitle: "Why the Fifteenth of the Lunar Month Isn't the Full Moon 🤔",
+    enSub: "A romantic little secret the phases of the Moon have been trying to tell you",
+    zhBody: [
+      "今日為農曆六月十五，但以當代天文學角度，並不是真正的滿月，這種情況在古時更有「望日」之稱，W H Y？",
+      "根據天體運行物理概念，能夠這麼解釋：",
+      "一、🌏 地球，其實是橢圓形的：",
+      "正因如此，月球公轉的 RUNWAY、我們所在的天體核心、舞台軌道也是橢圓形的；根據克卜勒第二定律（Kepler's second law of planetary motion），月球在繞行地球公轉時，其速度為「近地點快、遠地點慢」，白話文翻譯：月球走到離地球最近時，運行速度較快，而當月亮跟地球距離最遠時，運行速度較慢，這是第一個科學根據。",
+      "二、朔望月出現的時機點，並不一致：",
+      "「朔月」出現後，至下一輪「朔」的平均日期為 29.53 天，由於月球運行軌道導致公轉速度不一致，每一個「朔望月」的確切時間，大概間隔 29.27 天 ～ 29.83 天，這影響了月球從「朔、新」走到「望、滿」所需的時間；快的時候約為 13.9 天，最慢時可達 15.69 天，在數字上看似只差了一點點，但在陰曆、農曆和月曆上，累積起來會出現間歇性、明顯的差別。",
+      "三、農曆/陰曆的初一是怎麼制定的？",
+      "以古代人的角度 a.k.a 農曆的規則，當太陽與月球的黃道經度相差 0°，那天即為「初一」，是為朔月，這在許多古文明的曆法中都雷同。",
+      "中國農曆規則：當「朔月」在初一子時正刻後、子正一刻時才出現（以目前的時間概念就是 00:01），月亮便具備充足的時間，能在十五日當天「走滿」月途，那本輪的十五就會是「滿月」（但以天體實際測量軌跡，大約是 14.8 天）。",
+      "But，倘若「朔月」發生在初一的 23:59（子初四刻與子時正刻的交接點或之前），農曆的十五，月球本身實際上才走了約 13 天的行程，偏慢所以尚未走到與太陽相差 180° 的「望」點，還沒到全面發光，滿月就會延後到農曆十六，甚至是十七日的凌晨，類似本月、此時的情況。",
+      "苗栗♡格蘭傑舉手提問：",
+      "為什麼人類要硬把「月曆」設定為我們的日期界定？然後現在又換成「日曆」？",
+      "為什麼古代人明明知道 23:59 這確切時間，但時刻還是制定成子時（23 點～01 點），再細分也只有八刻鐘（一刻為 15 分鐘）？",
+      "辣妹請搶答，老師先不答。",
+      COLUMN_SEP,
+      "🌊 潮汐是大海受月球引力而產生的現象，人類已視為自然日常，而我們體內有近七成是由水分所組成，你覺得我們不會受到月亮陰晴圓缺的影響嗎？",
+      "月球本身沒有亮度，月光是由太陽反射而來，仔細觀察月相盈缺，其實也同時可探索或正視自我陰暗之面。",
+      "我們每個人皆自帶光芒，但會反射、折射或吸收的能量強度，其實是你自己可以決定的，因我們的軌道都不相同。",
+      COLUMN_SEP,
+      "編按：本輪「望」的精確時刻為台灣時間 2026 年 7 月 29 日 22:35，也就是農曆六月十六。文中所說的「滿月延後到十六」，這一輪就是明天晚上。App 內「宇宙」分頁的新月／滿月節點已全面改以真實朔望時刻計算，並依你裝置所在時區顯示日期。",
+    ],
+    enBody: [
+      "Today is the fifteenth day of the sixth lunar month. By the reckoning of modern astronomy, though, it is not the true full moon — the moment the ancients called wàng (望), the day of gazing. W H Y?",
+      "The physics of how bodies move through space explains it like this:",
+      "One. 🌏 The Earth is, in fact, an ellipse:",
+      "Which is precisely why the Moon's orbital RUNWAY — the celestial core we happen to stand on, the stage it circles — is elliptical too. By Kepler's second law of planetary motion, the Moon does not travel at a constant speed as it goes round us: it is quick at perigee and slow at apogee. In plain language, when the Moon swings closest to the Earth it moves faster, and when it is furthest away it slows down. That is the first piece of science.",
+      "Two. Lunations do not arrive on a fixed timetable:",
+      "From one new moon (朔) to the next averages 29.53 days. Because the shape of the orbit makes the Moon's speed uneven, each actual lunation runs somewhere between roughly 29.27 and 29.83 days — and that changes how long the Moon needs to travel from 'new' (朔／新) to 'full' (望／滿). At its quickest, about 13.9 days; at its slowest, as much as 15.69 days. On paper the gap looks like nothing much, but stacked up across a lunar calendar it produces intermittent, unmistakable differences.",
+      "Three. How is the first day of the lunar month decided?",
+      "From the ancients' point of view — a.k.a. the rule of the lunar calendar — the day on which the ecliptic longitudes of the Sun and the Moon differ by 0° is the first of the month, the day of the new moon. The calendars of many ancient civilisations work in much the same way.",
+      "The Chinese lunar rule: if the new moon arrives after the exact centre of the hour of Zi on the first day, in the quarter known as Zi-zheng (00:01, in the way we now tell the time), the Moon has time enough to walk its full path by the fifteenth — and the fifteenth of that cycle will be a full moon (although, measured against the real orbit, that walk takes around 14.8 days).",
+      "But: if the new moon falls at 23:59 on the first — at or before the seam between the fourth quarter of Zi-chu and the exact centre of the hour of Zi — then by the fifteenth the Moon has in truth travelled only about 13 days. Running behind, it has not yet reached wàng, the point 180° from the Sun, and is not yet fully alight. The full moon slips to the sixteenth of the lunar month, or even to the small hours of the seventeenth. Rather like this month. Rather like right now.",
+      "Miaoli ♡ Granger puts her hand up:",
+      "Why did human beings insist on making the lunar calendar the thing that defines our dates? And why have we now swapped it for the solar one?",
+      "And why, when the ancients clearly knew a moment as exact as 23:59, did they still set the hours as Zi (23:00–01:00), subdivided no further than eight quarters of fifteen minutes each?",
+      "Buzz in, ladies. Teacher isn't answering this one first.",
+      COLUMN_SEP,
+      "🌊 The tides are what happens when the sea answers the Moon's gravity — something humanity long ago filed away as ordinary nature. Close to seventy per cent of what we are made of is water. Do you really think the Moon's waxing and waning leaves us untouched?",
+      "The Moon has no brightness of its own; moonlight is sunlight, returned. Watch the phases closely enough and you are also exploring — and squarely facing — the darker side of yourself.",
+      "Every one of us carries our own light. How much of that energy we reflect, refract or absorb, though, is yours to decide. None of us travels the same orbit.",
+      COLUMN_SEP,
+      "Editor's note: this cycle's true wàng falls at 22:35 Taiwan time on 29 July 2026 — the sixteenth day of the sixth lunar month. The 'full moon slipping to the sixteenth' described above is, this time round, tomorrow night. The new-moon and full-moon markers in the app's Cosmos tab are now calculated from true syzygy times and shown in your own device's time zone.",
+    ],
+  },
+];
+const columnById = id => COLUMN.find(c => c.id === id);
+
+/* ---------- 站內通報（新文章／公告推播） ----------
+   本 App 沒有推播伺服器，也沒有向使用者收集 push subscription，所以走兩條路：
+   1) 已把 App 安裝在 Android 桌面、且允許通知的人 → sw.js 的 periodicsync
+      會在背景跳系統通知（和天象提醒同一條管線）。
+   2) 其他所有人（含 iOS）→ 下次打開 App 時，這裡跳出通報卡片。
+   兩條路都導向同一個領取動作，領過就寫進 settings.broadcasts，不會再跳。 */
+const BROADCASTS = [
+  {
+    id: "2026-07-28-column-01", date: "2026-07-28", icon: "🌕",
+    title: "星塵專欄創刊號上線",
+    body: "「為何農曆十五卻不是滿月🤔」——Blue 親筆的第一篇天象文章，中英對照，就在「宇宙」分頁。",
+    reward: "🪐 星際・完整神奇海螺 ×1",
+    rewardNote: "創刊號限定，感謝你是第一批走進星塵的人。",
+    articleId: "blue-2026-07-fullmoon",
   },
 ];
 
@@ -2830,6 +2986,16 @@ function renderMoon() {
     diary: new Set(store.data.diary.map(d => d.date)),
     cbt: new Set(store.data.cbt.map(d => d.date)),
   };
+  /* 新月／滿月用外框高亮：從「真正發生的那一天」起算 3 天（含當天，不往回追溯）。
+     以真實朔望時刻反推日期，否則朔望落在當天下午時，高亮會整組晚一天。 */
+  const phaseWindow = { newmoon: new Set(), fullmoon: new Set() };
+  const k0 = kNear(first) - 1;
+  for (let k = k0; k <= k0 + 3; k++) {
+    for (const [phase, type] of [[0, "newmoon"], [0.5, "fullmoon"]]) {
+      const d0 = phaseDate(k, phase);
+      for (let i = 0; i < 3; i++) phaseWindow[type].add(dstr(new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + i)));
+    }
+  }
   let cells = "";
   for (let i = 0; i < calOffset(first); i++) cells += `<div class="cal-cell blank"></div>`;
   for (let day = 1; day <= daysInMonth; day++) {
@@ -2841,10 +3007,7 @@ function renderMoon() {
       entryDates.diary.has(ds) ? `<i class="dot-diary"></i>` : "",
       entryDates.cbt.has(ds) ? `<i class="dot-cbt"></i>` : "",
     ].join("");
-    /* 新月／滿月用外框高亮：僅顯示「開始後 3 天內」（不往回追溯） */
-    const sinceNew = (mi.age - 0 + SYNODIC) % SYNODIC;
-    const sinceFull = (mi.age - SYNODIC / 2 + SYNODIC) % SYNODIC;
-    const phaseClass = sinceNew < 3 ? "newmoon" : sinceFull < 3 ? "fullmoon" : "";
+    const phaseClass = phaseWindow.newmoon.has(ds) ? "newmoon" : phaseWindow.fullmoon.has(ds) ? "fullmoon" : "";
     const isToday = ds === todayStr();
     cells += `<div class="cal-cell ${isToday ? "today" : ""} ${phaseClass}" data-date="${ds}">
       <span>${day}</span><span class="moon">${mi.e}</span><span class="dots">${dots}</span></div>`;
@@ -3252,6 +3415,11 @@ function renderCosmos() {
       <div class="btn-row"><button class="btn secondary" id="ev-ics">📆 匯出天象行事曆（.ics，含手機原生提醒）</button></div>
     </div>
     <div class="card">
+      <h2>🖋 星塵專欄 <span class="sub">Blue・中英對照</span></h2>
+      <p class="muted small">星塵夢汐的原創天象文章。點開先讀中文，往下接續英文（英式）。</p>
+      <div id="col-list">${COLUMN.map(columnRowHTML).join("")}</div>
+    </div>
+    <div class="card">
       <h2>📰 宇宙新聞 <span class="sub">NASA・每週更新</span></h2>
       <p class="muted small" id="news-note">內容取自 NASA。點文章可切換中／英。</p>
       <div id="news-list">${liveNews().map(newsRowHTML).join("")}</div>
@@ -3266,6 +3434,7 @@ function renderCosmos() {
   $("#ev-ics").addEventListener("click", exportICS);
   bindNewsRows(el);
   refreshSpaceNews();   // 背景抓當週最新，回來再換掉清單
+  $$("#col-list .art-row", el).forEach(r => r.addEventListener("click", () => openArticle(columnById(r.dataset.id), "zh")));
   $$("#know-list .art-row", el).forEach(r => r.addEventListener("click", () => openArticle(KNOWLEDGE.find(k => k.id === r.dataset.id), "zh")));
 }
 
@@ -3311,6 +3480,14 @@ function newsRowHTML(n) {
     ${n.zhTitle ? `<div class="muted small">${esc(n.zhTitle)}</div>` : ""}
   </button>`;
 }
+function columnRowHTML(c) {
+  return `<button type="button" class="entry art-row" data-id="${esc(c.id)}" style="width:100%;text-align:left">
+    <div class="meta">${c.icon || "🖋"} ${esc(fmtMD(c.date))}・${esc(c.author || "Blue")}</div>
+    <div class="body" style="font-weight:600">${esc(c.zhTitle)}</div>
+    ${c.zhSub ? `<div class="muted small">${esc(c.zhSub)}</div>` : ""}
+    <div class="muted small">${esc(c.enTitle)}</div>
+  </button>`;
+}
 function knowRowHTML(k) {
   return `<button type="button" class="entry art-row" data-id="${esc(k.id)}" style="width:100%;text-align:left">
     <div class="meta">${k.icon} ${esc(k.cat)}</div>
@@ -3321,6 +3498,7 @@ function knowRowHTML(k) {
 /* 通用文章閱讀器：預設語言 defLang（"en"／"zh"），可切換 */
 function openArticle(item, defLang) {
   if (!item) return;
+  if (item.bilingual) return openBilingualArticle(item);
   let lang = defLang;
   const m = modal(`<div id="art-body"></div>`);
   const draw = () => {
@@ -3342,6 +3520,27 @@ function openArticle(item, defLang) {
   };
   draw();
 }
+/* 中英對照閱讀器（星塵專欄用）：不切換語言，中文全文讀完直接接續英文全文 */
+function openBilingualArticle(item) {
+  const paras = arr => arr.map(p =>
+    p === COLUMN_SEP ? `<hr class="art-sep">` : `<p style="margin:10px 0">${esc(p)}</p>`).join("");
+  const m = modal(`
+    <article class="art-bi">
+      <h3 style="text-wrap:balance">${item.icon || ""} ${esc(item.zhTitle)}</h3>
+      ${item.zhSub ? `<p class="art-sub">${esc(item.zhSub)}</p>` : ""}
+      <p class="muted small">${esc(item.date)}・作者 ${esc(item.author || "Blue")}</p>
+      <div class="art-text">${paras(item.zhBody)}</div>
+      <div class="art-lang">English</div>
+      <h3 style="text-wrap:balance">${item.icon || ""} ${esc(item.enTitle)}</h3>
+      ${item.enSub ? `<p class="art-sub">${esc(item.enSub)}</p>` : ""}
+      <p class="muted small">${esc(item.date)}・by ${esc(item.author || "Blue")}</p>
+      <div class="art-text">${paras(item.enBody)}</div>
+    </article>
+    <div class="btn-row"><button class="btn secondary" id="art-close">關閉</button></div>`);
+  $("#art-close", m).addEventListener("click", () => m.remove());
+  return m;
+}
+
 function showDayDetail(ds) {
   $$(".cal-cell").forEach(c => c.classList.toggle("sel", c.dataset.date === ds));
   const mi = moonInfo(new Date(fromDstr(ds).getTime() + 12 * 3600e3));
@@ -4491,6 +4690,63 @@ function checkEventNotifications() {
   store.save();
 }
 
+/* ---------- 站內通報（開 App 時送達，領了就給禮物） ---------- */
+function pendingBroadcast() {
+  const seen = store.data.settings.broadcasts || {};
+  return BROADCASTS.find(b => b.date <= todayStr() && !seen[b.id]) || null;
+}
+function checkBroadcasts() {
+  const b = pendingBroadcast();
+  if (!b) return;
+  // 已允許通知的人，順手也跳一則系統通知，讓「有收到東西」這件事更明確
+  if ("Notification" in window && Notification.permission === "granted" && !store.data.settings.notified[`bc|${b.id}`]) {
+    try { new Notification(`${b.icon} ${b.title}`, { body: b.body }); } catch { /* 部分瀏覽器只允許 SW 發通知 */ }
+    store.data.settings.notified[`bc|${b.id}`] = true;
+    store.save();
+  }
+  /* 開場的魔法書（#book-landing）蓋在最上層且會吃掉點擊，其他 modal 也一樣，
+     所以先等畫面淨空再跳通報，最多等兩分鐘就放棄（下次開 App 還會再送一次）。 */
+  const busy = () => {
+    const bk = document.getElementById("book-landing");
+    return !!$(".modal-mask") || !!(bk && !bk.classList.contains("hidden"));
+  };
+  const tryShow = (tries = 0) => {
+    if (busy() && tries < 150) return setTimeout(() => tryShow(tries + 1), 800);
+    if (busy()) return;
+    showBroadcast(b);
+  };
+  setTimeout(tryShow, 1200);
+}
+function showBroadcast(b) {
+  const m = modal(`
+    <div class="broadcast">
+      <p class="bc-tag">✦ 星塵通報 ✦</p>
+      <div class="bc-icon">${b.icon}</div>
+      <h3>${esc(b.title)}</h3>
+      <p class="muted">${esc(b.body)}</p>
+      <p class="bc-reward">${esc(b.reward)}</p>
+      ${b.rewardNote ? `<p class="muted small">${esc(b.rewardNote)}</p>` : ""}
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="bc-claim">領取並閱讀</button>
+      <button class="btn secondary" id="bc-later">只領取</button>
+    </div>`);
+  const claim = () => {
+    store.data.settings.broadcasts[b.id] = new Date().toISOString();
+    const total = awardCompleteShell();
+    m.remove();
+    toast(`🐚 收到 ${b.reward}！目前擁有 ${total} 顆完整神奇海螺`);
+  };
+  $("#bc-later", m).addEventListener("click", claim);
+  $("#bc-claim", m).addEventListener("click", () => {
+    claim();
+    const art = columnById(b.articleId);
+    if (!art) return;
+    switchTab("cosmos");
+    setTimeout(() => openBilingualArticle(art), 260);
+  });
+}
+
 /* ---------- 啟動 ---------- */
 /* 安裝提示要在 init 之前就掛上：beforeinstallprompt 有可能在 App 還在初始化時就送達 */
 addEventListener("beforeinstallprompt", e => {
@@ -4518,6 +4774,7 @@ addEventListener("appinstalled", () => {
   // 每次進入 App 都打開個人魔法書；user 若曾按過「跳過」則直接進本文
   if (!store.data.settings.skipBook) setTimeout(() => openBookLanding(), 60);
   checkEventNotifications();
+  checkBroadcasts();
   checkSummonCharges({ silent: true });
   bindAutoReseal();
   // 星塵帳號：有 token 就標成「待解鎖」，並問後端這功能有沒有啟用
