@@ -1,5 +1,5 @@
 /* 星塵夢汐 Stardust DreamTide service worker — 快取＋背景天象檢查 */
-const CACHE = "dreamtide-v17";
+const CACHE = "dreamtide-v18";
 /* 核心殼層：一定要進快取才算安裝成功 */
 const CORE = ["./", "index.html", "style.css", "app.js", "crystals.js", "cloud.js", "account.js", "manifest.webmanifest"];
 /* 加分資產：抓不到也不該讓整個 SW 安裝失敗（失敗 → 沒有 SW → PWA 就不能安裝了）。
@@ -71,7 +71,7 @@ const DELTA_T_DAYS = 70 / 86400;
 const phaseDate = (k, phase) => new Date((truePhaseJDE(k, phase) - DELTA_T_DAYS - 2440587.5) * 86400000);
 const kNear = d => Math.floor(((d.getFullYear() + (d.getMonth() + d.getDate() / 30.4) / 12) - 2000) * 12.3685);
 const ASTRO = [
-  ["2026-07-30", "寶瓶座δ流星雨極大期"], ["2026-08-12", "日全食"], ["2026-08-12", "六星晨會（行星連珠）"],
+  ["2026-07-30", "寶瓶座δ流星雨極大期"], ["2026-08-13", "日全食"], ["2026-08-12", "六星晨會（行星連珠）"],
   ["2026-08-13", "英仙座流星雨極大期"], ["2026-08-15", "水星合木星"], ["2026-08-28", "月偏食"],
   ["2026-09-25", "海王星衝"], ["2026-10-21", "獵戶座流星雨極大期"], ["2026-11-15", "火星合木星"],
   ["2026-11-17", "獅子座流星雨極大期"], ["2026-11-24", "超級月亮"], ["2026-11-25", "天王星衝"],
