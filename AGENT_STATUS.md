@@ -1,6 +1,6 @@
 # AGENT_STATUS.md — ÆTHNOUS Project Network
 
-**Compiled:** 2026-07-23 · **Last updated:** 2026-07-29 · **Compiled by:** Claude (session `project-status-compilation`) · **For:** any AI agent (Claude, Gemini, ChatGPT, or other) picking up work in this repo or a sibling repo
+**Compiled:** 2026-07-23 · **Last updated:** 2026-07-30 · **Compiled by:** Claude (session `project-status-compilation`) · **For:** any AI agent (Claude, Gemini, ChatGPT, or other) picking up work in this repo or a sibling repo
 
 This file is a handoff briefing so any AI agent landing in *any* of Blue's repos with no other context can quickly understand who they're working for, what the whole project network looks like, which rules hold everywhere, and exactly where this repo stands right now. **This repo has no `CLAUDE.md` yet** (see the note at the end of section 4) — until one exists, this file is the only written orientation document here. Update it whenever this repo's status changes materially.
 
@@ -159,6 +159,30 @@ production 之後，Blue 在 Vercel 後台對一個**舊的 deployment**按了 R
 題庫寫作原則：只寫查得到、站得住腳的天文事實。有一支檢查腳本驗過全部 26 題的
 id 唯一性、選項數、答案索引範圍、選項不重複、`ref` 都能對到真的文章、解析長度。
 其中兩題刻意呼應新加的海螺（綜觀效應 Overview Effect、克爾／史瓦西黑洞的差別）。
+
+### 2026-07-30 — 文案修訂、今日天象光暈、sticky 子分頁、IG、連續參加獎勵
+
+Blue 指定的七項。值得記下來的三件：
+
+1. **sticky 子分頁的定位基準**。子分頁列改成 `position: sticky`，`top` 用 `--header-h`，
+   由 `syncHeaderHeight()` 量標題列實際高度寫進 `:root`（並掛 resize）。原本寫死 52px，
+   實測標題列是 56px，會露出一條縫。字級、主題、瀏海都會改變那個高度，不要寫死。
+   同時拿掉切換子分頁時的 `scrollIntoView`——那會把整頁捲到最上面，子分頁列被推到標題列
+   底下，看起來像自動隱藏，正是 Blue 回報的問題。
+
+2. **今日天象的呼吸光暈**。`eventRowHTML()` 在 `dd === 0` 時加 `.today`，CSS 用
+   `ev-breathe` 3.4s 循環改變 border-color 與 box-shadow。`prefers-reduced-motion`
+   下關掉動畫但保留金色外框，仍看得出是今天。
+
+3. **連續參加獎勵**（Duolingo 式）。`bumpQuizStreak()`：完成一輪就算今天有參加，
+   **答對與否不影響**；滿 7 天送一次召喚機會。連續天數比對用 `yesterdayStr()`，
+   以日期元件往回推一天，不用毫秒相減——有日光節約時間的地區減 24 小時可能還停在同一天。
+   同日重複玩不會重複計數也不會重複發獎。首頁的 7 格連續紀錄由 `quizStreakDays()` 產生。
+
+另外新增 `docs/cycle-moon-vision.md`：生理期 × 月相共時性的設計規劃，**尚未實作**，
+等 Blue 確認文件第七節那四個問題再開工。該文件第零節把健康資料的處理界線先釘死了
+（預設關閉、只存本機、上雲一律 E2E 加密、絕不進任何 API、匯出預設排除、可整組刪除、
+不做醫療宣稱、不做安全期與避孕推算）。
 
 ### Open / unfinished work
 `docs/crystal-vision.md` is a de facto product roadmap, with v1 marked shipped:
