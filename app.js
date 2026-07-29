@@ -4,7 +4,7 @@
 
 /* 版本號：每次要讓使用者看到新東西時，這裡和 sw.js 的 CACHE 一起往上加。
    設定分頁會顯示這個號碼，回報問題時報這個數字最快能判斷對方在哪一版。 */
-const APP_VERSION = "2026.07.30";
+const APP_VERSION = "2026.07.30b";
 
 /* ---------- 小工具 ---------- */
 const $ = (sel, el = document) => el.querySelector(sel);
@@ -416,6 +416,188 @@ function upcomingMoonEvents(days = 90) {
     }
   }
   return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/* ---------- 動態月相：月球的真實位置與距離 ----------
+   上面那組朔望演算法只回答「這一輪的朔與望是哪一刻」，算不出「此刻月球離我們多遠」。
+   要有會跳動的距離數字，得真的把月球的軌道解出來：這裡用 Meeus《Astronomical Algorithms》
+   第 47 章的 ELP-2000/82 截斷級數（60 項）。
+   驗證方式：拿書上第 47.a 個例題（1992-04-12.0 TD）跑一次，黃經 133.162655°、
+   距離 368409.7 km，兩個數字都跟書上印的完全一樣。
+   要知道的事：這是「地心」距離，也就是地球中心到月球中心，不是你站的位置到月球——
+   兩者最多會差一個地球半徑（約 6378 公里）。市面上的月相 App 幾乎都報地心距離。 */
+const MOON_LR = [
+  /* [D, M, M', F, Σl 係數(1e-6 度), Σr 係數(1e-3 公里)] */
+  [0, 0, 1, 0, 6288774, -20905355], [2, 0, -1, 0, 1274027, -3699111], [2, 0, 0, 0, 658314, -2955968],
+  [0, 0, 2, 0, 213618, -569925], [0, 1, 0, 0, -185116, 48888], [0, 0, 0, 2, -114332, -3149],
+  [2, 0, -2, 0, 58793, 246158], [2, -1, -1, 0, 57066, -152138], [2, 0, 1, 0, 53322, -170733],
+  [2, -1, 0, 0, 45758, -204586], [0, 1, -1, 0, -40923, -129620], [1, 0, 0, 0, -34720, 108743],
+  [0, 1, 1, 0, -30383, 104755], [2, 0, 0, -2, 15327, 10321], [0, 0, 1, 2, -12528, 0],
+  [0, 0, 1, -2, 10980, 79661], [4, 0, -1, 0, 10675, -34782], [0, 0, 3, 0, 10034, -23210],
+  [4, 0, -2, 0, 8548, -21636], [2, 1, -1, 0, -7888, 24208], [2, 1, 0, 0, -6766, 30824],
+  [1, 0, -1, 0, -5163, -8379], [1, 1, 0, 0, 4987, -16675], [2, -1, 1, 0, 4036, -12831],
+  [2, 0, 2, 0, 3994, -10445], [4, 0, 0, 0, 3861, -11650], [2, 0, -3, 0, 3665, 14403],
+  [0, 1, -2, 0, -2689, -7003], [2, 0, -1, 2, -2602, 0], [2, -1, -2, 0, 2390, 10056],
+  [1, 0, 1, 0, -2348, 6322], [2, -2, 0, 0, 2236, -9884], [0, 1, 2, 0, -2120, 5751],
+  [0, 2, 0, 0, -2069, 0], [2, -2, -1, 0, 2048, -4950], [2, 0, 1, -2, -1773, 4130],
+  [2, 0, 0, 2, -1595, 0], [4, -1, -1, 0, 1215, -3958], [0, 0, 2, 2, -1110, 0],
+  [3, 0, -1, 0, -892, 3258], [2, 1, 1, 0, -810, 2616], [4, -1, -2, 0, 759, -1897],
+  [0, 2, -1, 0, -713, -2117], [2, 2, -1, 0, -700, 2354], [2, 1, -2, 0, 691, 0],
+  [2, -1, 0, -2, 596, 0], [4, 0, 1, 0, 549, -1423], [0, 0, 4, 0, 537, -1117],
+  [4, -1, 0, 0, 520, -1571], [1, 0, -2, 0, -487, -1739], [2, 1, 0, -2, -399, 0],
+  [0, 0, 2, -2, -381, -4421], [1, 1, 1, 0, 351, 0], [3, 0, -2, 0, -340, 0],
+  [4, 0, -3, 0, 330, 0], [2, -1, 2, 0, 327, 0], [0, 2, 1, 0, -323, 1165],
+  [1, 1, -1, 0, 299, 0], [2, 0, 3, 0, 294, 0], [2, 0, -1, -2, 0, 8752],
+];
+const jdOf = date => date.getTime() / 86400000 + 2440587.5;
+const norm360 = d => ((d % 360) + 360) % 360;
+/* 黃道十二宮：這裡用西洋占星的「回歸黃道」（春分點為 0°），跟月相 App 顯示的是同一套 */
+const ZODIAC = [
+  "牡羊座 ♈︎", "金牛座 ♉︎", "雙子座 ♊︎", "巨蟹座 ♋︎", "獅子座 ♌︎", "處女座 ♍︎",
+  "天秤座 ♎︎", "天蠍座 ♏︎", "射手座 ♐︎", "摩羯座 ♑︎", "水瓶座 ♒︎", "雙魚座 ♓︎",
+];
+
+/* 月球的地心黃經、黃緯與距離（Meeus 47） */
+function moonPosition(date) {
+  const T = (jdOf(date) - 2451545) / 36525, sin = Math.sin, cos = Math.cos;
+  const Lp = 218.3164477 + 481267.88123421 * T - 0.0015786 * T ** 2 + T ** 3 / 538841 - T ** 4 / 65194000; // 平黃經
+  const D = 297.8501921 + 445267.1114034 * T - 0.0018819 * T ** 2 + T ** 3 / 545868 - T ** 4 / 113065000;  // 日月平距角
+  const M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T ** 2 + T ** 3 / 24490000;                      // 太陽平近點角
+  const Mp = 134.9633964 + 477198.8675055 * T + 0.0087414 * T ** 2 + T ** 3 / 69699 - T ** 4 / 14712000;   // 月球平近點角
+  const F = 93.2720950 + 483202.0175233 * T - 0.0036539 * T ** 2 - T ** 3 / 3526000 + T ** 4 / 863310000;  // 距升交點角距
+  const E = 1 - 0.002516 * T - 0.0000074 * T ** 2;
+  let sl = 0, sr = 0;
+  for (const [cd, cm, cmp, cf, al, ar] of MOON_LR) {
+    const arg = (cd * D + cm * M + cmp * Mp + cf * F) * D2R;
+    const e = cm === 0 ? 1 : Math.abs(cm) === 1 ? E : E * E;   // 含太陽近點角的項要乘地球離心率修正
+    sl += al * e * sin(arg);
+    sr += ar * e * cos(arg);
+  }
+  // 金星與木星的攝動，以及地球扁率造成的加項（Meeus 47 附加項）
+  sl += 3958 * sin((119.75 + 131.849 * T) * D2R) + 1962 * sin((Lp - F) * D2R) + 318 * sin((53.09 + 479264.290 * T) * D2R);
+  /* 黃緯只用短級數（誤差約數角秒）：它只影響月出月沒與照度的末位，不值得再背 60 項 */
+  const lat = 5.128 * sin(F * D2R) + 0.2806 * sin((Mp + F) * D2R) + 0.2777 * sin((Mp - F) * D2R)
+    + 0.1732 * sin((2 * D - F) * D2R) + 0.0554 * sin((2 * D - Mp + F) * D2R) + 0.0463 * sin((2 * D - Mp - F) * D2R)
+    + 0.0326 * sin((2 * D + F) * D2R) + 0.0172 * sin((2 * Mp + F) * D2R);
+  return { lon: norm360(Lp + sl / 1e6), lat, dist: 385000.56 + sr / 1000 };
+}
+/* 太陽的黃經與距離（Meeus 25，低精度式即可：照度只需要日月夾角） */
+function sunPosition(date) {
+  const T = (jdOf(date) - 2451545) / 36525;
+  const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T ** 2;
+  const M = (357.52911 + 35999.05029 * T - 0.0001537 * T ** 2) * D2R;
+  const C = (1.914602 - 0.004817 * T - 0.000014 * T ** 2) * Math.sin(M)
+    + (0.019993 - 0.000101 * T) * Math.sin(2 * M) + 0.000289 * Math.sin(3 * M);
+  const e = 0.016708634 - 0.000042037 * T - 0.0000001267 * T ** 2;
+  const AU = 149597870.7;
+  return { lon: norm360(L0 + C), dist: 1.000001018 * (1 - e * e) / (1 + e * Math.cos(M + C * D2R)) * AU };
+}
+
+/* 此刻的一切：距離、照度、月齡、視直徑、星座、正在靠近還是遠離 */
+function moonLive(date = new Date()) {
+  const m = moonPosition(date), s = sunPosition(date);
+  // 日月地夾角（相位角 i）：照度 k =(1+cos i)/2，這是真正的幾何照度，不是用月齡內插的
+  const psi = Math.acos(Math.cos(m.lat * D2R) * Math.cos((m.lon - s.lon) * D2R));
+  const i = Math.atan2(s.dist * Math.sin(psi), m.dist - s.dist * Math.cos(psi));
+  const elong = norm360(m.lon - s.lon);              // 0°＝朔、180°＝望；<180 為盈、>180 為虧
+  const waxing = elong < 180;
+  const base = moonInfo(date);                       // 相位名稱沿用全 App 同一套，避免同一顆月亮兩個名字
+  const rate = (moonPosition(new Date(date.getTime() + 60000)).dist - m.dist); // 公里／分鐘
+  const signIdx = Math.floor(m.lon / 30);
+  return {
+    date, lon: m.lon, lat: m.lat, dist: m.dist, rate, waxing, elong,
+    k: (1 + Math.cos(i)) / 2,
+    age: moonAge(date),
+    angDiam: 2 * Math.atan(1737.4 / m.dist) / D2R * 60,   // 視直徑（角分）
+    sign: ZODIAC[signIdx], signDeg: m.lon - signIdx * 30,
+    emoji: base.e, name: base.n,
+  };
+}
+/* 月球下一次換星座的時刻（黃經跨過 30° 整數倍）。月球一天走約 13.2°，先估再用割線法逼近 */
+function nextSignIngress(date = new Date()) {
+  const lon0 = moonPosition(date).lon;
+  const target = (Math.floor(lon0 / 30) + 1) * 30;
+  let t = date.getTime() + norm360(target - lon0) / 13.176 * 86400000;
+  for (let n = 0; n < 6; n++) {
+    const err = ((moonPosition(new Date(t)).lon - target + 540) % 360) - 180; // 帶正負號的差距
+    t -= err / 13.176 * 86400000;
+  }
+  return { at: new Date(t), sign: ZODIAC[Math.floor(norm360(target) / 30)] };
+}
+/* 下一次近地點與遠地點：距離函數以小時取樣找轉折，再用三分搜尋逼到分鐘級 */
+function nextApsides(from = new Date()) {
+  const t0 = from.getTime(), H = 3600000;
+  const at = ms => moonPosition(new Date(ms)).dist;
+  const out = {};
+  let a = at(t0), b = at(t0 + H);
+  for (let n = 2; n <= 24 * 32 && (!out.perigee || !out.apogee); n++) {
+    const c = at(t0 + n * H);
+    const kind = b < a && b < c ? "perigee" : b > a && b > c ? "apogee" : null;
+    if (kind && !out[kind]) {
+      // 三分搜尋：在 [n-2, n] 小時這個區間內把極值逼出來
+      let lo = t0 + (n - 2) * H, hi = t0 + n * H;
+      for (let j = 0; j < 40; j++) {
+        const p = lo + (hi - lo) / 3, q = hi - (hi - lo) / 3;
+        const better = kind === "perigee" ? at(p) < at(q) : at(p) > at(q);
+        if (better) hi = q; else lo = p;
+      }
+      const ms = (lo + hi) / 2;
+      out[kind] = { at: new Date(ms), dist: at(ms) };
+    }
+    a = b; b = c;
+  }
+  return out;
+}
+
+/* ---------- 月出月沒（需要使用者所在位置，預設不啟用） ---------- */
+/* 月球此刻在觀測者天空中的地平座標；h0 是「月心要多高才算升起」的門檻
+   （0.7275×地平視差 − 34′ 大氣折射，Meeus 15） */
+function moonAltAz(date, lat, lon) {
+  const jd = jdOf(date), T = (jd - 2451545) / 36525;
+  const m = moonPosition(date);
+  const eps = (23.439291 - 0.0130042 * T) * D2R;
+  const l = m.lon * D2R, b = m.lat * D2R;
+  const ra = Math.atan2(Math.sin(l) * Math.cos(eps) - Math.tan(b) * Math.sin(eps), Math.cos(l));
+  const dec = Math.asin(Math.sin(b) * Math.cos(eps) + Math.cos(b) * Math.sin(eps) * Math.sin(l));
+  const gmst = 280.46061837 + 360.98564736629 * (jd - 2451545) + 0.000387933 * T ** 2 - T ** 3 / 38710000;
+  const H = (norm360(gmst) + lon) * D2R - ra;                 // 時角（東經為正）
+  const phi = lat * D2R;
+  const alt = Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H));
+  const az = Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(dec) * Math.cos(phi));
+  const h0 = 0.7275 * Math.asin(6378.14 / m.dist) - 0.5667 * D2R;
+  return { alt: alt / D2R, az: norm360(az / D2R + 180), up: alt > h0, margin: (alt - h0) / D2R };
+}
+/* 目前這一輪的月出月沒。
+   刻意不是「下一次月出」：月亮此刻已經掛在天上時，要顯示的是它「幾點升起的」，
+   否則你抬頭看得到月亮，App 卻告訴你月出是明天晚上，對不起來。 */
+function currentRiseSet(now, lat, lon) {
+  const list = moonRiseSet(new Date(now.getTime() - 16 * 3600000), lat, lon, 44);
+  const up = moonAltAz(now, lat, lon).up;
+  return {
+    up,
+    rise: up ? [...list].reverse().find(x => x.kind === "rise" && x.at <= now) || null
+      : list.find(x => x.kind === "rise" && x.at > now) || null,
+    set: list.find(x => x.kind === "set" && x.at > now) || null,
+  };
+}
+/* 從 from 起算，接下來 hours 小時內的月出月沒（10 分鐘掃描 + 二分逼近，誤差約 1 分鐘） */
+function moonRiseSet(from, lat, lon, hours = 30) {
+  const f = ms => moonAltAz(new Date(ms), lat, lon).margin;
+  const t0 = from.getTime(), STEP = 600000, out = [];
+  let prev = f(t0);
+  for (let i = 1; i <= hours * 6; i++) {
+    const t = t0 + i * STEP, cur = f(t);
+    if ((prev < 0) !== (cur < 0)) {
+      let lo = t - STEP, hi = t, loNeg = prev < 0;
+      for (let j = 0; j < 22; j++) {
+        const mid = (lo + hi) / 2;
+        if ((f(mid) < 0) === loNeg) lo = mid; else hi = mid;
+      }
+      out.push({ kind: prev < 0 ? "rise" : "set", at: new Date((lo + hi) / 2) });
+    }
+    prev = cur;
+  }
+  return out;
 }
 
 /* ---------- 宇宙天象事件（資料整理自 Sea&Sky / Star Walk / Space.com，並由Blue親自編修；可見性視地區與天候而定） ---------- */
@@ -1619,6 +1801,7 @@ function switchTab(tab) {
   });
   $$(".view").forEach(v => v.classList.remove("active"));
   $(`#view-${tab}`).classList.add("active");
+  closeMoonLive();      // 換分頁就把即時月相收起來，不然它會蓋住剛切過去的內容
   if (tab !== "summon") stopAltar(); // 離開召喚頁就停掉雲層動畫
   VIEWS[tab]();
   window.scrollTo({ top: 0 });
@@ -5274,6 +5457,289 @@ function showUpdateBanner() {
   });
 }
 
+/* ================= 動態月相（即時抽屜） =================
+   為什麼不是第十個分頁：底部分頁列已經九顆按鈕，再加一顆在手機上會擠到很難點——
+   宇宙分頁改子分頁就是為了這件事。所以改成「標題列那顆月亮＝收合狀態」，
+   點一下才從標題列底下滑出整片即時資料：任何分頁都摸得到，關掉完全不佔版面。
+   計時器只在抽屜開著、而且 App 在前景時才跑，一關就清掉，不會在背景耗電。 */
+
+const MOON_LIVE_MS = 250;          // 每秒四次：月球徑向速度約每秒 0.03 公里，這個頻率下小數第二位看得出在跳
+const GEO_KEY = "dreamtide.geo";   /* 位置單獨存這支 key，刻意不放進 store.data：
+                                      這樣它不會被 JSON 匯出帶走，也不會進星塵帳號的雲端同步。 */
+let _mlOpen = false, _mlTimer = null, _mlStatic = null;
+
+const geoGet = () => { try { return JSON.parse(localStorage.getItem(GEO_KEY)) || null; } catch { return null; } };
+const geoSet = v => v ? localStorage.setItem(GEO_KEY, JSON.stringify(v)) : localStorage.removeItem(GEO_KEY);
+
+const fmtKm = n => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtHM = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+function dayLabel(d) {
+  const tm = new Date(); tm.setDate(tm.getDate() + 1);
+  const ds = dstr(d);
+  return ds === todayStr() ? "今天" : ds === dstr(tm) ? "明天" : `${d.getMonth() + 1}/${d.getDate()}`;
+}
+const fmtAt = d => `${dayLabel(d)} ${fmtHM(d)}`;
+function fmtCountdown(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000)), dd = Math.floor(s / 86400);
+  const t = `${pad(Math.floor(s % 86400 / 3600))}:${pad(Math.floor(s % 3600 / 60))}:${pad(s % 60)}`;
+  return dd ? `${dd} 天 ${t}` : t;
+}
+/* 下一次的望與朔（沿用上面那組真實朔望時刻，不另外算一套） */
+function nextSyzygy(from = new Date()) {
+  const k0 = kNear(from) - 2;
+  let full = null, dark = null;
+  for (let k = k0; k <= k0 + 4; k++) {
+    const f = phaseDate(k, 0.5), n = phaseDate(k, 0);
+    if (!full && f > from) full = f;
+    if (!dark && n > from) dark = n;
+  }
+  return { full, dark };
+}
+
+/* ---- 月面的畫法 ----
+   明暗界線在正面看過去是一段橢圓：短半徑＝R×|cos(日月黃經差)|。
+   所以亮面 ＝ 一段半圓弧（受光那側的邊緣）＋ 一段橢圓弧（明暗界線）接回去。
+   cos 為正時橢圓往受光側鼓出（眉月），為負時往另一側鼓（凸月）。 */
+const MOON_R = 50;
+function litPath(elong, R = MOON_R) {
+  const c = Math.cos(elong * D2R);
+  const rx = Math.max(Math.abs(c) * R, 0.001);
+  const waxing = elong < 180;
+  const limb = waxing ? 1 : 0;                  // 盈：亮面在右；虧：亮面在左（北半球視角）
+  const term = waxing === (c > 0) ? 0 : 1;      // 明暗界線往哪一側鼓
+  return `M0,${-R}A${R},${R} 0 0 ${limb} 0,${R}A${rx.toFixed(3)},${R} 0 0 ${term} 0,${-R}Z`;
+}
+/* 近側月海的粗略位置（單位同 viewBox），畫出來就認得出是那隻兔子 */
+const MOON_MARIA = [
+  [-18, -20, 14, 11], [6, -18, 9, 8], [18, -6, 11, 9], [30, 6, 7, 9],
+  [20, 15, 5, 5], [33, -18, 6, 5], [-30, 2, 11, 19], [-13, 23, 9, 7],
+];
+function moonDiscSVG() {
+  return `<svg class="ml-disc" viewBox="-56 -56 112 112" aria-hidden="true" focusable="false">
+    <defs>
+      <radialGradient id="ml-grad" cx="36%" cy="30%" r="72%">
+        <stop offset="0" stop-color="#fffdf4"/><stop offset=".62" stop-color="#e4dfcd"/><stop offset="1" stop-color="#a49d8b"/>
+      </radialGradient>
+      <clipPath id="ml-litclip"><path id="ml-clip-path" d=""/></clipPath>
+    </defs>
+    <circle r="${MOON_R}" class="ml-dark"/>
+    <path id="ml-lit" d="" fill="url(#ml-grad)"/>
+    <g clip-path="url(#ml-litclip)" class="ml-maria">
+      ${MOON_MARIA.map(([x, y, rx, ry]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}"/>`).join("")}
+      <circle cx="-6" cy="36" r="3.2" class="ml-tycho"/>
+    </g>
+    <circle r="${MOON_R}" class="ml-rim"/>
+  </svg>`;
+}
+
+/* ---- 抽屜本體 ---- */
+function toggleMoonLive() { _mlOpen ? closeMoonLive() : openMoonLive(); }
+
+function openMoonLive() {
+  if (_mlOpen) return;
+  _mlOpen = true;
+  store.data.settings.seenMoonLive = true;      // 看過一次就不再對標題列那顆月亮做提示脈動
+  store.save();
+  const now = new Date();
+  // 開啟時算一次就好的東西：朔望、近地遠地、換星座、月出月沒（都不是每秒會變的數字）
+  _mlStatic = { syzygy: nextSyzygy(now), apsides: nextApsides(now), ingress: nextSignIngress(now), riseSet: null };
+  const geo = geoGet();
+  if (geo) _mlStatic.riseSet = currentRiseSet(now, geo.lat, geo.lon);
+
+  const mask = document.createElement("div");
+  mask.className = "mlive-mask";
+  mask.id = "mlive-mask";
+  mask.innerHTML = `<section class="mlive" role="dialog" aria-label="即時月相">
+    <div class="mlive-grip" aria-hidden="true"></div>
+    <button class="mlive-x" id="ml-close" aria-label="收起即時月相">✕</button>
+    <div class="ml-hero">
+      ${moonDiscSVG()}
+      <div class="ml-heroText">
+        <b id="ml-name">—</b>
+        <span class="ml-clock" id="ml-clock">--:--:--</span>
+        <span class="muted small" id="ml-datestr"></span>
+      </div>
+    </div>
+
+    <div class="ml-dist">
+      <span class="ml-distNum" id="ml-dist">—</span> <span class="ml-unit">公里</span>
+      <span class="ml-rate" id="ml-rate"></span>
+    </div>
+    <div class="ml-bar"><i id="ml-bar-fill"></i><u id="ml-bar-dot"></u></div>
+    <p class="ml-barnote"><span>近地點 356,400</span><span>遠地點 406,700</span></p>
+
+    <dl class="ml-grid">
+      <div><dt>照度</dt><dd id="ml-illum">—</dd></div>
+      <div><dt>月齡</dt><dd id="ml-age">—</dd></div>
+      <div><dt>視直徑</dt><dd id="ml-diam">—</dd></div>
+      <div><dt>黃道十二宮</dt><dd id="ml-sign">—</dd></div>
+    </dl>
+
+    <ul class="ml-list" id="ml-events"></ul>
+
+    <div class="ml-geo" id="ml-geo"></div>
+
+    <p class="muted small ml-note">距離為地心到月心的幾何距離（Meeus《Astronomical Algorithms》第 47 章
+      ELP-2000/82 截斷級數）。你站的位置到月球最多會再差一個地球半徑，市售月相 App 報的也都是地心距離。</p>
+  </section>`;
+  mask.addEventListener("click", e => { if (e.target === mask) closeMoonLive(); });
+  document.body.appendChild(mask);
+  $("#ml-close", mask).addEventListener("click", closeMoonLive);
+  renderMoonLiveEvents();
+  renderMoonLiveGeo();
+  moonLiveTick();
+  startMoonLiveTimer();
+  addEventListener("keydown", moonLiveEsc);
+  $("#header-moon")?.setAttribute("aria-expanded", "true");
+  void mask.offsetHeight;                 // 先讓瀏覽器算出收合狀態的樣式，過場才跑得起來
+  mask.classList.add("on");
+}
+
+function closeMoonLive() {
+  if (!_mlOpen) return;
+  _mlOpen = false;
+  stopMoonLiveTimer();
+  removeEventListener("keydown", moonLiveEsc);
+  $("#header-moon")?.setAttribute("aria-expanded", "false");
+  const mask = $("#mlive-mask");
+  if (!mask) return;
+  mask.classList.remove("on");
+  setTimeout(() => mask.remove(), REDUCED_MOTION ? 0 : 200);
+}
+const moonLiveEsc = e => { if (e.key === "Escape") closeMoonLive(); };
+function startMoonLiveTimer() {
+  stopMoonLiveTimer();
+  if (document.visibilityState === "visible") _mlTimer = setInterval(moonLiveTick, MOON_LIVE_MS);
+}
+function stopMoonLiveTimer() { clearInterval(_mlTimer); _mlTimer = null; }
+// 切到背景就停表：沒人在看的時候不需要一秒算四次月球位置
+addEventListener("visibilitychange", () => {
+  if (!_mlOpen) return;
+  if (document.visibilityState === "visible") { moonLiveTick(); startMoonLiveTimer(); } else stopMoonLiveTimer();
+});
+
+/* 每一拍要更新的東西 */
+function moonLiveTick() {
+  const mask = $("#mlive-mask");
+  if (!mask) return stopMoonLiveTimer();
+  const now = new Date();
+  const m = moonLive(now);
+  const set = (id, text) => { const el = $(`#${id}`, mask); if (el && el.textContent !== text) el.textContent = text; };
+
+  const d = litPath(m.elong);
+  $("#ml-lit", mask).setAttribute("d", d);
+  $("#ml-clip-path", mask).setAttribute("d", d);
+
+  set("ml-name", `${m.emoji} ${m.name}`);
+  set("ml-clock", `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);
+  set("ml-datestr", `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}（${WEEKDAYS[now.getDay()]}）`);
+  set("ml-dist", fmtKm(m.dist));
+  set("ml-rate", `${m.rate < 0 ? "↓ 正在靠近" : "↑ 正在遠離"}　每分鐘 ${Math.abs(m.rate).toFixed(2)} 公里`);
+  set("ml-illum", `${(m.k * 100).toFixed(2)} %`);
+  set("ml-age", `${m.age.toFixed(2)} 日`);
+  set("ml-diam", `${m.angDiam.toFixed(2)} 角分`);
+  set("ml-sign", `${m.sign} ${m.signDeg.toFixed(1)}°`);
+
+  // 距離在「最近的近地點～最遠的遠地點」之間的位置；用固定端點才不會每個月刻度都在跳
+  const pct = Math.min(100, Math.max(0, (m.dist - 356400) / (406700 - 356400) * 100));
+  $("#ml-bar-fill", mask).style.width = `${pct}%`;
+  $("#ml-bar-dot", mask).style.left = `${pct}%`;
+
+  for (const el of $$("[data-until]", mask)) el.textContent = fmtCountdown(+el.dataset.until - now.getTime());
+  if (_mlStatic && now.getTime() > _mlStatic.nextExpiry + 1000) {   // 有節點剛過去了 → 重算下一輪
+    Object.assign(_mlStatic, { syzygy: nextSyzygy(now), apsides: nextApsides(now), ingress: nextSignIngress(now) });
+    renderMoonLiveEvents();
+  }
+  const alt = $("#ml-alt", mask);
+  if (alt) {
+    const geo = geoGet();
+    if (geo) {
+      const p = moonAltAz(now, geo.lat, geo.lon);
+      alt.textContent = p.up
+        ? `此刻在地平線上 ${p.alt.toFixed(1)}°・方位 ${p.az.toFixed(0)}°`
+        : `此刻在地平線下 ${Math.abs(p.alt).toFixed(1)}°`;
+    }
+  }
+  updateHeaderMoon(m);
+}
+
+/* 節點清單：下一次的望、朔、近地點、遠地點、換星座 */
+function renderMoonLiveEvents() {
+  const { syzygy, apsides, ingress } = _mlStatic;
+  const row = (icon, label, when, extra = "") => `<li>
+      <span class="ml-ev-i">${icon}</span>
+      <span class="ml-ev-l">${label}<em>${esc(fmtAt(when))}${extra ? `・${esc(extra)}` : ""}</em></span>
+      <span class="ml-ev-c" data-until="${when.getTime()}">—</span>
+    </li>`;
+  const rows = [
+    syzygy.full ? row("🌕", "下次滿月", syzygy.full) : "",
+    syzygy.dark ? row("🌑", "下次新月", syzygy.dark) : "",
+    ingress ? row(ingress.sign.slice(4), `進入${ingress.sign.slice(0, 3)}`, ingress.at) : "",
+    // 用跟上面「正在靠近／遠離」同一組箭頭，一眼看得出是距離在縮短還是拉長
+    apsides.perigee ? row("↓", "下次近地點", apsides.perigee.at, `${fmtKm(apsides.perigee.dist)} 公里`) : "",
+    apsides.apogee ? row("↑", "下次遠地點", apsides.apogee.at, `${fmtKm(apsides.apogee.dist)} 公里`) : "",
+  ].filter(Boolean);
+  // 依時間先後排，這樣「最近要發生的事」一定在最上面
+  const ul = $("#ml-events");
+  ul.innerHTML = rows.join("");
+  const byTime = [...ul.children].sort((a, b) =>
+    +a.querySelector("[data-until]").dataset.until - +b.querySelector("[data-until]").dataset.until);
+  byTime.forEach(li => ul.appendChild(li));
+  // 記下最快到期的那一個：抽屜開著不關時（例如就守著滿月那一刻），到點要自己換下一輪
+  _mlStatic.nextExpiry = byTime.length ? +byTime[0].querySelector("[data-until]").dataset.until : Infinity;
+}
+
+/* 月出月沒：要知道你在哪才算得出來，所以預設不開，按了才問一次位置 */
+function renderMoonLiveGeo() {
+  const box = $("#ml-geo");
+  if (!box) return;
+  const geo = geoGet();
+  if (!geo) {
+    box.innerHTML = `<button class="btn secondary" id="ml-geo-ask">📍 顯示月出月沒</button>
+      <p class="muted small">月球什麼時候升起、什麼時候落下，跟你人在哪裡有關。
+        座標只會四捨五入到小數第二位（約 1 公里）存在這台裝置，不會上傳、不進雲端備份、不進匯出檔，隨時可以刪掉。</p>`;
+    $("#ml-geo-ask", box).addEventListener("click", askGeo);
+    return;
+  }
+  const rs = _mlStatic.riseSet || {};
+  box.innerHTML = `<div class="ml-rs">
+      <div><span>🌜 月出</span><b>${rs.rise ? esc(fmtAt(rs.rise.at)) : "這兩天不升起"}</b></div>
+      <div><span>🌛 月沒</span><b>${rs.set ? esc(fmtAt(rs.set.at)) : "這兩天不落下"}</b></div>
+    </div>
+    <p class="muted small" id="ml-alt">—</p>
+    <p class="muted small">位置：${geo.lat.toFixed(2)}°, ${geo.lon.toFixed(2)}°
+      <button class="ml-link" id="ml-geo-clear">刪除位置</button></p>`;
+  $("#ml-geo-clear", box).addEventListener("click", () => {
+    geoSet(null); _mlStatic.riseSet = null; renderMoonLiveGeo(); toast("已刪除位置");
+  });
+}
+function askGeo() {
+  if (!navigator.geolocation) return toast("這個瀏覽器沒有定位功能");
+  toast("正在取得位置…");
+  navigator.geolocation.getCurrentPosition(
+    p => {
+      // 只留小數兩位：月出月沒的誤差不到一分鐘，但存下來的就不再是精確住址
+      geoSet({ lat: Math.round(p.coords.latitude * 100) / 100, lon: Math.round(p.coords.longitude * 100) / 100 });
+      const g = geoGet();
+      _mlStatic.riseSet = currentRiseSet(new Date(), g.lat, g.lon);
+      renderMoonLiveGeo();
+      moonLiveTick();
+    },
+    () => toast("拿不到位置，可能是權限被拒或訊號不足"),
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
+  );
+}
+
+/* 標題列那顆月亮＝收合狀態；沒點過就讓它微微呼吸，讓人知道它可以按 */
+function updateHeaderMoon(m) {
+  const el = $("#header-moon");
+  if (!el) return;
+  const mi = m || moonLive();
+  // 用半形空白而不是「・」隔開：標題列右邊要塞下箭頭，多出來的那幾個像素會把主標題擠成兩行
+  el.textContent = `${mi.emoji} ${mi.name} ${Math.round(mi.k * 100)}%`;
+  el.classList.toggle("hint", !store.data.settings.seenMoonLive && !_mlOpen);
+}
+
 /* ---------- 啟動 ---------- */
 /* 安裝提示要在 init 之前就掛上：beforeinstallprompt 有可能在 App 還在初始化時就送達 */
 addEventListener("beforeinstallprompt", e => {
@@ -5291,8 +5757,8 @@ addEventListener("appinstalled", () => {
   store.load();
   applyTheme(store.data.settings.theme || "night");
   try { await idb.open(); } catch { /* 無 IndexedDB 時照片功能停用 */ }
-  const mi = moonInfo(new Date());
-  $("#header-moon").textContent = `${mi.e} ${mi.n}・${mi.illum}%`;
+  updateHeaderMoon();
+  $("#header-moon").addEventListener("click", toggleMoonLive);
   $$(".tabbar button").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
   handleReferralHash();
   handleHashImport();
