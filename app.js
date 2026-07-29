@@ -821,7 +821,7 @@ const COLUMN = [
     enTitle: "Why the Fifteenth of the Lunar Month Isn't the Full Moon 🤔",
     enSub: "A romantic little secret the phases of the Moon have been trying to tell you",
     zhBody: [
-      "今日為農曆六月十五，但以當代天文學角度，並不是真正的滿月，這種情況在古時更有「望日」之稱，Why？",
+      "今日（7/28）為農曆六月十五，但以當代天文學角度，並不是真正的滿月，這種情況在古時更有「望日」之稱，Why？",
       "根據天體運行物理概念，能夠這麼解釋：",
       "一、🌏 地球與月球的軌道是橢圓的：",
       "月球公轉的 RUNWAY、我們所在的天體核心、那條舞台軌道，都不是正圓，because地球本人是橢圓形的；根據克卜勒第二定律（Kepler's second law of planetary motion），月球在繞行地球公轉時，其速度為「近地點快、遠地點慢」，白話文翻譯：月球走到離地球最近時，運行速度較快，而當月亮跟地球距離最遠時，運行速度較慢，這是第一個科學根據。",
@@ -840,7 +840,7 @@ const COLUMN = [
       "月球本身沒有亮度，月光是由太陽反射而來，仔細觀察月相盈缺，其實也同時可探索或正視自我陰暗之面。",
       "我們每個人皆自帶光芒，但會反射、折射或吸收的能量強度，其實是你自己可以決定的，因我們的軌道都不相同。",
       COLUMN_SEP,
-      "編按：本輪「望、滿月」的精確時刻為台灣時間 2026 年 7 月 29 日 22:35，也就是農曆六月十六。文中所說的「滿月延後到十六」，這一輪就是今天晚上。App 內「宇宙」分頁的新月／滿月節點已全面改以真實朔望時刻計算，並依你裝置所在時區顯示日期。",
+      "編按：本輪「望、滿月」的精確時刻為台灣時間 2026 年 7 月 29 日 22:35，也就是農曆六月十六。文中所說的「滿月延後到十六」，這一輪就是7/29 晚上。App 內「宇宙」分頁的新月／滿月節點已全面改以真實朔望時刻計算，並依你裝置所在時區顯示日期。",
     ],
     enBody: [
       "Today is the fifteenth day of the sixth lunar month. By the reckoning of modern astronomy, though, it is not the true full moon — the moment the ancients called wàng (望), the day of gazing. W H Y?",
