@@ -100,7 +100,7 @@ const ASTRO = [
 const BROADCAST = {
   id: "2026-07-28-column-01", from: "2026-07-28", until: "2026-08-11",
   title: "🌕 星塵專欄創刊號上線",
-  body: "為何農曆十五卻不是滿月？打開星塵夢汐即可閱讀，並領取 🪐 星際・完整神奇海螺 ×1。",
+  body: "為何農曆十五卻不是滿月？Blue在Stardust寫的第一篇文章，閱讀獎品： 🪐 量子糾纏神奇海螺 ×1。",
 };
 function upcomingWithin(days) {
   const out = [], now = new Date();
