@@ -43,6 +43,25 @@ icons/                App 圖示
 2. 想同時發通報，就在 `BROADCASTS` 再加一筆（`articleId` 指向上面的 `id`），
    並把 `sw.js` 的 `BROADCAST` 常數改成同一則、同一個 `id`。
 
+## 改版之後，怎麼讓使用者真的看到新版
+
+`app.js` 的 `APP_VERSION` 和 `sw.js` 的 `CACHE` 要一起往上加。改了 `CACHE` 這個字串，
+瀏覽器才會判定 `sw.js` 有變、去安裝新的 Service Worker，前端才跳得出「有新版本」橫幅。
+
+使用者端會發生三件事：啟動時與每次從背景切回前景時主動向伺服器問有沒有新版（5 分鐘節流）；
+偵測到新版就跳橫幅，由使用者自己按下重新載入（不自動 reload，免得他正在打日記被刷掉）；
+設定分頁隨時看得到目前版本號，回報問題時報這個數字最快。
+
+⚠️ **不要把更新邏輯掛在 `navigator.serviceWorker.register()` 回傳的 promise 上。**
+實測 Chromium 在「使用者回訪、頁面已被 SW 接管」時，那個 promise 會遲遲不 resolve，
+整套偵測會靜靜地失效。要拿 registration 請用 `navigator.serviceWorker.ready`。
+
+⚠️ **Vercel 後台不要對舊的 deployment 按 Redeploy。** 那等於把 production 回滾到那個
+commit（2026-07-28 就這樣把已上線的專欄整個滾掉，表現出來是「清除資料重裝都還是舊的」）。
+要回到最新版：對 main 最新的 deployment 按 **Promote to Production**，或讓 main 產生一個
+新 commit（合併任何 PR 都可以）。要確認線上到底是哪一版，抓 `stardust.bluechiou.com/app.js`
+跟各 commit 的 `app.js` 逐一比對就知道。
+
 ## 站內通報怎麼送達
 
 沒有推播伺服器，也沒有跟使用者收 push subscription，所以走兩條路：已把 App 裝在

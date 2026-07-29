@@ -2,6 +2,10 @@
    全部資料存於裝置本機＆你的帳號（localStorage + IndexedDB），無後端、無隱私外漏問題。 */
 "use strict";
 
+/* 版本號：每次要讓使用者看到新東西時，這裡和 sw.js 的 CACHE 一起往上加。
+   設定分頁會顯示這個號碼，回報問題時報這個數字最快能判斷對方在哪一版。 */
+const APP_VERSION = "2026.07.29";
+
 /* ---------- 小工具 ---------- */
 const $ = (sel, el = document) => el.querySelector(sel);
 const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
@@ -85,14 +89,18 @@ const STREAK_BADGES = [
   [3, "🌱 意念"], [7, "✨ 星芒"], [14, "🌙 星軌"], [30, "🌌 星座"], [60, "🌠 星河"], [100, "💫 星系"],
 ];
 
-/* 🐚 神奇海螺碎片：以自然元素（木火土金水）分類，另有極罕見的星際版；同色 5 顆合成一顆完整海螺 */
+/* 🐚 神奇海螺碎片：以自然元素（木火土金水）分類，另有三階星際版；同色 5 顆合成一顆完整海螺
+   權重總和 106，實際掉落率：五元素各 18.9%、量子糾纏 2.8%、綜觀效應 1.9%、克爾黑旋 0.9%。
+   克爾黑旋（克爾史瓦西黑洞）是全系列最罕見的一種。 */
 const SHELL_COLORS = [
   { key: "wood",  name: "聖木叢林", emoji: "🌲", weight: 20 },
   { key: "fire",  name: "緋紅火焰", emoji: "🔥", weight: 20 },
   { key: "earth", name: "蓋婭大地", emoji: "🌏", weight: 20 },
   { key: "metal", name: "金委員長", emoji: "🪙", weight: 20 },
   { key: "water", name: "湛藍海潮", emoji: "🌊", weight: 20 },
-  { key: "cosmic", name: "量子糾纏", emoji: "🪐", weight: 3, rare: true }, // 星際罕見版，約 2.9%
+  { key: "cosmic",   name: "量子糾纏", emoji: "🪐",  weight: 3, rare: true, rarity: "星際罕見" },
+  { key: "overview", name: "綜觀效應", emoji: "🚀",  weight: 2, rare: true, rarity: "深空稀有" },
+  { key: "kerr",     name: "克爾黑旋", emoji: "⚫️", weight: 1, rare: true, rarity: "事件視界・最罕見" },
 ];
 const SHELL_BY_KEY = Object.fromEntries(SHELL_COLORS.map(c => [c.key, c]));
 const SHELL_FRAGMENTS_PER_SHELL = 5;
@@ -179,7 +187,7 @@ function shellVaultHTML() {
       ${SHELL_COLORS.map(c => `
         <div class="shell-item shell-${c.key}${c.rare ? " shell-rare" : ""}">
           <span class="shell-emoji">${c.emoji}</span>
-          <span class="shell-name">${esc(c.name)}神奇海螺${c.rare ? "<i>罕見</i>" : ""}</span>
+          <span class="shell-name">${esc(c.name)}神奇海螺${c.rare ? `<i>${esc(c.rarity)}</i>` : ""}</span>
           <span class="shell-count">${s.frag[c.key] || 0}/${SHELL_FRAGMENTS_PER_SHELL}</span>
         </div>`).join("")}
     </div>
@@ -3341,7 +3349,7 @@ function renderSummon() {
         ${SHELL_COLORS.map(c => `
           <div class="shell-item shell-${c.key}${c.rare ? " shell-rare" : ""}">
             <span class="shell-emoji">${c.emoji}</span>
-            <span class="shell-name">${esc(c.name)}${c.rare ? "<i>罕見</i>" : ""}</span>
+            <span class="shell-name">${esc(c.name)}${c.rare ? `<i>${esc(c.rarity)}</i>` : ""}</span>
             <span class="shell-count">${s.frag[c.key] || 0}/${SHELL_FRAGMENTS_PER_SHELL}</span>
           </div>`).join("")}
       </div>
@@ -3385,9 +3393,9 @@ function showSummonResult(miss, result) {
   const info = SHELL_BY_KEY[result.key];
   const s = shellState();
   const m = modal(`
-    <div class="summon-res ${info.rare ? "rare" : ""}">
+    <div class="summon-res ${info.rare ? "rare" : ""} ${info.key === "kerr" ? "kerr" : ""}">
       <div class="sr-emoji">${info.emoji}</div>
-      ${info.rare ? `<p class="sr-rare">✦ 星際罕見 ✦</p>` : ""}
+      ${info.rare ? `<p class="sr-rare">✦ ${esc(info.rarity)} ✦</p>` : ""}
       <h3>${esc(info.name)}神奇海螺碎片 ×1</h3>
       ${result.merged
         ? `<p class="sr-merged">🎉 碎片集滿 ${SHELL_FRAGMENTS_PER_SHELL} 片，合成一顆完整的${info.emoji}${esc(info.name)}神奇海螺！</p>`
@@ -3792,8 +3800,17 @@ function renderSettings() {
       <p class="muted small">結束今天的紀錄時，把魔法書闔上重新封印，下次再由你親自開啟。</p>
       <div class="btn-row"><button class="btn secondary" id="seal-btn">🔒 封印魔法書 ✡️</button></div>
     </div>
+    <div class="card">
+      <h2>ℹ️ 版本 <span class="sub">${esc(APP_VERSION)}</span></h2>
+      <p class="muted small">
+        回報問題時，把這個版本號一起告訴 Blue，最快能判斷你手上是不是最新版。
+        星塵夢汐更新後不需要重新安裝，下次打開會自動抓新版；若一直沒變，按下面這顆。
+      </p>
+      <div class="btn-row"><button class="btn secondary" id="ver-check">🔄 立即檢查更新</button></div>
+    </div>
     <p class="disclaimer">星塵夢汐僅供自我紀錄，非供替代專業醫療，不提供分析治療。</p>`;
   renderBoard();
+  $("#ver-check").addEventListener("click", forceUpdateCheck);
   $("#bd-send").addEventListener("click", sendBoardMessage);
   $("#share-btn").addEventListener("click", openShareForm);
   $("#seal-btn").addEventListener("click", () => sealBookFX());
@@ -4747,6 +4764,108 @@ function showBroadcast(b) {
   });
 }
 
+/* ---------- Service Worker 與版本更新 ----------
+   要解決的問題：改版推上線之後，已經把 App 裝到桌面的人可能好幾天還停在舊版，
+   而且「清除資料、移除重裝」也不一定有用——因為舊的 Service Worker 還在服役，
+   使用者根本不知道自己看到的是哪一版。
+
+   三道保險：
+   1. 每次啟動、以及每次從背景切回前景時，主動叫 reg.update() 去問伺服器有沒有新版。
+   2. 新版 SW 接手（controllerchange）時跳一條橫幅，讓使用者自己按下重新載入。
+      不自動 reload：使用者可能正在打日記打到一半，畫面被刷掉等於資料沒了。
+   3. 設定分頁顯示版本號 ＋ 一顆「立即檢查更新」，回報問題時能立刻確認版本。 */
+let _swReg = null;
+let _updateShown = false;
+let _lastUpdateCheck = 0;
+
+function initServiceWorker() {
+  if (!("serviceWorker" in navigator) || location.protocol !== "https:") return;
+
+  /* 這一次載入時，頁面本來就已經被某個 SW 接管嗎？
+     首次安裝時是 null，SW 裝好 claim 之後 controllerchange 一樣會觸發，
+     若在事件裡才去讀 controller 就永遠是「有」，會對第一次來的人誤報有新版。 */
+  const hadController = !!navigator.serviceWorker.controller;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController) return;   // 首次安裝，不是更新
+    showUpdateBanner();
+  });
+
+  /* 觸發註冊，但「不等」它回傳的 promise。
+     實測（Chromium）：使用者回訪、頁面已被 SW 接管時，register() 的 promise
+     會被排到很後面甚至遲遲不 resolve；舊寫法把整套更新偵測都掛在那個 .then()
+     裡面，於是永遠拿不到 registration，更新提示形同不存在。
+     改成用 navigator.serviceWorker.ready 拿 registration，它每次都會即時回應。 */
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+
+  navigator.serviceWorker.ready.then(async reg => {
+    _swReg = reg;
+    // 已在服役中又出現待命的新版本（例如另一個分頁先抓到了）
+    if (reg.waiting && hadController) showUpdateBanner();
+    reg.addEventListener("updatefound", () => {
+      const sw = reg.installing;
+      if (!sw) return;
+      sw.addEventListener("statechange", () => {
+        if (sw.state === "installed" && hadController) showUpdateBanner();
+      });
+    });
+    checkForUpdate();
+    // Android Chrome：App 沒開也能背景檢查天象（best-effort，隨使用頻率調度）
+    try {
+      if ("periodicSync" in reg) {
+        const st = await navigator.permissions.query({ name: "periodic-background-sync" });
+        if (st.state === "granted") await reg.periodicSync.register("astro-check", { minInterval: 12 * 60 * 60 * 1000 });
+      }
+    } catch { /* iOS 或未安裝：改用 .ics 行事曆提醒 */ }
+  }).catch(() => {});
+
+  // 從背景切回前景時再問一次（裝成 App 的人往往好幾天不會真的「重新開啟」）
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") checkForUpdate();
+  });
+}
+
+/* 節流過的更新檢查：最快 5 分鐘問一次，避免頻繁切換分頁一直打伺服器 */
+function checkForUpdate({ force = false } = {}) {
+  if (!_swReg) return Promise.resolve(false);
+  const now = Date.now();
+  if (!force && now - _lastUpdateCheck < 5 * 60 * 1000) return Promise.resolve(false);
+  _lastUpdateCheck = now;
+  return _swReg.update().then(() => true).catch(() => false);
+}
+
+async function forceUpdateCheck() {
+  if (!("serviceWorker" in navigator) || location.protocol !== "https:") {
+    return toast("這個環境不支援自動更新，請重新整理頁面");
+  }
+  if (!_swReg) return toast("更新服務尚未就緒，請稍後再試");
+  toast("正在向伺服器確認版本⋯");
+  await checkForUpdate({ force: true });
+  // update() 回來時若真有新版，controllerchange／updatefound 會接手跳橫幅
+  setTimeout(() => { if (!_updateShown) toast(`目前已是最新版 ${APP_VERSION} ✨`); }, 2500);
+}
+
+function showUpdateBanner() {
+  if (_updateShown) return;
+  _updateShown = true;
+  const bar = document.createElement("div");
+  bar.className = "update-bar";
+  bar.innerHTML = `
+    <span>✨ 星塵夢汐有新版本了</span>
+    <button type="button" class="btn small" id="upd-reload">立即更新</button>
+    <button type="button" class="upd-x" id="upd-later" aria-label="稍後再說">✕</button>`;
+  document.body.appendChild(bar);
+  $("#upd-reload", bar).addEventListener("click", () => {
+    // 先把手上的資料落地，再重新載入，避免使用者剛打的東西沒存到
+    try { store.save(); } catch { /* 存不了也還是要讓他更新 */ }
+    location.reload();
+  });
+  $("#upd-later", bar).addEventListener("click", () => {
+    bar.remove();
+    _updateShown = false;   // 讓下次啟動還會再提醒一次
+  });
+}
+
 /* ---------- 啟動 ---------- */
 /* 安裝提示要在 init 之前就掛上：beforeinstallprompt 有可能在 App 還在初始化時就送達 */
 addEventListener("beforeinstallprompt", e => {
@@ -4781,15 +4900,5 @@ addEventListener("appinstalled", () => {
   if (typeof initAccount === "function") initAccount().catch(() => {});
   // 有好友用了我的邀請碼 → 把累積的碎片領回來（延後一點，不跟開場動畫搶）
   setTimeout(() => { collectReferralRewards().catch(() => {}); }, 4000);
-  if ("serviceWorker" in navigator && location.protocol === "https:") {
-    navigator.serviceWorker.register("sw.js").then(async reg => {
-      // Android Chrome：App 沒開也能背景檢查天象（best-effort，隨使用頻率調度）
-      try {
-        if ("periodicSync" in reg) {
-          const st = await navigator.permissions.query({ name: "periodic-background-sync" });
-          if (st.state === "granted") await reg.periodicSync.register("astro-check", { minInterval: 12 * 60 * 60 * 1000 });
-        }
-      } catch { /* iOS 或未安裝：改用 .ics 行事曆提醒 */ }
-    }).catch(() => {});
-  }
+  initServiceWorker();
 })();

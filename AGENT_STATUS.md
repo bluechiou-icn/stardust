@@ -1,6 +1,6 @@
 # AGENT_STATUS.md — ÆTHNOUS Project Network
 
-**Compiled:** 2026-07-23 · **Last updated:** 2026-07-28 · **Compiled by:** Claude (session `project-status-compilation`) · **For:** any AI agent (Claude, Gemini, ChatGPT, or other) picking up work in this repo or a sibling repo
+**Compiled:** 2026-07-23 · **Last updated:** 2026-07-29 · **Compiled by:** Claude (session `project-status-compilation`) · **For:** any AI agent (Claude, Gemini, ChatGPT, or other) picking up work in this repo or a sibling repo
 
 This file is a handoff briefing so any AI agent landing in *any* of Blue's repos with no other context can quickly understand who they're working for, what the whole project network looks like, which rules hold everywhere, and exactly where this repo stands right now. **This repo has no `CLAUDE.md` yet** (see the note at the end of section 4) — until one exists, this file is the only written orientation document here. Update it whenever this repo's status changes materially.
 
@@ -103,6 +103,43 @@ as a Vercel env var, never in git), a subscription store in Upstash Redis alongs
 account/board KV, an authenticated broadcast endpoint, `push`/`pushsubscriptionchange` handlers
 in `sw.js`, and a permission-request flow. Note iOS only delivers Web Push to PWAs installed to
 the home screen.
+
+### 2026-07-29 — 版本更新機制、SW fetch 修正、兩種新海螺
+
+**先記一件不是程式問題的事故。** 2026-07-28 兩個 PR（#15 #16）都正常合併並部署到
+production 之後，Blue 在 Vercel 後台對一個**舊的 deployment**按了 Redeploy（連按三次，
+16:33 / 16:37 / 16:43 UTC），把 production 別名指回 commit `19003c9`，於是線上跑的是
+專欄上線前的版本。表現出來就是「清除資料、移除重裝都還是舊的、沒有文章、沒有通知」。
+排查方式：抓 production 的 `app.js` 和每個 commit 逐一 diff，就能指認線上到底是哪一版。
+**要回到最新版，正確操作是對 main 最新的那個 deployment 按 Promote to Production，
+或直接讓 main 產生一個新 commit（合併任何 PR 都可以）；對舊 deployment 按 Redeploy
+等於回滾。**
+
+三項程式改動：
+
+1. **版本更新機制**（`APP_VERSION` + `initServiceWorker()`）。以前使用者無從得知自己在
+   哪一版，改版後也可能好幾天停在舊版。現在：設定分頁顯示版本號與一顆「立即檢查更新」；
+   啟動時與每次從背景回前景時主動 `reg.update()`（5 分鐘節流）；偵測到新版跳橫幅，
+   由使用者自己按下重載——不自動 reload，因為使用者可能正在打日記。
+   `hadController` 在註冊前先取值，否則首次安裝也會誤報有新版。
+   **關鍵實作細節：不要把邏輯掛在 `navigator.serviceWorker.register()` 的 promise 上。**
+   實測 Chromium 在「使用者回訪、頁面已被 SW 接管」時，那個 promise 會遲遲不 resolve
+   （5 秒仍 TIMEOUT），而 `navigator.serviceWorker.ready` 每次都即時回應。第一版就是踩到
+   這個坑，整套更新偵測形同不存在。
+
+2. **`sw.js` fetch handler 修正（真的 bug）**。舊版把**所有** GET 都攔下來，任何抓失敗的
+   請求一律回傳 `index.html`。於是第三方腳本（`accounts.google.com/gsi/client`）只要載入
+   失敗就會收到一坨 HTML，變成 `Uncaught SyntaxError: Unexpected token '<'`，而且會連帶
+   把 `register()` 卡住。現在：跨網域請求直接不接管；同網域抓不到時先找快取，只有
+   `request.mode === "navigate"` 才退回 `index.html`，其餘回 `Response.error()`。
+
+3. **兩種新的神奇海螺**：🚀 綜觀效應（深空稀有，權重 2）與 ⚫️ 克爾黑旋（事件視界・最罕見，
+   權重 1，全系列最罕見）。權重總和 106 → 五元素各 18.9%、量子糾纏 2.8%、綜觀效應 1.9%、
+   克爾黑旋 0.9%。稀有度字串改成資料驅動的 `rarity` 欄位，寶庫與召喚結果共用。
+
+驗證方式：本機起了一台 HTTPS 伺服器（service worker 只在安全環境運作），用 Chromium 跑
+完整情境——首次安裝不誤報、回訪不誤報、模擬上線新版本後切回前景跳出橫幅、按下更新後
+版本號確實變成新的、全程無 JS 錯誤。
 
 ### Open / unfinished work
 `docs/crystal-vision.md` is a de facto product roadmap, with v1 marked shipped:

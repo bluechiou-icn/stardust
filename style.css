@@ -468,7 +468,22 @@ nav.tabbar::after {
   background: linear-gradient(150deg, rgba(150,90,240,.16), rgba(60,120,240,.12));
 }
 .shell-cosmic .shell-count { color: #b478ff; }
+/* 綜觀效應：從軌道上回望地球的那一眼，用地球緣的藍白弧光 */
+.shell-overview {
+  border-color: rgba(90,190,240,.55);
+  background: linear-gradient(150deg, rgba(60,170,240,.18), rgba(20,40,90,.14));
+}
+.shell-overview .shell-count { color: #5abef0; }
+/* 克爾黑旋：全系列最罕見。事件視界的黑，外緣一圈吸積盤的橘金 */
+.shell-kerr {
+  border-color: rgba(255,170,70,.6);
+  background: radial-gradient(circle at 50% 42%, rgba(8,6,14,.92) 34%, rgba(255,150,50,.22) 62%, rgba(120,40,140,.16) 100%);
+}
+.shell-kerr .shell-count { color: #ffaa46; }
+.shell-kerr .shell-name { color: #f3e6d2; }
 .shell-rare { box-shadow: 0 0 14px rgba(180,120,255,.25); }
+.shell-overview.shell-rare { box-shadow: 0 0 14px rgba(90,190,240,.28); }
+.shell-kerr.shell-rare { box-shadow: 0 0 18px rgba(255,160,60,.32); }
 
 /* 心情 5 Level 選擇列 */
 .mood-picker { display: flex; gap: 6px; margin: 10px 0; }
@@ -588,11 +603,29 @@ nav.tabbar::after {
 .summon-res h3 { margin: 10px 0 6px; }
 .summon-res.rare .sr-emoji { filter: drop-shadow(0 0 16px rgba(180,120,255,.85)); }
 .sr-rare { color: #b478ff; letter-spacing: .3em; font-size: .7rem; margin-bottom: 4px; }
+/* 克爾黑旋抽到時換成吸積盤的橘金，讓最罕見的那一顆一眼認得出來 */
+.summon-res.kerr .sr-emoji { filter: drop-shadow(0 0 22px rgba(255,160,60,.9)); }
+.summon-res.kerr .sr-rare { color: #ffaa46; }
 .sr-merged { color: var(--accent); font-size: .86rem; font-weight: 600; margin: 6px 0; }
 @keyframes sr-pop { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .altar-btn, .summon-res .sr-emoji, .broadcast .bc-icon { animation: none; }
 }
+
+/* 有新版本的橫幅：壓在分頁列上方，不擋住底部導覽 */
+.update-bar {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(74px + env(safe-area-inset-bottom));
+  z-index: 150; display: flex; align-items: center; gap: 10px;
+  background: var(--surface-2); border: 1px solid var(--accent); border-radius: 14px;
+  padding: 8px 10px 8px 14px; font-size: .84rem; color: var(--ink);
+  box-shadow: 0 6px 24px rgba(0,0,0,.35); max-width: min(92vw, 420px);
+  animation: sr-pop .32s cubic-bezier(.2,1.4,.4,1);
+}
+.update-bar .upd-x {
+  background: none; border: 0; color: var(--ink-2); font-size: 1rem; line-height: 1;
+  padding: 4px 2px; cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) { .update-bar { animation: none; } }
 
 /* 站內通報卡片 */
 .broadcast { text-align: center; padding: 10px 4px 2px; }
