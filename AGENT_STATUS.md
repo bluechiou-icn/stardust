@@ -141,6 +141,25 @@ production 之後，Blue 在 Vercel 後台對一個**舊的 deployment**按了 R
 完整情境——首次安裝不誤報、回訪不誤報、模擬上線新版本後切回前景跳出橫幅、按下更新後
 版本號確實變成新的、全程無 JS 錯誤。
 
+### 2026-07-29（續）— 宇宙分頁子分頁化 ＋ 知識問答測驗
+
+**宇宙分頁改成子分頁**：`天象｜專欄｜新聞｜知識｜測驗`，選擇記在
+`settings.cosmosSub`。做這個決定的原因是底部分頁列已經有九顆按鈕，加第十顆在手機上
+會擠到很難點；而專欄文章之後會越來越多，四張卡片一路往下疊等於把新聞和知識埋掉。
+`renderCosmos()` 現在只畫子分頁列，內容交給 `renderCosmosSky/Column/News/Know/Quiz`
+其中一個填進 `#cosmos-body`。站內通報的「領取並閱讀」會先把 `cosmosSub` 設成
+`column`，否則使用者關掉文章之後會落在天象頁，找不到剛剛那篇。
+
+**宇宙知識問答測驗**（`QUIZ_BANK`，26 題）：每輪隨機抽 5 題，選項連同「是不是正解」
+一起洗牌，所以背選項位置沒有用。每題都帶 `ref` 指向一篇既有的天文知識文章，答完可以
+直接跳去讀。獎勵刻意設得很克制——**每天「第一次」全對才給一片碎片**，其餘純練習；
+這樣一天最多多出一片，不會把召喚祭壇的經濟灌爆，但仍有回來玩的理由。
+統計存在 `settings.quiz`（plays / best / totalCorrect / totalAnswered / lastRewardDate）。
+
+題庫寫作原則：只寫查得到、站得住腳的天文事實。有一支檢查腳本驗過全部 26 題的
+id 唯一性、選項數、答案索引範圍、選項不重複、`ref` 都能對到真的文章、解析長度。
+其中兩題刻意呼應新加的海螺（綜觀效應 Overview Effect、克爾／史瓦西黑洞的差別）。
+
 ### Open / unfinished work
 `docs/crystal-vision.md` is a de facto product roadmap, with v1 marked shipped:
 - **v1.5 (next):** collection achievement badges, a shareable collection poster (canvas → PNG export), full-moon cleansing push notifications (reusing the existing `sw.js` notification pipeline).

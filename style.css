@@ -612,6 +612,62 @@ nav.tabbar::after {
   .altar-btn, .summon-res .sr-emoji, .broadcast .bc-icon { animation: none; }
 }
 
+/* 宇宙分頁的子分頁列：橫向可捲，手機上放得下五個 */
+.subtabs {
+  display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.subtabs::-webkit-scrollbar { display: none; }
+.subtab {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
+  background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line);
+  border-radius: 999px; padding: 7px 14px; font-size: .82rem; cursor: pointer;
+}
+.subtab.on { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); font-weight: 600; }
+.subtab span { font-size: .95rem; }
+
+/* 宇宙知識問答 */
+.quiz-stats { display: flex; gap: 8px; margin: 12px 0 6px; }
+.quiz-stats div {
+  flex: 1; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px 4px; text-align: center;
+}
+.quiz-stats b { display: block; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.quiz-stats span { font-size: .68rem; color: var(--ink-2); }
+.quiz-top { display: flex; justify-content: space-between; align-items: center; font-size: .74rem; color: var(--ink-2); }
+.quiz-cat { background: var(--surface-2); border-radius: 999px; padding: 2px 10px; }
+.quiz-bar { height: 3px; background: var(--surface-2); border-radius: 2px; margin: 8px 0 14px; overflow: hidden; }
+.quiz-bar i { display: block; height: 100%; background: var(--accent); transition: width .3s ease; }
+.quiz-q { margin: 0 0 14px; line-height: 1.55; text-wrap: balance; }
+.quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+.quiz-opt {
+  text-align: left; background: var(--surface-2); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  font-size: .88rem; line-height: 1.5; cursor: pointer;
+}
+.quiz-opt:disabled { cursor: default; }
+.quiz-opt.right { border-color: #58aa6e; background: rgba(88,170,110,.14); }
+.quiz-opt.wrong { border-color: #e86048; background: rgba(232,96,72,.14); }
+.quiz-opt.dim { opacity: .5; }
+.quiz-why {
+  margin: 14px 0 4px; padding: 12px 14px; border-radius: 12px;
+  background: var(--accent-soft); border: 1px solid var(--line); font-size: .84rem; line-height: 1.7;
+}
+.quiz-why p { margin: 6px 0 10px; color: var(--ink-2); }
+.quiz-result { text-align: center; padding: 6px 4px 2px; }
+.quiz-result .qr-emoji { font-size: 3rem; line-height: 1; }
+.quiz-result h3 { margin: 8px 0 6px; }
+.quiz-reward {
+  margin: 12px auto 2px; display: inline-block; padding: 8px 16px; border-radius: 14px;
+  background: var(--accent-soft); border: 1px solid var(--accent); font-size: .84rem; line-height: 1.6;
+}
+.quiz-review { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+.quiz-review-h { font-size: .8rem; color: var(--ink-2); letter-spacing: .1em; }
+.quiz-review-item { margin-top: 12px; font-size: .84rem; line-height: 1.65; }
+.quiz-review-item .qri-q { font-weight: 600; margin-bottom: 4px; }
+.quiz-review-item .qri-a { color: #58aa6e; margin-bottom: 4px; }
+.quiz-review-item .qri-why { color: var(--ink-2); }
+
 /* 有新版本的橫幅：壓在分頁列上方，不擋住底部導覽 */
 .update-bar {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(74px + env(safe-area-inset-bottom));
