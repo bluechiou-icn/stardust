@@ -38,7 +38,7 @@ Compiled from the other six repos' `CLAUDE.md` files — this repo doesn't have 
 - **Blue's Version is the single authority for ZWDS logic** in the astrology repos — relevant here only if/when the roadmapped "destiny crystal report" (v2.5, see below) integrates with the Engine.
 - **IP boundaries are release blockers** elsewhere in the network (agent skill files, Owner-Ext proprietary content) — apply the same caution if this repo ever imports ÆTHNOUS chart logic for the v2.5 integration.
 - **Surgical changes only, everywhere.** State a verifiable success criterion before coding starts.
-- **Self-scheduled check-ins may only be armed when they'll deliver genuinely new value** (network-wide convention, stated explicitly in the Engine repo's CLAUDE.md).
+- **Self-scheduled check-ins may only be armed when they'll deliver genuinely new value** (network-wide convention, stated explicitly in the Engine repo's CLAUDE.md). **This is now enforced, not just advisory**: after an incident (2026-07-29) where a self-perpetuating `send_later` re-check loop for a PR burned ~12% of a week's usage overnight with no user request, `.claude/settings.json` in this repo `deny`-lists `mcp__Claude_Code_Remote__send_later` and `mcp__Claude_Code_Remote__create_trigger` outright. Do not remove that deny rule to "just do one quick re-check" — if a PR genuinely needs monitoring, use `subscribe_pr_activity` (event-driven, no polling) instead.
 
 ## 4. This repo: stardust
 
