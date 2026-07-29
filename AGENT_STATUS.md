@@ -1,6 +1,6 @@
 # AGENT_STATUS.md — ÆTHNOUS Project Network
 
-**Compiled:** 2026-07-23 · **Last updated:** 2026-07-30 · **Compiled by:** Claude (session `project-status-compilation`) · **For:** any AI agent (Claude, Gemini, ChatGPT, or other) picking up work in this repo or a sibling repo
+**Compiled:** 2026-07-23 · **Last updated:** 2026-07-30（動態月相抽屜） · **Compiled by:** Claude (session `project-status-compilation`) · **For:** any AI agent (Claude, Gemini, ChatGPT, or other) picking up work in this repo or a sibling repo
 
 This file is a handoff briefing so any AI agent landing in *any* of Blue's repos with no other context can quickly understand who they're working for, what the whole project network looks like, which rules hold everywhere, and exactly where this repo stands right now. **This repo has no `CLAUDE.md` yet** (see the note at the end of section 4) — until one exists, this file is the only written orientation document here. Update it whenever this repo's status changes materially.
 
@@ -184,6 +184,50 @@ Blue 指定的七項。值得記下來的三件：
 （預設關閉、只存本機、上雲一律 E2E 加密、絕不進任何 API、匯出預設排除、可整組刪除、
 不做醫療宣稱、不做安全期與避孕推算）。
 
+### 2026-07-30（續）— 動態月相抽屜（v2026.07.30b）
+
+Blue 平常用 Phases of the Moon 這支 App，最想要的是「一直在跳的距離數字」。本次把那件事做進來，
+但**沒有**開第十個分頁：底部分頁列已經九顆按鈕，第十顆在手機上會擠到很難點（宇宙分頁改子分頁
+就是為了這件事）。做法是**標題列右上那顆月亮＝收合狀態，點一下才從標題列底下滑出整片即時資料**，
+任何分頁都摸得到，關掉完全不佔版面——就是 Blue 說的「預設縮起、click 可展開」。
+
+三件值得記下來的事：
+
+1. **真的把月球軌道解出來了。** 原本的朔望演算法（Meeus 第 49 章）只回答「這一輪的朔與望是
+   哪一刻」，算不出「此刻月球離我們多遠」。新增 `moonPosition()`：Meeus 第 47 章
+   ELP-2000/82 截斷級數（60 項 Σl／Σr）＋短式黃緯級數，另加 `sunPosition()`（第 25 章）
+   算日月夾角。**驗證方式：拿書上第 47.a 例題（1992-04-12.0 TD）跑一次，黃經 133.162655°、
+   距離 368409.7 km，兩個數字跟書上印的完全一樣。** 月出時刻也對得上 Phases of the Moon
+   在 2026-07-29 三重顯示的 18:37。
+   要注意的是**這是地心距離**（地球中心↔月球中心），不是觀測者到月球；抽屜底部有一行說明。
+   順帶一提，該 App 的月齡（14.76 日）跟我們的（15.18 日）差約 9 小時，因為它用平均月長，
+   而我們用這一輪真實的朔；這正是 7/28 那次修掉的同一個問題，我們的比較準。
+
+2. **照度有兩套數字，是刻意的。** 首頁與標題列沿用 `moonInfo().illum`（整數，用真實朔→望→朔
+   內插），抽屜顯示 `(1+cos i)/2` 的幾何照度到小數第二位。實測 2026-07-29 22:10 兩者是
+   100% 與 99.97%，四捨五入後一致；相位「名稱」則一律取自 `moonInfo()`，避免同一顆月亮
+   在兩個地方叫不同名字。
+
+3. **標題列只剩幾個像素可以用。** 收合狀態加上 pill 內距與展開箭頭之後，主標題會被擠成兩行，
+   標題列從 56px 變 87px（`--header-h` 也跟著跳）。最後把字級收到 `.84rem`、內距 `1px 4px`、
+   分隔符從「・」改半形空白，412px 寬回到 56px，與改版前一致；390px 以下本來就會折行，沒有變差。
+   **改這顆按鈕的樣式時請一併量標題列高度**（`document.querySelector("header.app-header").offsetHeight`）。
+
+抽屜內容：即時時鐘、依真實明暗界線畫的月面 SVG（亮面＝半圓弧＋橢圓弧，短半徑 R×|cos 黃經差|，
+北半球視角）、距離（每 250ms 更新，並標示正在靠近／遠離與每分鐘公里數）、近地↔遠地位置條、
+照度／月齡／視直徑／黃道十二宮（回歸黃道），以及下次滿月、新月、換星座、近地點、遠地點五個
+倒數（依時間排序，到點會自己換下一輪）。計時器只在抽屜開著且 App 在前景時才跑
+（`visibilitychange` 會停表），關掉就清掉。
+
+**月出月沒是選擇性功能，預設關閉。** 要算它得知道使用者在哪裡，所以按了才問一次定位權限，
+而且座標**四捨五入到小數第二位（約 1 公里）**、單獨存在 `localStorage["dreamtide.geo"]`——
+刻意不放進 `store.data`，這樣它不會被 JSON 匯出帶走，也不會進星塵帳號的雲端同步，隨時可刪。
+這是照 `docs/cycle-moon-vision.md` 第零節那套健康資料界線的同一個原則處理位置資料。
+
+驗證方式：Chromium（412/390/360 三種寬度、深色與淺色、`prefers-reduced-motion`）跑過
+九個分頁全部重繪、抽屜開關三次無殘留計時器與節點、Escape 可關、換分頁自動收起、
+八個相位角的月面圖形逐一目視確認，全程無 JS 錯誤。
+
 ### Open / unfinished work
 `docs/crystal-vision.md` is a de facto product roadmap, with v1 marked shipped:
 - **v1.5 (next):** collection achievement badges, a shareable collection poster (canvas → PNG export), full-moon cleansing push notifications (reusing the existing `sw.js` notification pipeline).
@@ -198,9 +242,10 @@ Blue 指定的七項。值得記下來的三件：
 
 ### Branches
 `main`, `claude/moon-altar-account-system-op2yvx` (altar backgrounds, meteor tuning, 星塵帳號,
-install button), and `claude/stardust-fullmoon-article-translation-311edj` (星塵專欄創刊, true
-syzygy times, 站內通報 — see the 2026-07-28 entry above). The earliest branch,
-`claude/crystal-knowledge-collection-jcgq14`, is already merged via PR #1.
+install button), `claude/stardust-fullmoon-article-translation-311edj` (星塵專欄創刊, true
+syzygy times, 站內通報 — see the 2026-07-28 entry above), and
+`claude/moon-phases-dynamic-feature-m7jb2y` (動態月相抽屜 — see the entry above). The earliest
+branch, `claude/crystal-knowledge-collection-jcgq14`, is already merged via PR #1.
 
 ---
 
