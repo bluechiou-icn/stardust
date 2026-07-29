@@ -4,7 +4,7 @@
 
 /* 版本號：每次要讓使用者看到新東西時，這裡和 sw.js 的 CACHE 一起往上加。
    設定分頁會顯示這個號碼，回報問題時報這個數字最快能判斷對方在哪一版。 */
-const APP_VERSION = "2026.07.29b";
+const APP_VERSION = "2026.07.30";
 
 /* ---------- 小工具 ---------- */
 const $ = (sel, el = document) => el.querySelector(sel);
@@ -2334,7 +2334,7 @@ function renderDream() {
     <div class="card center">
       <h2 style="justify-content:center">黃金 90 秒 — 醒來立刻紀錄</h2>
       <button class="mic-big" id="dream-mic">🎙️<small>開始紀錄夢境</small></button>
-      <p class="muted small">直接說出：畫面、人物、事件、地點、情緒、顏色。<br>任何記得的情節，自動幫你標記欄位。<br>可以一直講，講完再按一次麥克風停止。<br>先快速說完再打字編輯也可以</p>
+      <p class="muted small">直接說出：畫面、人物、事件、地點、情緒、顏色。<br>任何記得的情節，自動幫你標記欄位。<br>可以一直瘋狂講，講完再按一次麥克風停止，<br>先快速說完再打字編輯也可以💙</p>
     </div>
     <div class="card locked-card">
       <h2>🌌 星塵樹洞 <span class="sub">傾聽你的秘密</span></h2>
@@ -2344,7 +2344,7 @@ function renderDream() {
     <div class="card locked-card">
       <h2>🖼 夢境圖鑑 <span class="sub">共 ${dreams.length} 則</span></h2>
       <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
-      <p class="muted small">收錄你的夢境，🧝‍♂️Lucian之後能幫你畫出夢境，展現出內心魔幻的世界；技能解鎖後，這裡會成為你的夢境美術館 🎨</p>
+      <p class="muted small">🧝‍♂️Lucian之後能幫你畫出夢境，展現出內心魔幻的世界；技能解鎖後，這裡會成為你的夢境美術館 🎨</p>
     </div>
     <div class="card locked-card">
       <h2>🪬 心願購物車 <span class="sub">許願清單</span></h2>
@@ -2571,7 +2571,7 @@ function renderCBT() {
   el.innerHTML = `
     <div class="card">
       <h2>🧠 思考紀錄（CBT 7-Step）</h2>
-      <p class="muted small">情緒上來的時候，先倒出來再整理；宇宙只提問、不下結論，替代思考來自於你自己的潛意識。</p>
+      <p class="muted small">情緒上來的時候，先倒出來再整理；宇宙只提問、不下結論，替代思考來自於自我潛意識；試一次看看會有新發現。</p>
       <div class="btn-row">
         <button class="btn" id="cbt-start">開始 7 步驟引導</button>
         <button class="btn secondary" id="cbt-dump">30 秒快速傾訴</button>
@@ -3546,15 +3546,21 @@ function renderCosmos() {
       <button type="button" class="subtab ${s.key === sub ? "on" : ""}" role="tab"
         aria-selected="${s.key === sub}" data-sub="${s.key}"><span>${s.icon}</span>${s.label}</button>`).join("")}</div>
     <div id="cosmos-body"></div>`;
+  /* 切換子分頁時「不要」動垂直捲動位置。
+     之前這裡會 scrollIntoView 把整個宇宙分頁捲到最上面，結果子分頁列被推到
+     標題列底下，看起來像自動隱藏。現在那一列是 sticky 的，本來就一直看得到。 */
   $$(".subtab", el).forEach(b => b.addEventListener("click", () => {
     store.data.settings.cosmosSub = b.dataset.sub;
     store.save();
     renderCosmos();
-    el.scrollIntoView({ block: "start" });
   }));
-  /* 子分頁列會橫向捲動，選到最右邊的「測驗」時它會被切一半。
-     block:"nearest" 是刻意的：只橫向捲那一列，不要順便把整頁往下拉。 */
-  $(".subtab.on", el)?.scrollIntoView({ inline: "center", block: "nearest" });
+  /* 子分頁列可橫向捲動，選到最右邊的「測驗」時它會被切一半。
+     只捲那一列本身，不要連帶動到頁面的垂直位置。 */
+  const on = $(".subtab.on", el);
+  if (on) {
+    const bar = on.parentElement;
+    bar.scrollLeft = on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2;
+  }
   ({ sky: renderCosmosSky, column: renderCosmosColumn, news: renderCosmosNews,
      know: renderCosmosKnow, quiz: renderCosmosQuiz }[sub])();
 }
@@ -3615,13 +3621,75 @@ function renderCosmosKnow() {
 const QUIZ_PER_ROUND = 5;
 let _quiz = null;   // 進行中的這一輪；null = 還沒開始
 
+const QUIZ_STREAK_GOAL = 7;   // 連續參加幾天換一次召喚機會
+
 function quizState() {
   const st = store.data.settings;
   st.quiz ||= {};
   const q = st.quiz;
   q.plays ||= 0; q.best ||= 0; q.totalCorrect ||= 0; q.totalAnswered ||= 0;
   q.lastRewardDate ||= "";
+  q.streak ||= 0;          // 目前連續參加天數
+  q.lastPlayDate ||= "";   // 上次「完成一輪」的日期
+  q.playDates ||= [];      // 有參加過的日期，只留最近 40 筆（畫連續紀錄用）
+  q.streakRewards ||= 0;   // 已經換過幾次召喚機會
   return q;
+}
+const yesterdayStr = () => {
+  // 用日期元件往回推一天，不要用「現在減 86400000 毫秒」：
+  // 有日光節約時間的地區減 24 小時可能還停在同一天，連續天數就會斷掉。
+  const d = fromDstr(todayStr());
+  d.setDate(d.getDate() - 1);
+  return dstr(d);
+};
+/* 完成一輪就算「今天有參加」，答對與否不影響。
+   回傳這一輪是不是當天第一次、以及有沒有剛好滿七天換到召喚機會。 */
+function bumpQuizStreak(q) {
+  const t = todayStr();
+  if (q.lastPlayDate === t) return { newDay: false, charge: false };
+  q.streak = q.lastPlayDate === yesterdayStr() ? q.streak + 1 : 1;
+  q.lastPlayDate = t;
+  q.playDates = [...new Set([...q.playDates, t])].sort().slice(-40);
+  let charge = false;
+  if (q.streak % QUIZ_STREAK_GOAL === 0) {
+    const s = shellState();
+    s.charges = (s.charges || 0) + 1;
+    q.streakRewards++;
+    charge = true;
+  }
+  return { newDay: true, charge };
+}
+/* 最近 N 天的參加紀錄，今天排在最右邊 */
+function quizStreakDays(n = QUIZ_STREAK_GOAL) {
+  const played = new Set(quizState().playDates);
+  const out = [];
+  const d = fromDstr(todayStr());
+  d.setDate(d.getDate() - (n - 1));
+  for (let i = 0; i < n; i++) {
+    const ds = dstr(d);
+    out.push({ date: ds, md: `${d.getMonth() + 1}/${d.getDate()}`, done: played.has(ds), today: ds === todayStr() });
+    d.setDate(d.getDate() + 1);
+  }
+  return out;
+}
+function quizStreakHTML() {
+  const q = quizState();
+  const days = quizStreakDays();
+  const toGo = QUIZ_STREAK_GOAL - (q.streak % QUIZ_STREAK_GOAL || QUIZ_STREAK_GOAL);
+  return `
+    <div class="quiz-streak">
+      <div class="qs-head">
+        <b>🔥 連續參加 ${q.streak} 天</b>
+        <span>${q.streak === 0
+          ? `連續 ${QUIZ_STREAK_GOAL} 天換一次召喚機會`
+          : toGo === 0 ? "今天達標，明天開始新一輪 ✨" : `再 ${toGo} 天換一次召喚機會`}</span>
+      </div>
+      <div class="qs-days">${days.map(d => `
+        <div class="qs-day ${d.done ? "done" : ""} ${d.today ? "now" : ""}">
+          <i>${d.done ? "✓" : ""}</i><span>${d.md}</span>
+        </div>`).join("")}</div>
+      ${q.streakRewards ? `<p class="muted small">已經換到 ${q.streakRewards} 次召喚機會 🔮</p>` : ""}
+    </div>`;
 }
 /* Fisher-Yates，就地洗牌 */
 function shuffled(arr) {
@@ -3650,9 +3718,11 @@ function renderCosmosQuiz() {
         <div><b>${q.best}/${QUIZ_PER_ROUND}</b><span>最佳</span></div>
         <div><b>${acc === null ? "—" : acc + "%"}</b><span>正確率</span></div>
       </div>
+      ${quizStreakHTML()}
       <p class="muted small">${gotToday
         ? "🐚 今天的碎片已經領過了。現在是純練習，不會再掉碎片，但成績照樣記錄。"
         : `🐚 今天第一次答對全部 ${QUIZ_PER_ROUND} 題，可以獲得一片隨機神奇海螺碎片。`}</p>
+      <p class="muted small">🔮 答對與否不影響連續天數，只要完成一輪就算今天有來。</p>
       <div class="btn-row"><button class="btn" id="quiz-start">🚀 開始測驗</button></div>
     </div>`;
   $("#quiz-start").addEventListener("click", () => {
@@ -3735,6 +3805,8 @@ function drawQuizResult() {
     q.lastRewardDate = todayStr();
     reward = awardShellFragment();
   }
+  // 連續參加：完成一輪就算，答對與否不影響；滿七天換一次召喚機會
+  const streak = bumpQuizStreak(q);
   store.save();
 
   const perfect = st.score === st.qs.length;
@@ -3749,7 +3821,9 @@ function drawQuizResult() {
         ${reward ? `<p class="quiz-reward">🐚 獲得「${SHELL_BY_KEY[reward.key].emoji}${esc(SHELL_BY_KEY[reward.key].name)}碎片」×1${
           reward.merged ? `<br>✨ 碎片集滿，合成一顆完整的神奇海螺！` : ""}</p>` : ""}
         ${!reward && perfect ? `<p class="muted small">今天的碎片已經領過了，成績仍然記錄。</p>` : ""}
+        ${streak.charge ? `<p class="quiz-reward">🔮 連續參加滿 ${QUIZ_STREAK_GOAL} 天，獲得一次神奇海螺召喚機會！</p>` : ""}
       </div>
+      ${quizStreakHTML()}
       ${st.wrong.length ? `
         <div class="quiz-review">
           <b class="quiz-review-h">答錯的題目</b>
@@ -3888,7 +3962,8 @@ function showDayDetail(ds) {
 }
 function eventRowHTML(e) {
   const dd = daysBetween(todayStr(), e.date);
-  return `<div class="event-row" data-ev-date="${esc(e.date)}" data-ev-type="${esc(e.type)}" data-ev-title="${esc(e.title)}">
+  // 就是今天的那一列多一個 today class，外框會慢慢發光又變暗（見 style.css 的 ev-breathe）
+  return `<div class="event-row${dd === 0 ? " today" : ""}" data-ev-date="${esc(e.date)}" data-ev-type="${esc(e.type)}" data-ev-title="${esc(e.title)}">
     <div class="d"><b>${esc(fmtMD(e.date))}</b><span>${fromDstr(e.date).getFullYear()}</span></div>
     <div class="t"><b>${esc(e.title)}</b><p>${esc(e.note || "")}</p></div>
     <div class="cd">${dd === 0 ? "今天！" : `${dd} 天後`}</div>
@@ -5030,6 +5105,13 @@ function checkEventNotifications() {
   store.save();
 }
 
+/* 量出標題列的實際高度寫進 --header-h，給 sticky 的子分頁列當定位基準。
+   字級、主題、瀏海高度都會影響它，寫死數字就會露出一條縫或蓋住東西。 */
+function syncHeaderHeight() {
+  const h = $("header.app-header")?.offsetHeight;
+  if (h) document.documentElement.style.setProperty("--header-h", `${h}px`);
+}
+
 /* ---------- 站內通報（開 App 時送達，領了就給禮物） ---------- */
 function pendingBroadcast() {
   const seen = store.data.settings.broadcasts || {};
@@ -5218,6 +5300,8 @@ addEventListener("appinstalled", () => {
   switchTab("today");
   // 每次進入 App 都打開個人魔法書；user 若曾按過「跳過」則直接進本文
   if (!store.data.settings.skipBook) setTimeout(() => openBookLanding(), 60);
+  syncHeaderHeight();
+  addEventListener("resize", syncHeaderHeight);
   checkEventNotifications();
   checkBroadcasts();
   checkSummonCharges({ silent: true });

@@ -387,6 +387,23 @@ nav.tabbar::after {
 .event-row .t b { font-size: .9rem; }
 .event-row .t p { font-size: .76rem; color: var(--ink-3); }
 .event-row .cd { font-size: .72rem; color: var(--gold); white-space: nowrap; }
+/* 就是今天的那一場天象：外框慢慢發光又變暗，像遠處的星星在呼吸 */
+.event-row.today {
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  padding: 10px 10px;
+  margin: 6px 0;
+  animation: ev-breathe 3.4s ease-in-out infinite;
+}
+.event-row.today .cd { font-weight: 700; }
+@keyframes ev-breathe {
+  0%, 100% { border-color: rgba(232,200,116,.28); box-shadow: 0 0 0 rgba(232,200,116,0); }
+  50%      { border-color: rgba(232,200,116,.95); box-shadow: 0 0 16px rgba(232,200,116,.38); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* 會動的東西對某些人是負擔，關掉動畫但保留金色外框，仍然看得出是今天 */
+  .event-row.today { animation: none; border-color: rgba(232,200,116,.9); }
+}
 
 /* capsule */
 .capsule-sealed { filter: blur(0); text-align: center; padding: 18px 10px; }
@@ -613,9 +630,16 @@ nav.tabbar::after {
 }
 
 /* 宇宙分頁的子分頁列：橫向可捲，手機上放得下五個 */
+/* sticky：往下捲內容時這一列固定停在標題列下方，隨時可以換子分頁。
+   --header-h 由 app.js 依標題列實際高度量出來寫進 :root——字級、主題、
+   有沒有瀏海都會改變那個高度，寫死數字就會露出一條縫或蓋住東西。
+   背景要不透明，否則卡片會從底下透出來。 */
 .subtabs {
-  display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px;
+  display: flex; gap: 6px; overflow-x: auto; padding: 8px 2px;
   scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  position: sticky; top: var(--header-h, 56px); z-index: 90;
+  background: var(--bg);
+  margin: 0 -14px; padding-left: 14px; padding-right: 14px;   /* 貼齊 main 的內距，捲動時左右不留縫 */
 }
 .subtabs::-webkit-scrollbar { display: none; }
 .subtab {
@@ -634,6 +658,25 @@ nav.tabbar::after {
 }
 .quiz-stats b { display: block; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
 .quiz-stats span { font-size: .68rem; color: var(--ink-2); }
+/* 連續參加紀錄（Duolingo 式）：只要完成一輪就算今天有來，答對與否不影響 */
+.quiz-streak {
+  margin: 12px 0 6px; padding: 12px; border-radius: 14px;
+  background: var(--surface-2); border: 1px solid var(--line);
+}
+.qs-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.qs-head b { font-size: .9rem; }
+.qs-head span { font-size: .72rem; color: var(--ink-3); }
+.qs-days { display: flex; gap: 5px; margin-top: 10px; }
+.qs-day { flex: 1; text-align: center; }
+.qs-day i {
+  display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 1; border-radius: 50%; font-style: normal; font-size: .8rem;
+  background: var(--surface); border: 1px dashed var(--line); color: var(--ink-3);
+}
+.qs-day.done i { background: var(--accent); border: 1px solid var(--accent); color: var(--accent-ink); font-weight: 700; }
+.qs-day.now i { box-shadow: 0 0 0 2px var(--gold); }
+.qs-day span { display: block; font-size: .6rem; color: var(--ink-3); margin-top: 3px; font-variant-numeric: tabular-nums; }
+
 .quiz-top { display: flex; justify-content: space-between; align-items: center; font-size: .74rem; color: var(--ink-2); }
 .quiz-cat { background: var(--surface-2); border-radius: 999px; padding: 2px 10px; }
 .quiz-bar { height: 3px; background: var(--surface-2); border-radius: 2px; margin: 8px 0 14px; overflow: hidden; }
@@ -710,7 +753,15 @@ nav.tabbar::after {
   padding: 12px 14px; margin: 12px 0; font-size: .88rem;
 }
 .disclaimer { font-size: .72rem; color: var(--ink-3); text-align: center; margin: 18px 8px 6px; }
-.app-footer { text-align: center; font-size: .72rem; color: var(--ink-3); letter-spacing: .08em; padding: 14px 8px 20px; margin-top: 6px; }
+.app-footer {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: .72rem; color: var(--ink-3); letter-spacing: .08em; padding: 14px 8px 20px; margin-top: 6px;
+}
+.app-footer .ig-link {
+  display: inline-flex; color: var(--ink-3); line-height: 0;
+  padding: 4px; border-radius: 8px; transition: color .2s ease;
+}
+.app-footer .ig-link:hover, .app-footer .ig-link:focus-visible { color: var(--accent); }
 /* 問候卡 */
 .greet-card {
   background: linear-gradient(120deg, var(--accent-soft), var(--surface));
