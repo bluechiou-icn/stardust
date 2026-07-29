@@ -120,7 +120,7 @@ function shellState() {
   s.frag ||= {}; s.complete ||= 0; s.lastStreak ||= 0; s.charges ||= 0; s.lastTodoDone ||= 0; s.summons ||= 0;
   return s;
 }
-/* 依權重抽一種元素（星際版極罕見） */
+/* 依權重抽一種元素（三種星際版極罕見） */
 function randomShellKey() {
   const total = SHELL_COLORS.reduce((n, c) => n + c.weight, 0);
   let r = Math.random() * total;
@@ -418,7 +418,7 @@ function upcomingMoonEvents(days = 90) {
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 
-/* ---------- 宇宙天象事件（資料整理自 Sea&Sky / Star Walk / Space.com，並由Blue編修；可見性視地區與天候而定） ---------- */
+/* ---------- 宇宙天象事件（資料整理自 Sea&Sky / Star Walk / Space.com，並由Blue親自編修；可見性視地區與天候而定） ---------- */
 const ASTRO_EVENTS = [
   { date: "2026-07-04", type: "conjunction", title: "火星合天王星", note: "僅相距 6 角分（約滿月直徑 1/5），金牛座黎明前東方低空" },
   { date: "2026-07-30", type: "meteor", title: "寶瓶座δ流星雨極大期", note: "南半球條件較佳，午夜後觀察" },
@@ -811,7 +811,7 @@ const QUIZ_BANK = [
 /* ---------- 星塵專欄（Blue 親筆原創，中英對照） ----------
    和 NASA 新聞分開放：api/space-news 回來會整批覆蓋 NEWS，專欄不能被洗掉。
    bodySep 這個字串單獨成段時，閱讀器會畫一條分隔線。
-   英文為英式英語（-ise、per cent、full stop 用法），Blue 會同步發到 SNS。 */
+   英國文學式用語（-ise、per cent、full stop 用法），Blue 會同步發到 SNS。 */
 const COLUMN_SEP = "———";
 const COLUMN = [
   {
@@ -821,7 +821,7 @@ const COLUMN = [
     enTitle: "Why the Fifteenth of the Lunar Month Isn't the Full Moon 🤔",
     enSub: "A romantic little secret the phases of the Moon have been trying to tell you",
     zhBody: [
-      "今日為農曆六月十五，但以當代天文學角度，並不是真正的滿月，這種情況在古時更有「望日」之稱，W H Y？",
+      "今日為農曆六月十五，但以當代天文學角度，並不是真正的滿月，這種情況在古時更有「望日」之稱，Why？",
       "根據天體運行物理概念，能夠這麼解釋：",
       "一、🌏 地球與月球的軌道是橢圓的：",
       "月球公轉的 RUNWAY、我們所在的天體核心、那條舞台軌道，都不是正圓；根據克卜勒第二定律（Kepler's second law of planetary motion），月球在繞行地球公轉時，其速度為「近地點快、遠地點慢」，白話文翻譯：月球走到離地球最近時，運行速度較快，而當月亮跟地球距離最遠時，運行速度較慢，這是第一個科學根據。",
@@ -840,7 +840,7 @@ const COLUMN = [
       "月球本身沒有亮度，月光是由太陽反射而來，仔細觀察月相盈缺，其實也同時可探索或正視自我陰暗之面。",
       "我們每個人皆自帶光芒，但會反射、折射或吸收的能量強度，其實是你自己可以決定的，因我們的軌道都不相同。",
       COLUMN_SEP,
-      "編按：本輪「望」的精確時刻為台灣時間 2026 年 7 月 29 日 22:35，也就是農曆六月十六。文中所說的「滿月延後到十六」，這一輪就是明天晚上。App 內「宇宙」分頁的新月／滿月節點已全面改以真實朔望時刻計算，並依你裝置所在時區顯示日期。",
+      "編按：本輪「望、滿月」的精確時刻為台灣時間 2026 年 7 月 29 日 22:35，也就是農曆六月十六。文中所說的「滿月延後到十六」，這一輪就是今天晚上。App 內「宇宙」分頁的新月／滿月節點已全面改以真實朔望時刻計算，並依你裝置所在時區顯示日期。",
     ],
     enBody: [
       "Today is the fifteenth day of the sixth lunar month. By the reckoning of modern astronomy, though, it is not the true full moon — the moment the ancients called wàng (望), the day of gazing. W H Y?",
@@ -878,9 +878,9 @@ const BROADCASTS = [
   {
     id: "2026-07-28-column-01", date: "2026-07-28", icon: "🌕",
     title: "星塵專欄創刊號上線",
-    body: "「為何農曆十五卻不是滿月🤔」——Blue 親筆的第一篇天象文章，中英對照，就在「宇宙」分頁。",
-    reward: "🪐 星際・完整神奇海螺 ×1",
-    rewardNote: "創刊號限定，感謝你是第一批走進星塵的人。",
+    body: "「為何農曆十五卻不是滿月🤔」—Blue自己撰寫的第一篇天文知識文章，就在「宇宙」分頁。",
+    reward: "🪐 量子糾纏神奇海螺 ×1",
+    rewardNote: "創刊號限定，感謝辣妹，你是第一批走進星塵的人。",
     articleId: "blue-2026-07-fullmoon",
   },
 ];
@@ -2344,7 +2344,7 @@ function renderDream() {
     <div class="card locked-card">
       <h2>🖼 夢境圖鑑 <span class="sub">共 ${dreams.length} 則</span></h2>
       <p class="locked-msg">🔒 您尚未獲得技能可啟動此功能</p>
-      <p class="muted small">收錄你的夢境，🧝‍♂️Lucian會幫你排列出內心世界的魔幻地圖；技能解鎖後，這裡會成為你的夢境美術館 🎨</p>
+      <p class="muted small">收錄你的夢境，🧝‍♂️Lucian之後能幫你畫出夢境，展現出內心魔幻的世界；技能解鎖後，這裡會成為你的夢境美術館 🎨</p>
     </div>
     <div class="card locked-card">
       <h2>🪬 心願購物車 <span class="sub">許願清單</span></h2>
@@ -3579,7 +3579,7 @@ function renderCosmosColumn() {
   $("#cosmos-body").innerHTML = `
     <div class="card">
       <h2>🖋 星塵專欄 <span class="sub">Blue・中英對照</span></h2>
-      <p class="muted small">星塵夢汐的原創天象文章。點開先讀中文，往下接續英文（英式）。</p>
+      <p class="muted small">星塵夢汐的原創天象雙語文章。累積知識的同時還能一起學英文。</p>
       <div id="col-list">${COLUMN.map(columnRowHTML).join("")}</div>
     </div>`;
   $$("#col-list .art-row").forEach(r =>
@@ -3796,12 +3796,12 @@ async function refreshSpaceNews() {
   if (!list) return;
   list.innerHTML = _liveNews.map(newsRowHTML).join("");
   bindNewsRows($("#view-cosmos"));
-  // 後端沒設 ANTHROPIC_API_KEY 時抓回來的是純英文，別再寫「可切換中／英」騙人
+  // 後端沒設 ANTHROPIC_API_KEY 時抓回來的是純英文，別再寫「可切換中／英」誤導user
   const note = $("#news-note");
   if (note) {
     note.textContent = _liveNews.some(n => n.zhTitle)
       ? "內容取自 NASA，每週更新。點文章可切換中／英。"
-      : "內容取自 NASA，每週更新（原文為英文）。點文章可閱讀全文。";
+      : "內容取自 NASA，每週更新（原文英文）。點文章可閱讀全文。";
   }
 }
 function newsRowHTML(n) {
@@ -4126,8 +4126,8 @@ function renderSettings() {
     <div class="card">
       <h2>ℹ️ 版本 <span class="sub">${esc(APP_VERSION)}</span></h2>
       <p class="muted small">
-        回報問題時，把這個版本號一起告訴 Blue，最快能判斷你手上是不是最新版。
-        星塵夢汐更新後不需要重新安裝，下次打開會自動抓新版；若一直沒變，按下面這顆。
+        回報問題時，把這個版本號一起告訴 Blue，能夠快速判斷你手上是不是最新版。
+        星塵夢汐更新後不需要重新安裝，下次打開會自動抓新版；若一直沒變，這顆給他按下去。
       </p>
       <div class="btn-row"><button class="btn secondary" id="ver-check">🔄 立即檢查更新</button></div>
     </div>
@@ -4288,7 +4288,7 @@ function shareUrl() {
 }
 function openShareForm() {
   const url = shareUrl();
-  const text = `分享乙個有趣的東西「星塵夢汐」可記錄夢境和心情 ✨ 用這個連結打開你的個人魔法書，我們都會拿到一片神奇海螺碎片 🐚`;
+  const text = `分享乙個有趣的東西「星塵夢汐」可記錄夢境和心情、跟宇宙連線 ✨ 用這個連結打開你的個人魔法書，我們都會拿到一片神奇海螺碎片 🐚`;
   const m = modal(`
     <h3>🎁 分享給好友</h3>
     <p class="muted small">好友開啟個人魔法書後，雙方都能獲得一個隨機神奇海螺碎片。</p>
