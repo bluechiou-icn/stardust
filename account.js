@@ -24,7 +24,8 @@ const AcctCfg = {
 };
 
 const Account = {
-  enabled: null,   // null = 還沒問過後端
+  enabled: null,      // true/false = 後端明確回答過；null = 還不知道（沒問過，或問了但連不上）
+  probeFailed: false, // 上一次探測是「連不上」而不是「後端說沒開」——兩者要分開，見 accountCheckEnabled
   token: null,
   email: null,
   nickname: "",
@@ -99,15 +100,34 @@ const ERR_ZH = {
 };
 const errZh = e => ERR_ZH[e?.code] || "連線不順，請稍後再試";
 
-/* ---------- 啟用狀態 ---------- */
-async function accountCheckEnabled() {
-  if (Account.enabled !== null) return Account.enabled;
+/* ---------- 啟用狀態 ----------
+   ⚠️ 這裡踩過一個很難查的坑：舊版把「連不上後端」直接當成 enabled = false，
+   而且 false 會被永久快取（`if (Account.enabled !== null) return`）。
+   於是從手機桌面點開已安裝的 PWA、網路還沒真的接上時，開場那一發 status 失敗，
+   帳號區塊就整個變成「星塵帳號尚未啟用」——看起來就跟被登出了一樣，
+   而且網路恢復也不會自己好，只能把 App 整個關掉重開。
+   現在分成三種狀態：true／false（後端明確回答過）與 null（還不知道，下次會再問）。 */
+async function accountCheckEnabled({ force = false } = {}) {
+  if (Account.enabled !== null && !force) return Account.enabled;
   try {
     const r = await fetch(`${AcctCfg.api}?action=status`, { cache: "no-store" });
+    if (!r.ok) throw new Error(`http-${r.status}`);
     const j = await r.json();
     Account.enabled = !!j.enabled;
-  } catch { Account.enabled = false; }
+    Account.probeFailed = false;
+  } catch {
+    Account.probeFailed = true;   // enabled 保持原樣（多半是 null）→ 下次進設定或回到前景會再問
+  }
   return Account.enabled;
+}
+/* 連不上時不要就這樣算了：回到前景或網路回來時自己再問一次 */
+function retryAccountProbe() {
+  if (!Account.probeFailed || Account.enabled !== null) return;
+  accountCheckEnabled({ force: true }).then(refreshAccountUI).catch(() => {});
+}
+if (typeof window !== "undefined") {
+  addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") retryAccountProbe(); });
+  addEventListener("online", retryAccountProbe);
 }
 
 /* ---------- 合併：本機為主，雲端只補上本機沒有的 ---------- */
@@ -234,16 +254,30 @@ function refreshAccountUI() {
   const box = document.getElementById("account-box");
   if (!box) return;
 
-  if (Account.enabled === null) {
-    box.innerHTML = `<p class="muted small">載入中⋯</p>`;
-    accountCheckEnabled().then(refreshAccountUI);
-    return;
-  }
-  if (!Account.enabled) {
-    box.innerHTML = `
-      <p class="muted small">星塵帳號尚未啟用（需在 Vercel 設定 <code>ACCOUNT_KV_URL</code> 與
-      <code>ACCOUNT_KV_TOKEN</code>）。在那之前，請用下面的「匯出 JSON」自己留一份備份。</p>`;
-    return;
+  /* 順序很重要：只要這台裝置上還有 token，就一律先把帳號狀態畫出來。
+     舊版先看 Account.enabled，於是開 App 那一發 status 失敗時，
+     明明還登入著的人會看到「帳號尚未啟用」，等同被登出。 */
+  if (!accountSignedIn() && !Account.token) {
+    if (Account.enabled === null) {
+      if (Account.probeFailed) {
+        box.innerHTML = `<p class="muted small">連不上帳號伺服器，可能是網路還沒接上。</p>
+          <div class="btn-row"><button class="btn secondary" id="ac-retry">🔄 重試</button></div>`;
+        box.querySelector("#ac-retry").addEventListener("click", () => {
+          box.innerHTML = `<p class="muted small">重新連線中⋯</p>`;
+          accountCheckEnabled({ force: true }).then(refreshAccountUI);
+        });
+        return;
+      }
+      box.innerHTML = `<p class="muted small">載入中⋯</p>`;
+      accountCheckEnabled().then(refreshAccountUI);
+      return;
+    }
+    if (!Account.enabled) {
+      box.innerHTML = `
+        <p class="muted small">星塵帳號尚未啟用（需在 Vercel 設定 <code>ACCOUNT_KV_URL</code> 與
+        <code>ACCOUNT_KV_TOKEN</code>）。在那之前，請用下面的「匯出 JSON」自己留一份備份。</p>`;
+      return;
+    }
   }
 
   if (accountSignedIn()) {
@@ -259,7 +293,7 @@ function refreshAccountUI() {
         <button class="btn ghost" id="ac-logout">登出</button>
       </div>
       <div class="btn-row"><button class="btn ghost danger" id="ac-destroy">🗑 刪除雲端帳號</button></div>`;
-  } else if (Account.locked) {
+  } else if (Account.token) {          // 有 token、沒金鑰 ＝ 待解鎖（不看 Account.locked，以 token 為準）
     box.innerHTML = `
       <p class="small">🔒 <b>${esc(Account.email || "")}</b> 已登入這台裝置，但還沒解鎖</p>
       <p class="muted small">紀錄是用你的密碼加密的，金鑰不會存在裝置上；輸入一次密碼就能繼續同步。</p>
