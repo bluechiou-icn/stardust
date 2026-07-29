@@ -40,7 +40,8 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
       const out = await redis([["LRANGE", LIST_KEY, 0, MAX_RETURN - 1]]);
-      if (!out) return res.status(200).json({ ok: true, enabled: false, messages: [] });
+      // reason 只講「環境變數在不在」與「連不連得上」，不會洩漏 URL 或 token 本身
+      if (!out) return res.status(200).json({ ok: true, enabled: false, reason: "not-configured", messages: [] });
       const raw = out[0]?.result || [];
       // 只挑公開欄位出來，IP／UA 絕不外流
       const messages = raw.map(safeParse).filter(Boolean).map(m => ({
@@ -52,7 +53,9 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, enabled: true, messages });
     } catch (e) {
       console.warn("board read failed", e);
-      return res.status(200).json({ ok: true, enabled: false, messages: [] });
+      return res.status(200).json({
+        ok: true, enabled: false, reason: "kv-error", detail: String(e?.message || e).slice(0, 60), messages: [],
+      });
     }
   }
 

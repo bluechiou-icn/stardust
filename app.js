@@ -4,7 +4,7 @@
 
 /* 版本號：每次要讓使用者看到新東西時，這裡和 sw.js 的 CACHE 一起往上加。
    設定分頁會顯示這個號碼，回報問題時報這個數字最快能判斷對方在哪一版。 */
-const APP_VERSION = "2026.07.30b";
+const APP_VERSION = "2026.07.30c";
 
 /* ---------- 小工具 ---------- */
 const $ = (sel, el = document) => el.querySelector(sel);
