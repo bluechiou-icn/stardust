@@ -468,7 +468,22 @@ nav.tabbar::after {
   background: linear-gradient(150deg, rgba(150,90,240,.16), rgba(60,120,240,.12));
 }
 .shell-cosmic .shell-count { color: #b478ff; }
+/* 綜觀效應：從軌道上回望地球的那一眼，用地球緣的藍白弧光 */
+.shell-overview {
+  border-color: rgba(90,190,240,.55);
+  background: linear-gradient(150deg, rgba(60,170,240,.18), rgba(20,40,90,.14));
+}
+.shell-overview .shell-count { color: #5abef0; }
+/* 克爾黑旋：全系列最罕見。事件視界的黑，外緣一圈吸積盤的橘金 */
+.shell-kerr {
+  border-color: rgba(255,170,70,.6);
+  background: radial-gradient(circle at 50% 42%, rgba(8,6,14,.92) 34%, rgba(255,150,50,.22) 62%, rgba(120,40,140,.16) 100%);
+}
+.shell-kerr .shell-count { color: #ffaa46; }
+.shell-kerr .shell-name { color: #f3e6d2; }
 .shell-rare { box-shadow: 0 0 14px rgba(180,120,255,.25); }
+.shell-overview.shell-rare { box-shadow: 0 0 14px rgba(90,190,240,.28); }
+.shell-kerr.shell-rare { box-shadow: 0 0 18px rgba(255,160,60,.32); }
 
 /* 心情 5 Level 選擇列 */
 .mood-picker { display: flex; gap: 6px; margin: 10px 0; }
@@ -588,11 +603,85 @@ nav.tabbar::after {
 .summon-res h3 { margin: 10px 0 6px; }
 .summon-res.rare .sr-emoji { filter: drop-shadow(0 0 16px rgba(180,120,255,.85)); }
 .sr-rare { color: #b478ff; letter-spacing: .3em; font-size: .7rem; margin-bottom: 4px; }
+/* 克爾黑旋抽到時換成吸積盤的橘金，讓最罕見的那一顆一眼認得出來 */
+.summon-res.kerr .sr-emoji { filter: drop-shadow(0 0 22px rgba(255,160,60,.9)); }
+.summon-res.kerr .sr-rare { color: #ffaa46; }
 .sr-merged { color: var(--accent); font-size: .86rem; font-weight: 600; margin: 6px 0; }
 @keyframes sr-pop { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .altar-btn, .summon-res .sr-emoji, .broadcast .bc-icon { animation: none; }
 }
+
+/* 宇宙分頁的子分頁列：橫向可捲，手機上放得下五個 */
+.subtabs {
+  display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.subtabs::-webkit-scrollbar { display: none; }
+.subtab {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
+  background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line);
+  border-radius: 999px; padding: 7px 14px; font-size: .82rem; cursor: pointer;
+}
+.subtab.on { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); font-weight: 600; }
+.subtab span { font-size: .95rem; }
+
+/* 宇宙知識問答 */
+.quiz-stats { display: flex; gap: 8px; margin: 12px 0 6px; }
+.quiz-stats div {
+  flex: 1; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px 4px; text-align: center;
+}
+.quiz-stats b { display: block; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.quiz-stats span { font-size: .68rem; color: var(--ink-2); }
+.quiz-top { display: flex; justify-content: space-between; align-items: center; font-size: .74rem; color: var(--ink-2); }
+.quiz-cat { background: var(--surface-2); border-radius: 999px; padding: 2px 10px; }
+.quiz-bar { height: 3px; background: var(--surface-2); border-radius: 2px; margin: 8px 0 14px; overflow: hidden; }
+.quiz-bar i { display: block; height: 100%; background: var(--accent); transition: width .3s ease; }
+.quiz-q { margin: 0 0 14px; line-height: 1.55; text-wrap: balance; }
+.quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+.quiz-opt {
+  text-align: left; background: var(--surface-2); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  font-size: .88rem; line-height: 1.5; cursor: pointer;
+}
+.quiz-opt:disabled { cursor: default; }
+.quiz-opt.right { border-color: #58aa6e; background: rgba(88,170,110,.14); }
+.quiz-opt.wrong { border-color: #e86048; background: rgba(232,96,72,.14); }
+.quiz-opt.dim { opacity: .5; }
+.quiz-why {
+  margin: 14px 0 4px; padding: 12px 14px; border-radius: 12px;
+  background: var(--accent-soft); border: 1px solid var(--line); font-size: .84rem; line-height: 1.7;
+}
+.quiz-why p { margin: 6px 0 10px; color: var(--ink-2); }
+.quiz-result { text-align: center; padding: 6px 4px 2px; }
+.quiz-result .qr-emoji { font-size: 3rem; line-height: 1; }
+.quiz-result h3 { margin: 8px 0 6px; }
+.quiz-reward {
+  margin: 12px auto 2px; display: inline-block; padding: 8px 16px; border-radius: 14px;
+  background: var(--accent-soft); border: 1px solid var(--accent); font-size: .84rem; line-height: 1.6;
+}
+.quiz-review { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+.quiz-review-h { font-size: .8rem; color: var(--ink-2); letter-spacing: .1em; }
+.quiz-review-item { margin-top: 12px; font-size: .84rem; line-height: 1.65; }
+.quiz-review-item .qri-q { font-weight: 600; margin-bottom: 4px; }
+.quiz-review-item .qri-a { color: #58aa6e; margin-bottom: 4px; }
+.quiz-review-item .qri-why { color: var(--ink-2); }
+
+/* 有新版本的橫幅：壓在分頁列上方，不擋住底部導覽 */
+.update-bar {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(74px + env(safe-area-inset-bottom));
+  z-index: 150; display: flex; align-items: center; gap: 10px;
+  background: var(--surface-2); border: 1px solid var(--accent); border-radius: 14px;
+  padding: 8px 10px 8px 14px; font-size: .84rem; color: var(--ink);
+  box-shadow: 0 6px 24px rgba(0,0,0,.35); max-width: min(92vw, 420px);
+  animation: sr-pop .32s cubic-bezier(.2,1.4,.4,1);
+}
+.update-bar .upd-x {
+  background: none; border: 0; color: var(--ink-2); font-size: 1rem; line-height: 1;
+  padding: 4px 2px; cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) { .update-bar { animation: none; } }
 
 /* 站內通報卡片 */
 .broadcast { text-align: center; padding: 10px 4px 2px; }

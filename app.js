@@ -2,6 +2,10 @@
    全部資料存於裝置本機＆你的帳號（localStorage + IndexedDB），無後端、無隱私外漏問題。 */
 "use strict";
 
+/* 版本號：每次要讓使用者看到新東西時，這裡和 sw.js 的 CACHE 一起往上加。
+   設定分頁會顯示這個號碼，回報問題時報這個數字最快能判斷對方在哪一版。 */
+const APP_VERSION = "2026.07.29b";
+
 /* ---------- 小工具 ---------- */
 const $ = (sel, el = document) => el.querySelector(sel);
 const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
@@ -85,14 +89,18 @@ const STREAK_BADGES = [
   [3, "🌱 意念"], [7, "✨ 星芒"], [14, "🌙 星軌"], [30, "🌌 星座"], [60, "🌠 星河"], [100, "💫 星系"],
 ];
 
-/* 🐚 神奇海螺碎片：以自然元素（木火土金水）分類，另有極罕見的星際版；同色 5 顆合成一顆完整海螺 */
+/* 🐚 神奇海螺碎片：以自然元素（木火土金水）分類，另有三階星際版；同色 5 顆合成一顆完整海螺
+   權重總和 106，實際掉落率：五元素各 18.9%、量子糾纏 2.8%、綜觀效應 1.9%、克爾黑旋 0.9%。
+   克爾黑旋（克爾史瓦西黑洞）是全系列最罕見的一種。 */
 const SHELL_COLORS = [
   { key: "wood",  name: "聖木叢林", emoji: "🌲", weight: 20 },
   { key: "fire",  name: "緋紅火焰", emoji: "🔥", weight: 20 },
   { key: "earth", name: "蓋婭大地", emoji: "🌏", weight: 20 },
   { key: "metal", name: "金委員長", emoji: "🪙", weight: 20 },
   { key: "water", name: "湛藍海潮", emoji: "🌊", weight: 20 },
-  { key: "cosmic", name: "量子糾纏", emoji: "🪐", weight: 3, rare: true }, // 星際罕見版，約 2.9%
+  { key: "cosmic",   name: "量子糾纏", emoji: "🪐",  weight: 3, rare: true, rarity: "星際罕見" },
+  { key: "overview", name: "綜觀效應", emoji: "🚀",  weight: 2, rare: true, rarity: "深空稀有" },
+  { key: "kerr",     name: "克爾黑旋", emoji: "⚫️", weight: 1, rare: true, rarity: "事件視界・最罕見" },
 ];
 const SHELL_BY_KEY = Object.fromEntries(SHELL_COLORS.map(c => [c.key, c]));
 const SHELL_FRAGMENTS_PER_SHELL = 5;
@@ -179,7 +187,7 @@ function shellVaultHTML() {
       ${SHELL_COLORS.map(c => `
         <div class="shell-item shell-${c.key}${c.rare ? " shell-rare" : ""}">
           <span class="shell-emoji">${c.emoji}</span>
-          <span class="shell-name">${esc(c.name)}神奇海螺${c.rare ? "<i>罕見</i>" : ""}</span>
+          <span class="shell-name">${esc(c.name)}神奇海螺${c.rare ? `<i>${esc(c.rarity)}</i>` : ""}</span>
           <span class="shell-count">${s.frag[c.key] || 0}/${SHELL_FRAGMENTS_PER_SHELL}</span>
         </div>`).join("")}
     </div>
@@ -687,6 +695,117 @@ const NEWS = [
     ],
     source: "NASA Science — Webb Mission", url: "https://science.nasa.gov/missions/webb/nasas-webb-finds-clues-to-ancient-distant-origin-of-comet-3i-atlas/",
   },
+];
+
+/* ---------- 宇宙知識問答題庫 ----------
+   每題都對應一篇 App 內既有的天文知識文章（ref），答錯時可以直接跳去讀那篇。
+   a 是 opts 裡正確答案的索引；實際出題時選項會洗牌，背位置沒有用。
+   出題原則：只寫查得到、站得住腳的天文事實，寧可少也不要寫錯。 */
+const QUIZ_BANK = [
+  { id: "q-moonlight", cat: "月亮", ref: "moon-phases",
+    q: "月亮本身會發光嗎？",
+    opts: ["會，它是一顆很暗的恆星", "不會，月光是太陽光反射而來", "會，但只有滿月那幾天", "不會，月光是地球反射的光"],
+    a: 1, why: "月球本身不發光。我們看到的月光，是太陽照在月面之後反射回來的。" },
+  { id: "q-phase-cause", cat: "月亮", ref: "moon-phases",
+    q: "月亮會有盈虧變化，是因為什麼？",
+    opts: ["地球的影子遮住月亮", "月球被雲層遮擋的程度不同", "我們看到月球「被太陽照亮那一面」的角度改變", "月球本身的亮度會週期性變化"],
+    a: 2, why: "月球永遠有一半被太陽照亮。隨著它繞地球公轉，我們從地球看過去的角度改變，看到的亮面比例就跟著變。被地球影子遮住的那個叫月蝕，是另一回事。" },
+  { id: "q-synodic", cat: "月亮", ref: "moon-phases",
+    q: "從一次「朔」到下一次「朔」，平均要多久？",
+    opts: ["約 27.32 天", "約 29.53 天", "約 30.44 天", "剛好 30 天"],
+    a: 1, why: "這叫朔望月，平均 29.53 天。27.32 天是恆星月，指月球公轉一圈回到同一顆背景恆星的時間，兩者不一樣。" },
+  { id: "q-shuo", cat: "月亮", ref: "new-moon",
+    q: "天文學上的「朔」，指的是什麼時刻？",
+    opts: ["太陽與月球的黃道經度相差 0°", "月球離地球最近的時刻", "月亮完全看不見的整個晚上", "農曆每個月的初一凌晨"],
+    a: 0, why: "「朔」是太陽與月球黃經相差 0° 的那個瞬間，也就是新月。農曆把朔所在的那一天定為初一。" },
+  { id: "q-wang", cat: "月亮", ref: "full-moon",
+    q: "天文學上的「望」（滿月）是指？",
+    opts: ["月亮升起最早的那一天", "太陽與月球黃經相差 180°", "月球正好通過近地點", "農曆十五的整個晚上"],
+    a: 1, why: "「望」是太陽與月球黃經相差 180° 的瞬間，此時從地球看月面幾乎全被照亮。" },
+  { id: "q-15th", cat: "月亮", ref: "moon-phases",
+    q: "為什麼農曆十五不一定是滿月？",
+    opts: ["農曆的算法有誤差需要修正", "月球公轉速度不均，從朔走到望要 13.9 至 15.7 天不等", "滿月固定比農曆晚一天出現", "因為各地時區不同"],
+    a: 1, why: "月球軌道是橢圓的，近地點快、遠地點慢，所以每一輪從朔走到望所需時間都不一樣。若朔發生在初一稍晚的時刻，滿月就會落到十六甚至十七。" },
+  { id: "q-kepler2", cat: "月亮", ref: "supermoon",
+    q: "克卜勒第二定律描述的是什麼？",
+    opts: ["行星軌道是橢圓，太陽位於其中一個焦點", "行星與太陽的連線在相同時間掃過相同面積", "公轉週期平方正比於軌道半長軸立方", "所有行星都在同一個平面上運行"],
+    a: 1, why: "第二定律說的是「等時間掃過等面積」，結果就是近日點跑得快、遠日點跑得慢。第一定律講橢圓軌道，第三定律講週期與半長軸的關係。" },
+  { id: "q-supermoon", cat: "月亮", ref: "supermoon",
+    q: "超級月亮看起來比較大，是因為？",
+    opts: ["地球大氣把月亮放大了", "滿月剛好發生在月球接近近地點時", "月球那幾天真的膨脹了", "太陽照射角度讓它顯得更大"],
+    a: 1, why: "月球軌道是橢圓的，近地點比遠地點近了四萬多公里。滿月剛好碰上近地點附近，看起來就更大更亮。" },
+  { id: "q-tide", cat: "月亮", ref: "full-moon",
+    q: "海洋潮汐主要是什麼造成的？",
+    opts: ["地球自轉產生的離心力", "月球的引力，太陽也有較小的貢獻", "季風與洋流", "海水溫度的日夜變化"],
+    a: 1, why: "潮汐主要來自月球引力造成的潮汐力，太陽也有影響但大約只有月球的一半。日月連成一線時就是大潮。" },
+  { id: "q-solar-eclipse", cat: "天象", ref: "eclipse",
+    q: "日蝕只會發生在哪個月相？",
+    opts: ["新月", "上弦月", "滿月", "下弦月"],
+    a: 0, why: "日蝕是月球跑到太陽與地球之間、擋住太陽，這只有在新月時才可能發生。" },
+  { id: "q-lunar-eclipse", cat: "天象", ref: "eclipse",
+    q: "月蝕只會發生在哪個月相？",
+    opts: ["新月", "滿月", "上弦月", "任何月相都可能"],
+    a: 1, why: "月蝕是地球的影子落在月球上，必須地球位於太陽與月球之間，也就是滿月的時候。" },
+  { id: "q-why-not-monthly", cat: "天象", ref: "eclipse",
+    q: "既然每個月都有新月和滿月，為什麼不是每個月都有日蝕和月蝕？",
+    opts: ["因為地球大氣會擋住", "因為月球軌道面與黃道面有約 5 度夾角", "因為月球的距離每個月都不同", "因為需要地球自轉配合"],
+    a: 1, why: "月球軌道面與地球繞日的黃道面傾斜約 5 度，多數月份新月或滿月時月球會偏在黃道上方或下方，三者沒有排成一直線。" },
+  { id: "q-meteor-source", cat: "天象", ref: "meteor",
+    q: "流星雨的碎屑主要來自哪裡？",
+    opts: ["小行星帶的碰撞", "彗星（少數為小行星）沿軌道留下的塵埃帶", "月球表面被撞擊噴出的物質", "太陽風帶來的粒子"],
+    a: 1, why: "彗星接近太陽時會噴發物質，在軌道上留下一條塵埃帶。地球每年固定時間穿過它，就形成週期性的流星雨。" },
+  { id: "q-perseid", cat: "天象", ref: "meteor",
+    q: "英仙座流星雨的母彗星是哪一顆？",
+    opts: ["哈雷彗星", "斯威夫特－塔特爾彗星（109P）", "恩克彗星", "海爾－博普彗星"],
+    a: 1, why: "英仙座流星雨來自 109P/Swift–Tuttle 留下的塵埃帶，每年八月中旬達到極大。" },
+  { id: "q-halley-showers", cat: "天象", ref: "meteor",
+    q: "獵戶座流星雨與寶瓶座 η 流星雨，都是哪顆彗星的碎屑？",
+    opts: ["哈雷彗星", "斯威夫特－塔特爾彗星", "坦普爾－塔特爾彗星", "3I/ATLAS"],
+    a: 0, why: "地球一年會兩次穿過哈雷彗星的軌道塵埃帶，五月產生寶瓶座 η 流星雨，十月產生獵戶座流星雨。" },
+  { id: "q-radiant", cat: "天象", ref: "meteor",
+    q: "流星雨的「輻射點」是什麼意思？",
+    opts: ["流星真的從那一點噴出來", "碎屑平行進入大氣，透視效果讓流星看起來像從同一點射出", "那是母彗星此刻所在的位置", "那是流星燃燒最亮的高度"],
+    a: 1, why: "碎屑其實是平行前進的。就像筆直的鐵軌在遠方看起來會交會於一點，流星軌跡反向延長也會交於天球上的輻射點。" },
+  { id: "q-opposition", cat: "行星", ref: "opposition",
+    q: "「行星衝」指的是什麼狀態？",
+    opts: ["行星與太陽在天空中同一個方向", "地球位於太陽與該行星之間，行星整夜可見且最亮", "行星運行到軌道最遠處", "兩顆行星在天空中靠得很近"],
+    a: 1, why: "衝的時候地球夾在太陽與外行星之間，該行星日落時升起、日出時落下，整夜可見，而且距離最近、最亮。" },
+  { id: "q-no-opposition", cat: "行星", ref: "opposition",
+    q: "下列哪兩顆行星永遠不會發生「衝」？",
+    opts: ["火星與木星", "水星與金星", "土星與天王星", "天王星與海王星"],
+    a: 1, why: "水星和金星的軌道在地球內側，地球永遠不可能跑到它們與太陽之間，所以只有內行星特有的「合」，沒有衝。" },
+  { id: "q-venus-visibility", cat: "行星", ref: "conjunction",
+    q: "為什麼金星只會出現在黎明或黃昏，不會在半夜高掛？",
+    opts: ["它太暗了，半夜看不見", "它的軌道在地球內側，離太陽的角距有上限", "它自轉太慢", "它半夜會被地球擋住"],
+    a: 1, why: "金星軌道在地球內側，從地球看它與太陽的角距最多約 47 度，所以只能在日出前或日落後的低空出現，因此有「晨星／昏星」之稱。" },
+  { id: "q-conjunction", cat: "行星", ref: "conjunction",
+    q: "天文上的「合相」是指？",
+    opts: ["兩顆天體真的撞在一起", "兩顆天體在天空中看起來靠得很近", "行星運行到軌道最近點", "行星突然變亮"],
+    a: 1, why: "合相只是視線方向上的接近。兩顆天體實際距離仍然非常遙遠，只是剛好在我們的視線上排在一起。" },
+  { id: "q-retrograde", cat: "行星", ref: "retrograde",
+    q: "行星逆行時，它真的在軌道上倒退嗎？",
+    opts: ["是，它會短暫反向公轉", "不是，那是地球與該行星相對運動造成的視覺效果", "是，受到太陽磁場影響", "不是，那是望遠鏡的成像誤差"],
+    a: 1, why: "行星始終朝同一個方向公轉。當地球在內側超車外行星時，從地球看過去它就像在背景恆星之間短暫向後移動，這是相對運動的視覺效果。" },
+  { id: "q-parade", cat: "行星", ref: "planet-parade",
+    q: "所謂「行星連珠」，實際上是什麼情況？",
+    opts: ["行星在太空中排成一條直線", "數顆行星同時出現在天空同一側、看起來大致排成一線", "行星彼此的引力互相鎖定", "行星軌道暫時重疊"],
+    a: 1, why: "行星並沒有真的排成一直線。它們本來就都在接近黃道的平面上運行，只是剛好同一段時間都出現在天空同一側，看起來連成一串。" },
+  { id: "q-zodiac", cat: "文化", ref: "zodiac",
+    q: "占星使用的黃道十二星座，和天文學上太陽實際經過的星座，關係是？",
+    opts: ["完全一致", "因為歲差，兩者已經有明顯偏移", "占星多了一個星座", "天文學不承認星座的存在"],
+    a: 1, why: "地球自轉軸會緩慢繞行（歲差），兩千年下來，太陽在某個日期實際所在的星座已經和傳統占星差了大約一個。天文學上太陽實際還會經過蛇夫座。" },
+  { id: "q-3iatlas", cat: "天象", ref: "meteor",
+    q: "彗星 3I/ATLAS 之所以特別，是因為？",
+    opts: ["它是史上最亮的彗星", "它是第三顆確認來自太陽系之外的星際天體", "它即將撞上地球", "它是月球碎裂後形成的"],
+    a: 1, why: "3I/ATLAS 於 2025 年 7 月由 NASA 資助的智利 ATLAS 巡天計畫發現，是人類確認的第三顆星際彗星，帶著在別的恆星系統形成的化學成分。" },
+  { id: "q-overview", cat: "文化", ref: "zodiac",
+    q: "太空人常提到的「綜觀效應」（Overview Effect）是指？",
+    opts: ["在無重力環境下產生的暈眩", "從太空看見地球全貌後，對生命與國界產生的認知轉變", "一種望遠鏡的廣角成像技術", "同時觀測多顆行星的方法"],
+    a: 1, why: "綜觀效應是許多太空人描述過的心理經驗：從軌道上看見沒有國界、只被一層薄薄大氣包裹的地球之後，對人類處境產生的深刻視角轉變。" },
+  { id: "q-kerr", cat: "文化", ref: "zodiac",
+    q: "「克爾黑洞」與「史瓦西黑洞」最主要的差別是什麼？",
+    opts: ["克爾黑洞會旋轉，史瓦西黑洞不旋轉", "克爾黑洞比較大", "史瓦西黑洞不會吸收光", "克爾黑洞位於銀河系中心"],
+    a: 0, why: "史瓦西解描述的是不旋轉、不帶電的黑洞；克爾解描述的是會旋轉的黑洞。現實中的黑洞由旋轉的恆星塌縮而成，因此幾乎都帶有自轉。" },
 ];
 
 /* ---------- 星塵專欄（Blue 親筆原創，中英對照） ----------
@@ -3341,7 +3460,7 @@ function renderSummon() {
         ${SHELL_COLORS.map(c => `
           <div class="shell-item shell-${c.key}${c.rare ? " shell-rare" : ""}">
             <span class="shell-emoji">${c.emoji}</span>
-            <span class="shell-name">${esc(c.name)}${c.rare ? "<i>罕見</i>" : ""}</span>
+            <span class="shell-name">${esc(c.name)}${c.rare ? `<i>${esc(c.rarity)}</i>` : ""}</span>
             <span class="shell-count">${s.frag[c.key] || 0}/${SHELL_FRAGMENTS_PER_SHELL}</span>
           </div>`).join("")}
       </div>
@@ -3385,9 +3504,9 @@ function showSummonResult(miss, result) {
   const info = SHELL_BY_KEY[result.key];
   const s = shellState();
   const m = modal(`
-    <div class="summon-res ${info.rare ? "rare" : ""}">
+    <div class="summon-res ${info.rare ? "rare" : ""} ${info.key === "kerr" ? "kerr" : ""}">
       <div class="sr-emoji">${info.emoji}</div>
-      ${info.rare ? `<p class="sr-rare">✦ 星際罕見 ✦</p>` : ""}
+      ${info.rare ? `<p class="sr-rare">✦ ${esc(info.rarity)} ✦</p>` : ""}
       <h3>${esc(info.name)}神奇海螺碎片 ×1</h3>
       ${result.merged
         ? `<p class="sr-merged">🎉 碎片集滿 ${SHELL_FRAGMENTS_PER_SHELL} 片，合成一顆完整的${info.emoji}${esc(info.name)}神奇海螺！</p>`
@@ -3402,40 +3521,252 @@ function showSummonResult(miss, result) {
   $("#sr-again", m)?.addEventListener("click", () => { m.remove(); doSummon(); });
 }
 
-/* ================= 宇宙（天象・新聞・天文知識） ================= */
+/* ================= 宇宙（天象・專欄・新聞・知識・測驗） =================
+   五個區塊改用子分頁呈現，而不是四張卡片一路往下疊。
+   理由：底部分頁列已經有九顆按鈕，手機上再加一顆會擠到很難點；
+   而專欄文章之後會越來越多，擺在最下面等於沒人看得到。
+   選了哪個子分頁記在 settings.cosmosSub，下次回來還在同一頁。 */
+const COSMOS_SUBS = [
+  { key: "sky",    icon: "✨", label: "天象" },
+  { key: "column", icon: "🖋", label: "專欄" },
+  { key: "news",   icon: "📰", label: "新聞" },
+  { key: "know",   icon: "📖", label: "知識" },
+  { key: "quiz",   icon: "🧪", label: "測驗" },
+];
+const cosmosSub = () => {
+  const k = store.data.settings.cosmosSub;
+  return COSMOS_SUBS.some(s => s.key === k) ? k : "sky";
+};
+
 function renderCosmos() {
   const el = $("#view-cosmos");
-  const events = allUpcomingEvents(120);
+  const sub = cosmosSub();
   el.innerHTML = `
+    <div class="subtabs" role="tablist">${COSMOS_SUBS.map(s => `
+      <button type="button" class="subtab ${s.key === sub ? "on" : ""}" role="tab"
+        aria-selected="${s.key === sub}" data-sub="${s.key}"><span>${s.icon}</span>${s.label}</button>`).join("")}</div>
+    <div id="cosmos-body"></div>`;
+  $$(".subtab", el).forEach(b => b.addEventListener("click", () => {
+    store.data.settings.cosmosSub = b.dataset.sub;
+    store.save();
+    renderCosmos();
+    el.scrollIntoView({ block: "start" });
+  }));
+  /* 子分頁列會橫向捲動，選到最右邊的「測驗」時它會被切一半。
+     block:"nearest" 是刻意的：只橫向捲那一列，不要順便把整頁往下拉。 */
+  $(".subtab.on", el)?.scrollIntoView({ inline: "center", block: "nearest" });
+  ({ sky: renderCosmosSky, column: renderCosmosColumn, news: renderCosmosNews,
+     know: renderCosmosKnow, quiz: renderCosmosQuiz }[sub])();
+}
+
+function renderCosmosSky() {
+  const events = allUpcomingEvents(120);
+  $("#cosmos-body").innerHTML = `
     <div class="card">
       <h2>✨ 天象與月相節點 <span class="sub">未來 120 天</span></h2>
-      <p class="muted small">日蝕／流星雨等可見性視地區與天候而定。新月・滿月由月相演算法自動計算。</p>
+      <p class="muted small">日蝕／流星雨等可見性視地區與天候而定。新月・滿月依真實朔望時刻計算，並以你裝置所在時區顯示。</p>
       ${events.map(eventRowHTML).join("") || `<p class="muted">近期無事件</p>`}
       <div class="btn-row"><button class="btn ghost" id="ev-add">＋ 自訂天象／儀式提醒（例：行星連珠）</button></div>
       <div class="btn-row"><button class="btn secondary" id="ev-ics">📆 匯出天象行事曆（.ics，含手機原生提醒）</button></div>
-    </div>
+    </div>`;
+  const el = $("#view-cosmos");
+  bindEventRows(el);
+  $("#ev-add").addEventListener("click", openCustomEventForm);
+  $("#ev-ics").addEventListener("click", exportICS);
+}
+
+function renderCosmosColumn() {
+  $("#cosmos-body").innerHTML = `
     <div class="card">
       <h2>🖋 星塵專欄 <span class="sub">Blue・中英對照</span></h2>
       <p class="muted small">星塵夢汐的原創天象文章。點開先讀中文，往下接續英文（英式）。</p>
       <div id="col-list">${COLUMN.map(columnRowHTML).join("")}</div>
-    </div>
+    </div>`;
+  $$("#col-list .art-row").forEach(r =>
+    r.addEventListener("click", () => openArticle(columnById(r.dataset.id), "zh")));
+}
+
+function renderCosmosNews() {
+  $("#cosmos-body").innerHTML = `
     <div class="card">
       <h2>📰 宇宙新聞 <span class="sub">NASA・每週更新</span></h2>
       <p class="muted small" id="news-note">內容取自 NASA。點文章可切換中／英。</p>
       <div id="news-list">${liveNews().map(newsRowHTML).join("")}</div>
-    </div>
+    </div>`;
+  bindNewsRows($("#view-cosmos"));
+  refreshSpaceNews();   // 背景抓當週最新，回來再換掉清單
+}
+
+function renderCosmosKnow() {
+  $("#cosmos-body").innerHTML = `
     <div class="card">
       <h2>📖 天文知識 <span class="sub">中英雙語</span></h2>
-      <p class="muted small">Star Walk 風格的天文入門文章，點開可切換中／英。</p>
+      <p class="muted small">Star Walk 風格的天文入門文章，點開可切換中／英。讀完可以到「測驗」考自己。</p>
       <div id="know-list">${KNOWLEDGE.map(knowRowHTML).join("")}</div>
     </div>`;
-  bindEventRows(el);
-  $("#ev-add").addEventListener("click", openCustomEventForm);
-  $("#ev-ics").addEventListener("click", exportICS);
-  bindNewsRows(el);
-  refreshSpaceNews();   // 背景抓當週最新，回來再換掉清單
-  $$("#col-list .art-row", el).forEach(r => r.addEventListener("click", () => openArticle(columnById(r.dataset.id), "zh")));
-  $$("#know-list .art-row", el).forEach(r => r.addEventListener("click", () => openArticle(KNOWLEDGE.find(k => k.id === r.dataset.id), "zh")));
+  $$("#know-list .art-row").forEach(r =>
+    r.addEventListener("click", () => openArticle(KNOWLEDGE.find(k => k.id === r.dataset.id), "zh")));
+}
+
+/* ---------- 宇宙知識問答 ----------
+   每輪從題庫隨機抽 QUIZ_PER_ROUND 題，選項也洗牌。
+   獎勵刻意設得很克制：每天「第一次」全對才給一片碎片，其餘純練習。
+   這樣一天最多多出一片，不會把召喚祭壇的經濟弄壞，但仍有回來玩的理由。 */
+const QUIZ_PER_ROUND = 5;
+let _quiz = null;   // 進行中的這一輪；null = 還沒開始
+
+function quizState() {
+  const st = store.data.settings;
+  st.quiz ||= {};
+  const q = st.quiz;
+  q.plays ||= 0; q.best ||= 0; q.totalCorrect ||= 0; q.totalAnswered ||= 0;
+  q.lastRewardDate ||= "";
+  return q;
+}
+/* Fisher-Yates，就地洗牌 */
+function shuffled(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function renderCosmosQuiz() {
+  if (_quiz) return drawQuiz();
+  const q = quizState();
+  const gotToday = q.lastRewardDate === todayStr();
+  const acc = q.totalAnswered ? Math.round(q.totalCorrect / q.totalAnswered * 100) : null;
+  $("#cosmos-body").innerHTML = `
+    <div class="card">
+      <h2>🧪 宇宙知識問答 <span class="sub beta-tag">測試中</span></h2>
+      <p class="muted small">
+        每輪 ${QUIZ_PER_ROUND} 題，從 ${QUIZ_BANK.length} 題裡隨機抽，選項順序也會打亂。
+        答完每題都會告訴你為什麼，還能直接跳去讀對應的那篇天文知識。
+      </p>
+      <div class="quiz-stats">
+        <div><b>${q.plays}</b><span>已完成</span></div>
+        <div><b>${q.best}/${QUIZ_PER_ROUND}</b><span>最佳</span></div>
+        <div><b>${acc === null ? "—" : acc + "%"}</b><span>正確率</span></div>
+      </div>
+      <p class="muted small">${gotToday
+        ? "🐚 今天的碎片已經領過了。現在是純練習，不會再掉碎片，但成績照樣記錄。"
+        : `🐚 今天第一次答對全部 ${QUIZ_PER_ROUND} 題，可以獲得一片隨機神奇海螺碎片。`}</p>
+      <div class="btn-row"><button class="btn" id="quiz-start">🚀 開始測驗</button></div>
+    </div>`;
+  $("#quiz-start").addEventListener("click", () => {
+    _quiz = {
+      qs: shuffled(QUIZ_BANK).slice(0, QUIZ_PER_ROUND).map(item => ({
+        ...item,
+        // 選項連同「是不是正解」一起洗，之後就不必再對照索引
+        shuffled: shuffled(item.opts.map((text, i) => ({ text, correct: i === item.a }))),
+      })),
+      i: 0, picked: null, score: 0, wrong: [],
+    };
+    drawQuiz();
+  });
+}
+
+function drawQuiz() {
+  const st = _quiz;
+  if (st.i >= st.qs.length) return drawQuizResult();
+  const item = st.qs[st.i];
+  const answered = st.picked !== null;
+  $("#cosmos-body").innerHTML = `
+    <div class="card quiz-card">
+      <div class="quiz-top">
+        <span class="quiz-progress">第 ${st.i + 1} / ${st.qs.length} 題</span>
+        <span class="quiz-cat">${esc(item.cat)}</span>
+      </div>
+      <div class="quiz-bar"><i style="width:${st.i / st.qs.length * 100}%"></i></div>
+      <h3 class="quiz-q">${esc(item.q)}</h3>
+      <div class="quiz-opts">
+        ${item.shuffled.map((o, i) => {
+          let cls = "";
+          if (answered) {
+            if (o.correct) cls = "right";
+            else if (i === st.picked) cls = "wrong";
+            else cls = "dim";
+          }
+          return `<button type="button" class="quiz-opt ${cls}" data-i="${i}" ${answered ? "disabled" : ""}>
+            ${esc(o.text)}${answered && o.correct ? " ✓" : ""}${answered && i === st.picked && !o.correct ? " ✗" : ""}
+          </button>`;
+        }).join("")}
+      </div>
+      ${answered ? `
+        <div class="quiz-why">
+          <b>${item.shuffled[st.picked].correct ? "答對了 ✨" : "再看一次 👀"}</b>
+          <p>${esc(item.why)}</p>
+          ${KNOWLEDGE.find(k => k.id === item.ref)
+            ? `<button type="button" class="btn small secondary" id="quiz-read">📖 讀這篇：${esc(KNOWLEDGE.find(k => k.id === item.ref).zhTitle)}</button>`
+            : ""}
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="quiz-next">${st.i + 1 >= st.qs.length ? "看結果" : "下一題"}</button>
+        </div>` : ""}
+      <div class="btn-row"><button class="btn ghost small" id="quiz-quit">結束這一輪</button></div>
+    </div>`;
+
+  $$(".quiz-opt").forEach(b => b.addEventListener("click", () => {
+    if (st.picked !== null) return;
+    st.picked = +b.dataset.i;
+    const ok = item.shuffled[st.picked].correct;
+    if (ok) st.score++; else st.wrong.push(item);
+    const qs = quizState();
+    qs.totalAnswered++; if (ok) qs.totalCorrect++;
+    store.save();
+    drawQuiz();
+  }));
+  $("#quiz-read")?.addEventListener("click", () => openArticle(KNOWLEDGE.find(k => k.id === item.ref), "zh"));
+  $("#quiz-next")?.addEventListener("click", () => { st.i++; st.picked = null; drawQuiz(); });
+  $("#quiz-quit").addEventListener("click", () => { _quiz = null; renderCosmosQuiz(); });
+}
+
+function drawQuizResult() {
+  const st = _quiz;
+  const q = quizState();
+  q.plays++;
+  if (st.score > q.best) q.best = st.score;
+
+  // 每天第一次全對才給碎片，避免一直重刷把海螺經濟灌爆
+  let reward = null;
+  if (st.score === st.qs.length && q.lastRewardDate !== todayStr()) {
+    q.lastRewardDate = todayStr();
+    reward = awardShellFragment();
+  }
+  store.save();
+
+  const perfect = st.score === st.qs.length;
+  $("#cosmos-body").innerHTML = `
+    <div class="card quiz-card">
+      <div class="quiz-result">
+        <div class="qr-emoji">${perfect ? "🌟" : st.score >= 3 ? "✨" : "🌙"}</div>
+        <h3>${st.score} / ${st.qs.length} 題答對</h3>
+        <p class="muted">${perfect ? "全對，辣妹是天文系的吧。"
+          : st.score >= 3 ? "不錯，錯的那幾題點下去讀一下就記起來了。"
+          : "沒關係，這一輪就當導覽，把解析讀完就賺到了。"}</p>
+        ${reward ? `<p class="quiz-reward">🐚 獲得「${SHELL_BY_KEY[reward.key].emoji}${esc(SHELL_BY_KEY[reward.key].name)}碎片」×1${
+          reward.merged ? `<br>✨ 碎片集滿，合成一顆完整的神奇海螺！` : ""}</p>` : ""}
+        ${!reward && perfect ? `<p class="muted small">今天的碎片已經領過了，成績仍然記錄。</p>` : ""}
+      </div>
+      ${st.wrong.length ? `
+        <div class="quiz-review">
+          <b class="quiz-review-h">答錯的題目</b>
+          ${st.wrong.map(w => `
+            <div class="quiz-review-item">
+              <p class="qri-q">${esc(w.q)}</p>
+              <p class="qri-a">正解：${esc(w.opts[w.a])}</p>
+              <p class="qri-why">${esc(w.why)}</p>
+            </div>`).join("")}
+        </div>` : ""}
+      <div class="btn-row">
+        <button class="btn" id="quiz-again">🔁 再來一輪</button>
+        <button class="btn secondary" id="quiz-done">回到測驗首頁</button>
+      </div>
+    </div>`;
+  $("#quiz-again").addEventListener("click", () => { _quiz = null; renderCosmosQuiz(); $("#quiz-start")?.click(); });
+  $("#quiz-done").addEventListener("click", () => { _quiz = null; renderCosmosQuiz(); });
 }
 
 /* ---------- 每週更新的宇宙新聞 ----------
@@ -3792,8 +4123,17 @@ function renderSettings() {
       <p class="muted small">結束今天的紀錄時，把魔法書闔上重新封印，下次再由你親自開啟。</p>
       <div class="btn-row"><button class="btn secondary" id="seal-btn">🔒 封印魔法書 ✡️</button></div>
     </div>
+    <div class="card">
+      <h2>ℹ️ 版本 <span class="sub">${esc(APP_VERSION)}</span></h2>
+      <p class="muted small">
+        回報問題時，把這個版本號一起告訴 Blue，最快能判斷你手上是不是最新版。
+        星塵夢汐更新後不需要重新安裝，下次打開會自動抓新版；若一直沒變，按下面這顆。
+      </p>
+      <div class="btn-row"><button class="btn secondary" id="ver-check">🔄 立即檢查更新</button></div>
+    </div>
     <p class="disclaimer">星塵夢汐僅供自我紀錄，非供替代專業醫療，不提供分析治療。</p>`;
   renderBoard();
+  $("#ver-check").addEventListener("click", forceUpdateCheck);
   $("#bd-send").addEventListener("click", sendBoardMessage);
   $("#share-btn").addEventListener("click", openShareForm);
   $("#seal-btn").addEventListener("click", () => sealBookFX());
@@ -4742,8 +5082,113 @@ function showBroadcast(b) {
     claim();
     const art = columnById(b.articleId);
     if (!art) return;
+    // 先把宇宙分頁切到「專欄」子分頁，關掉文章之後才找得回它
+    store.data.settings.cosmosSub = "column";
+    store.save();
     switchTab("cosmos");
     setTimeout(() => openBilingualArticle(art), 260);
+  });
+}
+
+/* ---------- Service Worker 與版本更新 ----------
+   要解決的問題：改版推上線之後，已經把 App 裝到桌面的人可能好幾天還停在舊版，
+   而且「清除資料、移除重裝」也不一定有用——因為舊的 Service Worker 還在服役，
+   使用者根本不知道自己看到的是哪一版。
+
+   三道保險：
+   1. 每次啟動、以及每次從背景切回前景時，主動叫 reg.update() 去問伺服器有沒有新版。
+   2. 新版 SW 接手（controllerchange）時跳一條橫幅，讓使用者自己按下重新載入。
+      不自動 reload：使用者可能正在打日記打到一半，畫面被刷掉等於資料沒了。
+   3. 設定分頁顯示版本號 ＋ 一顆「立即檢查更新」，回報問題時能立刻確認版本。 */
+let _swReg = null;
+let _updateShown = false;
+let _lastUpdateCheck = 0;
+
+function initServiceWorker() {
+  if (!("serviceWorker" in navigator) || location.protocol !== "https:") return;
+
+  /* 這一次載入時，頁面本來就已經被某個 SW 接管嗎？
+     首次安裝時是 null，SW 裝好 claim 之後 controllerchange 一樣會觸發，
+     若在事件裡才去讀 controller 就永遠是「有」，會對第一次來的人誤報有新版。 */
+  const hadController = !!navigator.serviceWorker.controller;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController) return;   // 首次安裝，不是更新
+    showUpdateBanner();
+  });
+
+  /* 觸發註冊，但「不等」它回傳的 promise。
+     實測（Chromium）：使用者回訪、頁面已被 SW 接管時，register() 的 promise
+     會被排到很後面甚至遲遲不 resolve；舊寫法把整套更新偵測都掛在那個 .then()
+     裡面，於是永遠拿不到 registration，更新提示形同不存在。
+     改成用 navigator.serviceWorker.ready 拿 registration，它每次都會即時回應。 */
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+
+  navigator.serviceWorker.ready.then(async reg => {
+    _swReg = reg;
+    // 已在服役中又出現待命的新版本（例如另一個分頁先抓到了）
+    if (reg.waiting && hadController) showUpdateBanner();
+    reg.addEventListener("updatefound", () => {
+      const sw = reg.installing;
+      if (!sw) return;
+      sw.addEventListener("statechange", () => {
+        if (sw.state === "installed" && hadController) showUpdateBanner();
+      });
+    });
+    checkForUpdate();
+    // Android Chrome：App 沒開也能背景檢查天象（best-effort，隨使用頻率調度）
+    try {
+      if ("periodicSync" in reg) {
+        const st = await navigator.permissions.query({ name: "periodic-background-sync" });
+        if (st.state === "granted") await reg.periodicSync.register("astro-check", { minInterval: 12 * 60 * 60 * 1000 });
+      }
+    } catch { /* iOS 或未安裝：改用 .ics 行事曆提醒 */ }
+  }).catch(() => {});
+
+  // 從背景切回前景時再問一次（裝成 App 的人往往好幾天不會真的「重新開啟」）
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") checkForUpdate();
+  });
+}
+
+/* 節流過的更新檢查：最快 5 分鐘問一次，避免頻繁切換分頁一直打伺服器 */
+function checkForUpdate({ force = false } = {}) {
+  if (!_swReg) return Promise.resolve(false);
+  const now = Date.now();
+  if (!force && now - _lastUpdateCheck < 5 * 60 * 1000) return Promise.resolve(false);
+  _lastUpdateCheck = now;
+  return _swReg.update().then(() => true).catch(() => false);
+}
+
+async function forceUpdateCheck() {
+  if (!("serviceWorker" in navigator) || location.protocol !== "https:") {
+    return toast("這個環境不支援自動更新，請重新整理頁面");
+  }
+  if (!_swReg) return toast("更新服務尚未就緒，請稍後再試");
+  toast("正在向伺服器確認版本⋯");
+  await checkForUpdate({ force: true });
+  // update() 回來時若真有新版，controllerchange／updatefound 會接手跳橫幅
+  setTimeout(() => { if (!_updateShown) toast(`目前已是最新版 ${APP_VERSION} ✨`); }, 2500);
+}
+
+function showUpdateBanner() {
+  if (_updateShown) return;
+  _updateShown = true;
+  const bar = document.createElement("div");
+  bar.className = "update-bar";
+  bar.innerHTML = `
+    <span>✨ 星塵夢汐有新版本了</span>
+    <button type="button" class="btn small" id="upd-reload">立即更新</button>
+    <button type="button" class="upd-x" id="upd-later" aria-label="稍後再說">✕</button>`;
+  document.body.appendChild(bar);
+  $("#upd-reload", bar).addEventListener("click", () => {
+    // 先把手上的資料落地，再重新載入，避免使用者剛打的東西沒存到
+    try { store.save(); } catch { /* 存不了也還是要讓他更新 */ }
+    location.reload();
+  });
+  $("#upd-later", bar).addEventListener("click", () => {
+    bar.remove();
+    _updateShown = false;   // 讓下次啟動還會再提醒一次
   });
 }
 
@@ -4781,15 +5226,5 @@ addEventListener("appinstalled", () => {
   if (typeof initAccount === "function") initAccount().catch(() => {});
   // 有好友用了我的邀請碼 → 把累積的碎片領回來（延後一點，不跟開場動畫搶）
   setTimeout(() => { collectReferralRewards().catch(() => {}); }, 4000);
-  if ("serviceWorker" in navigator && location.protocol === "https:") {
-    navigator.serviceWorker.register("sw.js").then(async reg => {
-      // Android Chrome：App 沒開也能背景檢查天象（best-effort，隨使用頻率調度）
-      try {
-        if ("periodicSync" in reg) {
-          const st = await navigator.permissions.query({ name: "periodic-background-sync" });
-          if (st.state === "granted") await reg.periodicSync.register("astro-check", { minInterval: 12 * 60 * 60 * 1000 });
-        }
-      } catch { /* iOS 或未安裝：改用 .ics 行事曆提醒 */ }
-    }).catch(() => {});
-  }
+  initServiceWorker();
 })();
