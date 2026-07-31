@@ -4319,14 +4319,14 @@ function renderSettings() {
       <p class="muted small">是否於每次開啟 App 時，先呈現你的 Book of Shadows。</p>
       <div class="btn-row">
         <button class="btn secondary" id="book-toggle">${store.data.settings.skipBook ? "想打開魔法書 📖" : "下次直接進首頁🆗️"}</button>
-        <button class="btn ghost" id="book-preview">✡️重新封印魔法書</button>
+        <button class="btn ghost" id="book-preview">🔜換一本魔法書</button>
       </div>
     </div>
     <div class="card">
       <h2>🐰 星塵夢汐帳號 <span class="sub beta-tag">測試中</span></h2>
-      <p class="muted small">用 email＋密碼建立帳號，紀錄會<b>加密</b>後存進雲端；換手機、清掉瀏覽器資料、重新安裝New Version，登入後回復紀錄；所有資料都僅存在您的雲端帳號，後台完全不會留存，這些私密的紀錄，只有你自己看得見</p>
+      <p class="muted small">用 email＋密碼建立帳號，同步紀錄會<b>加密</b>後存進雲端；換手機、清掉瀏覽器資料、重新安裝APP，登入後可回復紀錄；所有資料都僅存在您的雲端帳號，後台完全不會留存，這些私密的紀錄，只有你自己看得見</p>
       <div class="warn-box">⚠️ <b>帳號同步仍在測試中</b>，請務必定期用下方「🔐 資料（本機儲存）」的<b>  匯出 JSON</b> 自己留一份備份。
-<br>只依賴雲端偏危險，因金鑰只存在你的手機裡，系統也不會留存你的資料（Blue根本沒有租伺服器，想存也存不了）<b>整個宇宙都不曉得、也無法協助找回你的密碼</b>，如果不小心忘記了，花時間寫下的資料都會掉進黑洞（但手機已匯出紀錄仍在，在APP正式上架前，每天寫完來按一下匯出，會是最Safe的）。</div>
+<br>只依賴雲端偏危險，因金鑰只存在你的手機裡，系統也不會留存你的資料（Blue根本沒有租伺服器，想存也存不了）；<b>因此整個宇宙都不曉得、也無法協助找回你的密碼</b>，如果不小心忘記了，花時間寫下的資料都會掉進黑洞（但手機已匯出檔案仍存在，在APP正式上架前，每天寫完來按一下匯出，會是最Safe的）。</div>
       <div id="account-box"><p class="muted small">載入中⋯</p></div>
     </div>
     <div class="card">
