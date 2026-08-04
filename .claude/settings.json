@@ -2,7 +2,12 @@
   "permissions": {
     "deny": [
       "mcp__Claude_Code_Remote__send_later",
-      "mcp__Claude_Code_Remote__create_trigger"
+      "mcp__Claude_Code_Remote__create_trigger",
+      "mcp__Claude_Code_Remote__fire_trigger",
+      "mcp__Claude_Code_Remote__update_trigger",
+      "ScheduleWakeup",
+      "CronCreate",
+      "PushNotification"
     ]
   }
 }
