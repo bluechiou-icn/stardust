@@ -4,7 +4,7 @@
 
 /* 版本號：每次要讓使用者看到新東西時，這裡和 sw.js 的 CACHE 一起往上加。
    設定分頁會顯示這個號碼，回報問題時報這個數字最快能判斷對方在哪一版。 */
-const APP_VERSION = "2026.07.30c";
+const APP_VERSION = "2026.08.06";
 
 /* ---------- 小工具 ---------- */
 const $ = (sel, el = document) => el.querySelector(sel);
@@ -1050,12 +1050,9 @@ const COLUMN = [
 ];
 const columnById = id => COLUMN.find(c => c.id === id);
 
-/* ---------- 站內通報（新文章／公告推播） ----------
-   本 App 沒有推播伺服器，也沒有向使用者收集 push subscription，所以走兩條路：
-   1) 已把 App 安裝在 Android 桌面、且允許通知的人 → sw.js 的 periodicsync
-      會在背景跳系統通知（和天象提醒同一條管線）。
-   2) 其他所有人（含 iOS）→ 下次打開 App 時，這裡跳出通報卡片。
-   兩條路都導向同一個領取動作，領過就寫進 settings.broadcasts，不會再跳。 */
+/* ---------- 站內通報（新文章／公告） ----------
+   本 App 沒有推播伺服器，也不使用背景推播——App 沒開就不會跳出任何系統通知。
+   下次打開 App 時，這裡跳出通報卡片；領過就寫進 settings.broadcasts，不會再跳。 */
 const BROADCASTS = [
   {
     id: "2026-07-28-column-01", date: "2026-07-28", icon: "🌕",
@@ -5401,13 +5398,10 @@ function initServiceWorker() {
       });
     });
     checkForUpdate();
-    // Android Chrome：App 沒開也能背景檢查天象（best-effort，隨使用頻率調度）
+    // App 沒開時不再送任何系統通知：主動撤銷舊版留下的背景排程（若有）
     try {
-      if ("periodicSync" in reg) {
-        const st = await navigator.permissions.query({ name: "periodic-background-sync" });
-        if (st.state === "granted") await reg.periodicSync.register("astro-check", { minInterval: 12 * 60 * 60 * 1000 });
-      }
-    } catch { /* iOS 或未安裝：改用 .ics 行事曆提醒 */ }
+      if ("periodicSync" in reg) await reg.periodicSync.unregister("astro-check");
+    } catch { /* 不支援此 API 的瀏覽器 */ }
   }).catch(() => {});
 
   // 從背景切回前景時再問一次（裝成 App 的人往往好幾天不會真的「重新開啟」）

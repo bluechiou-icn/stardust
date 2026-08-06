@@ -94,14 +94,18 @@ commit（2026-07-28 就這樣把已上線的專欄整個滾掉，表現出來是
 
 ## 站內通報怎麼送達
 
-沒有推播伺服器，也沒有跟使用者收 push subscription，所以走兩條路：已把 App 裝在
-Android 桌面且允許通知的人，由 `sw.js` 的 `periodicsync` 在背景跳系統通知；其他人
-（含全部 iOS）下次打開 App 時跳出通報卡片。兩條路都導到同一個領取動作，領過的 id
-會寫進 `settings.broadcasts`，不會重複發。
+沒有推播伺服器，也沒有跟使用者收 push subscription。**App 沒開就不會跳出任何系統通知**——
+2026-08-06 之前 `sw.js` 有一段 `periodicsync` 背景推播（Android 已安裝 PWA 會在 App 關閉
+時被瀏覽器排程喚醒跳系統通知），因為沒有已讀去重（判斷式在 Service Worker context 讀不到
+`localStorage` 裡的 `settings.broadcasts`），同一則通報會在背景重複跳出，已整支移除。
+現在唯一的送達路徑是：下次打開 App 時跳出通報卡片，含全部 iOS 與 Android。
+`app.js` 啟動時會主動 `periodicSync.unregister("astro-check")`，撤銷舊版留在使用者裝置上
+的背景排程。
 
 要做真正的伺服器推播是另一件工程：VAPID 金鑰（私鑰只放 Vercel 環境變數）、
 訂閱清單存 Upstash Redis、一支需要驗證的廣播 API、`sw.js` 補 `push` 事件，
-再加一段請求通知權限的流程；iOS 只有「加到主畫面」的 PWA 收得到。
+再加一段請求通知權限的流程；iOS 只有「加到主畫面」的 PWA 收得到。做的話務必連同
+訂閱時的使用者同意流程與可退訂入口一起做，不要只做送出端。
 
 ## 部署（Vercel）
 
