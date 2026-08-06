@@ -1,6 +1,6 @@
 # AGENT_STATUS.md — ÆTHNOUS Project Network
 
-**Compiled:** 2026-07-23 · **Last updated:** 2026-07-30（動態月相抽屜） · **Compiled by:** Claude (session `project-status-compilation`) · **For:** any AI agent (Claude, Gemini, ChatGPT, or other) picking up work in this repo or a sibling repo
+**Compiled:** 2026-07-23 · **Last updated:** 2026-08-06（移除背景推播 periodicsync） · **Compiled by:** Claude (session `project-status-compilation`) · **For:** any AI agent (Claude, Gemini, ChatGPT, or other) picking up work in this repo or a sibling repo
 
 This file is a handoff briefing so any AI agent landing in *any* of Blue's repos with no other context can quickly understand who they're working for, what the whole project network looks like, which rules hold everywhere, and exactly where this repo stands right now. **This repo has no `CLAUDE.md` yet** (see the note at the end of section 4) — until one exists, this file is the only written orientation document here. Update it whenever this repo's status changes materially.
 
@@ -227,6 +227,40 @@ Blue 平常用 Phases of the Moon 這支 App，最想要的是「一直在跳的
 驗證方式：Chromium（412/390/360 三種寬度、深色與淺色、`prefers-reduced-motion`）跑過
 九個分頁全部重繪、抽屜開關三次無殘留計時器與節點、Escape 可關、換分頁自動收起、
 八個相位角的月面圖形逐一目視確認，全程無 JS 錯誤。
+
+### 2026-08-06 — 移除背景推播（periodicsync）
+
+Blue 回報「明明沒開 App 卻收到推播」（2026-08-05 晚間 ~18:xx），查明來源：`sw.js` 的
+`periodicsync` handler（`astro-check` tag，`app.js` 用 `reg.periodicSync.register(...,
+{ minInterval: 12h })` 註冊）會在 Chrome 自行排程的背景時刻檢查 `BROADCAST`／`ASTRO`
+並呼叫 `showNotification()`。這**不是** Claude Code agent 的自動排程復活（`.claude/settings.json`
+的 deny 清單管的是 agent session 能不能呼叫 `send_later`/`create_trigger` 這類工具，跟瀏覽器
+原生 Periodic Background Sync API 完全是兩個系統，deny 清單管不到已經部署在使用者手機上的
+`sw.js`），而是 App 自己 7/28 上線的既有功能：唯一能在 App 沒開時送達使用者的通知管道。
+根因是它**沒有真正的已讀判斷**——`app.js` 宣稱的「領過就不會再跳」寫進 `localStorage`
+的 `settings.broadcasts`，但 Service Worker 讀不到 `localStorage`，所以只要 Chrome 在
+`BROADCAST.until`（原設 2026-08-11）前的任何時刻喚醒背景排程，同一則通知就會重新跳出——
+這就是為什麼 Blue 說「已經收到自己做的程式發了七八次推播」。
+
+Blue 的指示很明確：關掉任何「App 沒開就跳出」的推播。處理方式是整支移除，不是修 dedupe：
+- `sw.js`：刪掉整個 `periodicsync` handler、其專用的月相/天象輔助函式（`truePhaseJDE`／
+  `phaseDate`／`kNear`／`upcomingWithin`／`ASTRO`／`BROADCAST`，這些只被這支 handler
+  用到，sw.js 別處沒有引用），以及跟著變成死碼的 `notificationclick` handler；`CACHE`
+  版號跟著跳（`v23-2026.07.30c` → `v24-2026.08.06`）讓瀏覽器裝新版 SW。
+- `app.js`：`periodicSync.register("astro-check", ...)` 改成 `periodicSync.unregister(
+  "astro-check")`，主動撤銷**已經在使用者裝置上跑著**的舊排程（光是這次不再註冊還不夠，
+  舊安裝的 tag 會留在瀏覽器裡繼續喚醒）；`APP_VERSION` 同步跳到 `2026.08.06`。
+- App 開啟時的通報卡片（`checkBroadcasts()`）與天象提醒（`checkEventNotifications()`）
+  維持原樣——它們只在使用者主動打開 App 時才跑，用的是前景 `new Notification()`，不會在
+  App 關閉時觸發，不在這次「未開 App 就推播」的問題範圍內。
+- 更新了 `README.md`「站內通報怎麼送達」一節與 `app.js:1053` 附近的說明註解，兩處都曾
+  宣稱背景推播「不會重複發」，現在已不再是事實，一併改寫。
+
+**如果之後要重做 v1.5 的「滿月淨化推播」**：不能再靠 `sw.js` 的 `periodicsync` 這條管線
+（已整支移除），且即使要重做背景推播也必須先在 Service Worker context 做真正的已讀判斷
+（例如寫 Cache API 或 IndexedDB，而不是假設能讀到 `localStorage`）。更穩妥的做法是走
+README 已經寫的「真正的伺服器推播」路線（VAPID + 訂閱清單 + 使用者明確同意 + 可退訂），
+讓使用者自己選擇要不要收，不要重新做成使用者沒同意就會背景跳出的通知。
 
 ### Open / unfinished work
 `docs/crystal-vision.md` is a de facto product roadmap, with v1 marked shipped:
