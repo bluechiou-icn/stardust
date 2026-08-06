@@ -1055,12 +1055,10 @@ const columnById = id => COLUMN.find(c => c.id === id);
    下次打開 App 時，這裡跳出通報卡片；領過就寫進 settings.broadcasts，不會再跳。 */
 const BROADCASTS = [
   {
-    id: "2026-07-28-column-01", date: "2026-07-28", icon: "🌕",
-    title: "星塵專欄創刊號上線",
-    body: "「為何農曆十五卻不是滿月🤔」—Blue自己撰寫的第一篇天文知識文章，就在「宇宙」分頁。",
-    reward: "🪐 量子糾纏神奇海螺 ×1",
-    rewardNote: "創刊號限定，感謝辣妹，你是第一批走進星塵的人。",
-    articleId: "blue-2026-07-fullmoon",
+    id: "2026-08-06-apology-01", date: "2026-08-06", icon: "💙",
+    title: "給正在測試 Stardust 的你",
+    body: "我是Blue，謝謝您持續使用測試版Stardust，這幾天頻繁、重複的推播訊息，是一個我未能即時修復的程式錯誤，如有打擾到您，在此向您道歉；本PWA APP未來不會再有任何推播，建議您先匯出儲存已紀錄的資料，再移除已安裝至手機的星塵夢汐，在正式上線前，網頁版仍舊可繼續使用，也感謝每一位提供意見給新手開發者我本人的你，謝謝 💙。",
+    silent: true,
   },
 ];
 
@@ -5301,7 +5299,8 @@ function checkBroadcasts() {
   const b = pendingBroadcast();
   if (!b) return;
   // 已允許通知的人，順手也跳一則系統通知，讓「有收到東西」這件事更明確
-  if ("Notification" in window && Notification.permission === "granted" && !store.data.settings.notified[`bc|${b.id}`]) {
+  // silent 的通報（例如道歉啟事）刻意不跳系統通知，只在開 App 時用卡片呈現一次
+  if (!b.silent && "Notification" in window && Notification.permission === "granted" && !store.data.settings.notified[`bc|${b.id}`]) {
     try { new Notification(`${b.icon} ${b.title}`, { body: b.body }); } catch { /* 部分瀏覽器只允許 SW 發通知 */ }
     store.data.settings.notified[`bc|${b.id}`] = true;
     store.save();
@@ -5320,21 +5319,29 @@ function checkBroadcasts() {
   setTimeout(tryShow, 1200);
 }
 function showBroadcast(b) {
+  // 純公告（例如道歉啟事）沒有 reward，不套用「領取獎勵」那套話術與雙按鈕
+  const hasReward = !!b.reward;
   const m = modal(`
     <div class="broadcast">
       <p class="bc-tag">✦ 星塵通報 ✦</p>
       <div class="bc-icon">${b.icon}</div>
       <h3>${esc(b.title)}</h3>
       <p class="muted">${esc(b.body)}</p>
-      <p class="bc-reward">${esc(b.reward)}</p>
+      ${hasReward ? `<p class="bc-reward">${esc(b.reward)}</p>` : ""}
       ${b.rewardNote ? `<p class="muted small">${esc(b.rewardNote)}</p>` : ""}
     </div>
     <div class="btn-row">
-      <button class="btn" id="bc-claim">領取並閱讀</button>
-      <button class="btn secondary" id="bc-later">只領取</button>
+      ${hasReward
+        ? `<button class="btn" id="bc-claim">領取並閱讀</button><button class="btn secondary" id="bc-later">只領取</button>`
+        : `<button class="btn" id="bc-ack">知道了</button>`}
     </div>`);
+  const markSeen = () => { store.data.settings.broadcasts[b.id] = new Date().toISOString(); };
+  if (!hasReward) {
+    $("#bc-ack", m).addEventListener("click", () => { markSeen(); store.save(); m.remove(); });
+    return;
+  }
   const claim = () => {
-    store.data.settings.broadcasts[b.id] = new Date().toISOString();
+    markSeen();
     const total = awardCompleteShell();
     m.remove();
     toast(`🐚 收到 ${b.reward}！目前擁有 ${total} 顆完整神奇海螺`);
